@@ -1,0 +1,72 @@
+@startuml
+
+hide footbox
+
+<style>
+participant {
+    Padding: 20
+}
+</style>
+
+participant MainView
+participant MainPresenter
+participant ApiNetworksRepository
+participant ICityBikesAPI
+
+box "Internet" #lavenderblush
+database CityBikes #orange
+endbox
+
+[-> MainView : onCreate()
+activate MainView
+
+MainView -> MainPresenter : init()
+activate MainPresenter
+
+MainPresenter -> MainView : init()
+note left: initialize listeners
+|||
+
+MainPresenter <-- MainView : //finished//
+
+MainPresenter -> MainPresenter : load()
+
+MainPresenter -> ApiNetworksRepository : requestNetworks()
+
+deactivate MainView
+deactivate MainPresenter
+activate ApiNetworksRepository
+
+ApiNetworksRepository -> ICityBikesAPI : networks()
+deactivate ApiNetworksRepository
+activate ICityBikesAPI
+
+ICityBikesAPI -->(20) CityBikes
+deactivate ICityBikesAPI
+note right: Request data \nfrom service
+
+...waiting for data...
+
+CityBikes -->(20) ICityBikesAPI
+activate ICityBikesAPI
+note right: Data is provided
+
+ICityBikesAPI --> ApiNetworksRepository : [networks]
+deactivate ICityBikesAPI
+activate ApiNetworksRepository
+
+ApiNetworksRepository --> MainPresenter : [networks]
+deactivate ApiNetworksRepository
+activate MainPresenter
+
+MainPresenter -> MainView : showNetworks()
+activate MainView
+note left: updates UI\n with networks
+
+|||
+
+MainView --> MainPresenter
+deactivate MainView
+deactivate MainPresenter
+
+@enduml

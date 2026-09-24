@@ -1,0 +1,52 @@
+{
+    "networks": [
+        {
+            "id": "bicing",
+            "name": "Bicing",
+            "location": {
+                "latitude": 41.3850639,
+                "longitude": 2.1734035,
+                "city": "Barcelona",
+                "country": "ES"
+            },
+            "href": "/v2/networks/bicing",
+            "company": [
+                "Barcelona de Serveis Municipals, S.A. (BSM)",
+                "CESPA",
+                "PBSC"
+            ],
+            "ebikes": true
+        },
+        {
+            "id": "bicimad",
+            "name": "BiciMAD",
+            "location": {
+                "latitude": 40.4168,
+                "longitude": -3.7038,
+                "city": "Madrid",
+                "country": "ES"
+            },
+            "href": "/v2/networks/bicimad",
+            "company": [
+                "Empresa Municipal de Transportes de Madrid, S.A."
+            ],
+            "system": "bicimad",
+            "source": "https://mobilitylabs.emtmadrid.es/"
+        },
+        {
+            "id": "tuebici",
+            "name": "TUeBICI",
+            "location": {
+                "latitude": 43.46230569999999,
+                "longitude": -3.8099803,
+                "city": "Santander",
+                "country": "ES"
+            },
+            "href": "/v2/networks/tuebici",
+            "company": [
+                "UTE BICIS SANTANDER"
+            ],
+            "system": "Nextbike"
+        }
+    ]
+}

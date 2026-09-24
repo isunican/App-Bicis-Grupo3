@@ -1,0 +1,39 @@
+@startjson
+{
+    "network": {
+        "id": "bicing",
+        "name": "Bicing",
+        "location": {
+            "latitude": 41.3850639,
+            "longitude": 2.1734035,
+            "city": "Barcelona",
+            "country": "ES"
+        },
+        "href": "/v2/networks/bicing",
+        "company": [
+            "Barcelona de Serveis Municipals, S.A. (BSM)",
+            "CESPA",
+            "PBSC"
+        ],
+        "ebikes": true,
+        "stations": [
+            {
+                "id": "00341b8b54545c560fdec7d7983f9f5a",
+                "name": "C/ SARDENYA,  178",
+                "latitude": 41.3967169,
+                "longitude": 2.1825085,
+                "timestamp": "2026-08-20T10:33:23.574581+00:00Z",
+                "free_bikes": 27,
+                "empty_slots": 8,
+                "extra": {
+                    "uid": 119,
+                    "online": true,
+                    "normal_bikes": 22,
+                    "has_ebikes": true,
+                    "ebikes": 5
+                }
+            }
+        ]
+    }
+}
+@endjson

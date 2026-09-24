@@ -1,0 +1,9 @@
+.DS_Store
+.directory
+*.crswap
+
+# Token de SonarCloud (uso local; no subir al repositorio)
+sonar.env
+
+# PlantUML jar descargado automaticamente por Docs/Models/generate_diagrams.sh
+Docs/Models/plantuml.jar

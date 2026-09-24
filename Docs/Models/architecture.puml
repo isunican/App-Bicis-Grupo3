@@ -1,0 +1,63 @@
+@startuml architecture
+
+hide empty members
+
+MainView ..|> IMainContract.View
+MainPresenter ..|> IMainContract.Presenter
+MainPresenter ..> INetworksRepository
+ApiNetworksRepository ..|> INetworksRepository
+JsonNetworksRepository ..|> INetworksRepository
+ApiNetworksRepository ..> NetworksCallback
+ApiNetworksRepository ..> NetworkDetailsCallback
+JsonNetworksRepository ..> NetworksCallback
+JsonNetworksRepository ..> NetworkDetailsCallback
+
+MainView --> MainPresenter : <<use>>
+MainView ..> InfoView : <<use>>
+MainView ..> DetailsView : <<use>>
+
+class MainView {
+}
+
+class MainPresenter {
+    -load()
+}
+
+class InfoView
+class DetailsView
+class ApiNetworksRepository
+class JsonNetworksRepository
+
+interface IMainContract.View {
+    + init()
+    + getNetworksRepository() : INetworksRepository
+    + showNetworks(List<Network> networks)
+    + showLoadCorrect(int networks)
+    + showLoadError()
+    + showNetworkDetails(Network network)
+    + showInfoActivity()
+}
+
+interface IMainContract.Presenter {
+    + init(View view)
+    + onNetworkClicked(Network network)
+    + onMenuInfoClicked()
+}
+
+interface INetworksRepository {
+    + requestNetworks(NetworksCallback cb)
+    + requestNetwork(NetworkDetailsCallback cb, String networkId)
+}
+
+interface NetworksCallback {
+    + onSuccess(List<Network> networks)
+    + onFailure(Throwable e)
+}
+
+interface NetworkDetailsCallback {
+    + onSuccess(Network network)
+    + onFailure(Throwable e)
+}
+
+
+@enduml

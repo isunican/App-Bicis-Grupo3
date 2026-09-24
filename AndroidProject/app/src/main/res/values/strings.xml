@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Bicis</string>
+    <string name="refresh">Recargar</string>
+    <string name="info">Info</string>
+    <string name="loadCorrect">Se han cargado %d redes</string>
+    <string name="loadError">Ha habido un error cargando las redes</string>
+    <string name="info_text">Aplicación creada para el Proyecto Integrado Curso 2026-2027</string>
+</resources>
