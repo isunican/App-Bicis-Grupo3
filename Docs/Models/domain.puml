@@ -3,29 +3,28 @@
 hide empty members
 
 class Network {
-    - String id
-    - String name
-    - Location location
-    - String href
-    - String[] company
-    - String gbfsHref
-    - boolean ebikes
+    - id : String
+    - name : String
+    - href : String
+    - company : String[]
+    - gbfsHref : String
+    - ebikes : boolean
 }
 
 class Location {
-    - String city
+    - city : String
 }
 
 class NetworksResponse {
-    - List<Network> networks
+
 }
 
 class NetworkResponse {
-    - Network network
+    
 }
 
-Network *-- "1" Location : location
-NetworksResponse *-- "*" Network : networks
-NetworkResponse *-- "1" Network : network
+Network *--> "1" Location : location
+NetworksResponse *--> "*" Network : networks
+NetworkResponse *--> "1" Network : network
 
 @enduml

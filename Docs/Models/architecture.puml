@@ -4,15 +4,11 @@ hide empty members
 
 MainView ..|> IMainContract.View
 MainPresenter ..|> IMainContract.Presenter
-MainPresenter ..> INetworksRepository
+MainView --> INetworksRepository : repository
 ApiNetworksRepository ..|> INetworksRepository
 JsonNetworksRepository ..|> INetworksRepository
-ApiNetworksRepository ..> NetworksCallback
-ApiNetworksRepository ..> NetworkDetailsCallback
-JsonNetworksRepository ..> NetworksCallback
-JsonNetworksRepository ..> NetworkDetailsCallback
-
-MainView --> MainPresenter : <<use>>
+MainView --> MainPresenter : presenter
+MainPresenter --> MainView : view
 MainView ..> InfoView : <<use>>
 MainView ..> DetailsView : <<use>>
 
@@ -31,32 +27,32 @@ class JsonNetworksRepository
 interface IMainContract.View {
     + init()
     + getNetworksRepository() : INetworksRepository
-    + showNetworks(List<Network> networks)
-    + showLoadCorrect(int networks)
+    + showNetworks(networks : List<Network>)
+    + showLoadCorrect(networks : int)
     + showLoadError()
-    + showNetworkDetails(Network network)
+    + showNetworkDetails(network : Network)
     + showInfoActivity()
 }
 
 interface IMainContract.Presenter {
     + init(View view)
-    + onNetworkClicked(Network network)
+    + onNetworkClicked(network : Network)
     + onMenuInfoClicked()
 }
 
 interface INetworksRepository {
-    + requestNetworks(NetworksCallback cb)
-    + requestNetwork(NetworkDetailsCallback cb, String networkId)
+    + requestNetworks(cb : NetworksCallback )
+    + requestNetwork(cb: NetworkDetailsCallback , networkId : String)
 }
 
 interface NetworksCallback {
-    + onSuccess(List<Network> networks)
-    + onFailure(Throwable e)
+    + onSuccess(networks : List<Network>)
+    + onFailure(e : Throwable)
 }
 
 interface NetworkDetailsCallback {
-    + onSuccess(Network network)
-    + onFailure(Throwable e)
+    + onSuccess(network : Networ)
+    + onFailure(e : Throwable)
 }
 
 
