@@ -33,7 +33,7 @@ import es.unican.bicis.repository.INetworksRepository;
 public class MainView extends AppCompatActivity implements IMainContract.View {
 
     /** The presenter of this view */
-    private MainPresenter presenter;
+    private IMainContract.Presenter presenter;
 
     /** The repository to access the data. This is automatically injected by Hilt in this class */
     @Inject
