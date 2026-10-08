@@ -35,7 +35,7 @@ public class Network {
 
 
     @JsonAdapter(BooleanAdapter.class)
-    @SerializedName("ebikes")               protected boolean ebikes;
+    @SerializedName("ebikes")               protected Boolean ebikes;
 
     //@return [el numero de compañias] o [null] si la compañia es un array de textos vacios
     public Integer countOperators() {
