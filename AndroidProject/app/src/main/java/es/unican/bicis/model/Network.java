@@ -35,6 +35,6 @@ public class Network {
 
 
     @JsonAdapter(BooleanAdapter.class)
-    @SerializedName("ebikes")               protected boolean ebikes;
+    @SerializedName("ebikes")               protected Boolean ebikes;
 
 }
