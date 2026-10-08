@@ -1,5 +1,6 @@
 package es.unican.bicis.model;
 
+import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 
 import org.parceler.Parcel;
@@ -22,5 +23,12 @@ import lombok.Setter;
 public class Location {
 
     @SerializedName("city")                     protected String city;
+    @SerializedName("country")                  protected String country;
+
+    @JsonAdapter(DoubleAdapter.class)
+    @SerializedName("latitude")                 protected Double latitude;
+
+    @JsonAdapter(DoubleAdapter.class)
+    @SerializedName("longitude")                protected Double longitude;
 
 }
