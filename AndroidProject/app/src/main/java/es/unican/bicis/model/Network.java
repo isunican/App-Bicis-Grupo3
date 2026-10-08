@@ -1,5 +1,6 @@
 package es.unican.bicis.model;
 
+import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 
 import org.parceler.Parcel;
@@ -25,8 +26,15 @@ public class Network {
     @SerializedName("name")                 protected String name;
     @SerializedName("location")             protected Location location;
     @SerializedName("href")                 protected String href;
-    @SerializedName("company")              protected String[] company;
     @SerializedName("gbfs_href")            protected String gbfsHref;
+
+
+
+    @JsonAdapter(StringArrayAdapter.class)
+    @SerializedName("company")              protected String[] company;
+
+
+    @JsonAdapter(BooleanAdapter.class)
     @SerializedName("ebikes")               protected boolean ebikes;
 
 }
