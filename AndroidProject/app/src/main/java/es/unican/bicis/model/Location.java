@@ -31,4 +31,10 @@ public class Location {
     @JsonAdapter(DoubleAdapter.class)
     @SerializedName("longitude")                protected Double longitude;
 
+    //@return [true] si als coordenadas estan en los valores permitidos
+    public boolean hasValidCoordinates() {
+        return latitude != null && longitude != null
+                && latitude >= -90 && latitude <= 90
+                && longitude >= -180 && longitude <= 180;
+    }
 }
