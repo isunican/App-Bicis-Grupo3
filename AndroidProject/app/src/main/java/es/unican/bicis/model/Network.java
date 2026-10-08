@@ -37,4 +37,34 @@ public class Network {
     @JsonAdapter(BooleanAdapter.class)
     @SerializedName("ebikes")               protected boolean ebikes;
 
+    //@return [el numero de compañias] o [null] si la compañia es un array de textos vacios
+    public Integer countOperators() {
+        if (company == null || company.length == 0) {
+            return null;
+        }
+        for (String c : company) {
+            if (isBlank(c)) {
+                return null;
+            }
+        }
+        return company.length;
+    }
+
+    // @return [true] si (id, href, gbfsHref, operators, country, coordinates) no son null
+    public boolean hasOnlyBasicInfo() {
+        boolean extraNetworkData = !isBlank(id) || !isBlank(href) || !isBlank(gbfsHref)
+                || countOperators() != null;
+        boolean extraLocationData = location != null
+                && (!isBlank(location.getCountry())
+                || location.getLatitude() != null
+                || location.getLongitude() != null);
+        return !extraNetworkData && !extraLocationData;
+    }
+
+    //
+    private static boolean isBlank(String s) {
+        return s == null || s.trim().isEmpty();
+    }
+
+
 }
