@@ -22,19 +22,6 @@ public interface IDetailsContract {
          */
         public void init(View view, Network network);
 
-        /**
-         * The presenter is informed that a network has been clicked
-         * Only the View should call this method
-         * @param network the network that has been clicked
-         */
-        public void onNetworkClicked(Network network);
-
-        /**
-         * The presenter is informed that the Info item in the menu has been clicked
-         * Only the View should call this method
-         */
-        public void onMenuInfoClicked();
-
     }
 
     /**
