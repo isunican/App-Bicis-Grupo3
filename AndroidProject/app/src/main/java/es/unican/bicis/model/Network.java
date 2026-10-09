@@ -52,13 +52,9 @@ public class Network {
 
     // @return [true] si (id, href, gbfsHref, operators, country, coordinates) no son null
     public boolean hasOnlyBasicInfo() {
-        boolean extraNetworkData = !isBlank(id) || !isBlank(href) || !isBlank(gbfsHref)
-                || countOperators() != null;
-        boolean extraLocationData = location != null
-                && (!isBlank(location.getCountry())
-                || location.getLatitude() != null
-                || location.getLongitude() != null);
-        return !extraNetworkData && !extraLocationData;
+        boolean hasLocationData = location != null
+                && (location.getLatitude() != null || location.getLongitude() != null);
+        return !hasLocationData && ebikes == null && company == null;
     }
 
     //
