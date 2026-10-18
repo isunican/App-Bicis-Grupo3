@@ -41,28 +41,28 @@ public class NetworkLocatorTest {
         return red;
     }
 
-    // UT1
+    // UNL.1a
     @Test
     public void testUsuarioEnSantander() {
         Network res = NetworkLocator.findNearestNetwork(redes, 43.4600, -3.8000, NetworkLocator.MAX_DISTANCE_KM);
         assertEquals(tuebici, res);
     }
 
-    // UT2 - no hace falta estar justo en el centro, a 5km tambien vale
+    // UNL.1b - no hace falta estar justo en el centro, a 5km tambien vale
     @Test
     public void testUsuarioCercaDeMadrid() {
         Network res = NetworkLocator.findNearestNetwork(redes, 40.4618, -3.7038, NetworkLocator.MAX_DISTANCE_KM);
         assertEquals(bicimad, res);
     }
 
-    // UT3 - Paris, no hay ninguna red nuestra cerca
+    // UNL.1c - Paris, no hay ninguna red nuestra cerca
     @Test
     public void testUsuarioLejos() {
         Network res = NetworkLocator.findNearestNetwork(redes, 48.8566, 2.3522, NetworkLocator.MAX_DISTANCE_KM);
         assertNull(res);
     }
 
-    // UT4 - meto otra red en Madrid un poco mas al norte y me pongo al lado,
+    // UNL.1d - meto otra red en Madrid un poco mas al norte y me pongo al lado,
     // tiene que devolver esa y no bicimad aunque bicimad este antes en la lista
     @Test
     public void testDosRedesMismaCiudad() {
@@ -73,7 +73,7 @@ public class NetworkLocatorTest {
         assertEquals(otraMadrid, res);
     }
 
-    // UT5 - todas estas tienen algo mal y se las tiene que saltar
+    // UNL.1e - todas estas tienen algo mal y se las tiene que saltar
     @Test
     public void testRedesConDatosMal() {
         List<Network> lista = new ArrayList<>();
@@ -89,19 +89,19 @@ public class NetworkLocatorTest {
         assertEquals(tuebici, res);
     }
 
-    // UT6
+    // UNL.1f
     @Test
     public void testListaVacia() {
         assertNull(NetworkLocator.findNearestNetwork(new ArrayList<>(), 43.4623, -3.8099, NetworkLocator.MAX_DISTANCE_KM));
     }
 
-    // UT7 - si llega null no deberia dar NullPointerException
+    // UNL.1g - si llega null no deberia dar NullPointerException
     @Test
     public void testListaNull() {
         assertNull(NetworkLocator.findNearestNetwork(null, 43.4623, -3.8099, NetworkLocator.MAX_DISTANCE_KM));
     }
 
-    // UT8 - el limite. Calculo la distancia exacta desde un punto al sur de Santander
+    // UNL.1h - el limite. Calculo la distancia exacta desde un punto al sur de Santander
     // y la uso como maximo: con eso tiene que entrar, y con un poco menos ya no
     @Test
     public void testLimiteDistancia() {
@@ -111,14 +111,14 @@ public class NetworkLocatorTest {
         assertNull(NetworkLocator.findNearestNetwork(redes, 43.3000, -3.8099, d - 0.01));
     }
 
-    // UT9 - en linea recta salen unos 339km, dejo 1km de margen
+    // UNL.2a - en linea recta salen unos 339km, dejo 1km de margen
     @Test
     public void testDistanciaSantanderMadrid() {
         double d = NetworkLocator.distanceKm(43.4623, -3.8099, 40.4168, -3.7038);
         assertEquals(338.8, d, 1.0);
     }
 
-    // UT10
+    // UNL.2b
     @Test
     public void testDistanciaMismoPunto() {
         assertEquals(0.0, NetworkLocator.distanceKm(40.4168, -3.7038, 40.4168, -3.7038), 0.001);
