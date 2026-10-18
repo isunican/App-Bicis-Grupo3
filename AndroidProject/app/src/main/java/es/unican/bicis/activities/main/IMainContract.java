@@ -2,6 +2,7 @@ package es.unican.bicis.activities.main;
 
 import java.util.List;
 
+import es.unican.bicis.location.ILocationProvider;
 import es.unican.bicis.model.Network;
 import es.unican.bicis.repository.INetworksRepository;
 
@@ -118,6 +119,21 @@ public interface IMainContract {
          * Only the Presenter should call this method
          */
         public void showLocationError();
+
+        /**
+         * Returns the provider that gives the location of the device. Like the repository,
+         * it is created in the view because it needs Android.
+         * Only the Presenter should call this method
+         * @return the location provider
+         */
+        public ILocationProvider getLocationProvider();
+
+        /**
+         * The view is requested to show the stations of the network of the user's city.
+         * Only the Presenter should call this method
+         * @param network the network detected from the user's location
+         */
+        public void showNetworkStations(Network network);
 
     }
 }

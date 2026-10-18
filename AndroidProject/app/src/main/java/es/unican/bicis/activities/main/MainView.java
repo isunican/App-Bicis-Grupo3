@@ -29,6 +29,7 @@ import dagger.hilt.android.AndroidEntryPoint;
 import es.unican.bicis.R;
 import es.unican.bicis.activities.info.InfoView;
 import es.unican.bicis.activities.details.DetailsView;
+import es.unican.bicis.location.ILocationProvider;
 import es.unican.bicis.model.Network;
 import es.unican.bicis.repository.INetworksRepository;
 
@@ -44,6 +45,10 @@ public class MainView extends AppCompatActivity implements IMainContract.View {
     /** The repository to access the data. This is automatically injected by Hilt in this class */
     @Inject
     INetworksRepository repository;
+
+    /** Gives the location of the device. It is also injected by Hilt */
+    @Inject
+    ILocationProvider locationProvider;
 
     /**
      * Shows the Android dialog asking for the location permission and tells the presenter
@@ -192,6 +197,25 @@ public class MainView extends AppCompatActivity implements IMainContract.View {
     }
 
     /**
+     * @see IMainContract.View#getLocationProvider()
+     * @return the location provider
+     */
+    @Override
+    public ILocationProvider getLocationProvider() {
+        return locationProvider;
+    }
+
+    /**
+     * @see IMainContract.View#showNetworkStations(Network)
+     * @param network the network detected from the user's location
+     */
+    @Override
+    public void showNetworkStations(Network network) {
+        Toast.makeText(this, getString(R.string.networkDetected, network.getName()),
+                Toast.LENGTH_LONG).show();
+    }
+
+    /**
      * Checks if the user has already given the location permission (approximate is enough).
      * @return true if the permission is granted
      */
@@ -205,7 +229,6 @@ public class MainView extends AppCompatActivity implements IMainContract.View {
      * @param answers for each permission asked, true if the user allowed it
      */
     private void onLocationPermissionAnswer(Map<String, Boolean> answers) {
-        // vale con que haya dado la aproximada o la precisa
         boolean granted = Boolean.TRUE.equals(answers.get(Manifest.permission.ACCESS_COARSE_LOCATION))
                 || Boolean.TRUE.equals(answers.get(Manifest.permission.ACCESS_FINE_LOCATION));
         presenter.onLocationPermissionResult(granted);

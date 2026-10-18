@@ -2,7 +2,9 @@ package es.unican.bicis.activities.main;
 
 import java.util.List;
 
+import es.unican.bicis.location.LocationResultCallback;
 import es.unican.bicis.model.Network;
+import es.unican.bicis.model.NetworkLocator;
 import es.unican.bicis.repository.INetworksRepository;
 import es.unican.bicis.repository.NetworksCallback;
 
@@ -14,7 +16,7 @@ public class MainPresenter implements IMainContract.Presenter {
     /** The view that is controlled by this presenter */
     private IMainContract.View view;
 
-    /** The networks loaded from the repository (needed later to find the user's city) */
+    /** The networks loaded from the repository (needed to find the user's city) */
     private List<Network> networks;
 
     /**
@@ -54,7 +56,28 @@ public class MainPresenter implements IMainContract.Presenter {
         // sin permiso no podemos saber donde esta, se queda en la lista de redes
         if (!granted) {
             view.showLocationError();
+            return;
         }
+
+        view.getLocationProvider().requestCurrentLocation(new LocationResultCallback() {
+
+            @Override
+            public void onSuccess(double latitude, double longitude) {
+                Network red = NetworkLocator.findNearestNetwork(networks, latitude, longitude,
+                        NetworkLocator.MAX_DISTANCE_KM);
+                if (red != null) {
+                    view.showNetworkStations(red);
+                } else {
+                    // esta en una ciudad sin red cerca
+                    view.showLocationError();
+                }
+            }
+
+            @Override
+            public void onFailure(Throwable e) {
+                view.showLocationError();
+            }
+        });
     }
 
     /**
