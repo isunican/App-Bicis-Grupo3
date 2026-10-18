@@ -37,6 +37,13 @@ public interface IMainContract {
          */
         public void onMenuInfoClicked();
 
+        /**
+         * The presenter is informed of the user's answer to the location permission request.
+         * Only the View should call this method
+         * @param granted true if the user has given the location permission, false otherwise
+         */
+        public void onLocationPermissionResult(boolean granted);
+
     }
 
     /**
@@ -97,6 +104,20 @@ public interface IMainContract {
          * Only the Presenter should call this method
          */
         public void showInfoActivity();
+
+        /**
+         * The view is requested to ask the user for the location permission. If the permission
+         * was already given, the view must inform the presenter directly.
+         * Only the Presenter should call this method
+         */
+        public void requestLocationPermission();
+
+        /**
+         * The view is requested to display a message indicating that the location of the user
+         * could not be obtained. The list of networks stays visible so the user can pick one.
+         * Only the Presenter should call this method
+         */
+        public void showLocationError();
 
     }
 }

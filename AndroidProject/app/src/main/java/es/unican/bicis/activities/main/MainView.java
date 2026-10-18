@@ -1,6 +1,8 @@
 package es.unican.bicis.activities.main;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -8,13 +10,17 @@ import android.view.MenuItem;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 
 import org.parceler.Parcels;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 
@@ -38,6 +44,14 @@ public class MainView extends AppCompatActivity implements IMainContract.View {
     /** The repository to access the data. This is automatically injected by Hilt in this class */
     @Inject
     INetworksRepository repository;
+
+    /**
+     * Shows the Android dialog asking for the location permission and tells the presenter
+     * the answer. It has to be registered here (before onCreate finishes), Android requires it.
+     */
+    private final ActivityResultLauncher<String[]> locationPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(),
+                    this::onLocationPermissionAnswer);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -152,5 +166,48 @@ public class MainView extends AppCompatActivity implements IMainContract.View {
     public void showInfoActivity() {
         Intent intent = new Intent(this, InfoView.class);
         startActivity(intent);
+    }
+
+    /**
+     * @see IMainContract.View#requestLocationPermission()
+     */
+    @Override
+    public void requestLocationPermission() {
+        // si ya lo dio otra vez no se le vuelve a preguntar
+        if (hasLocationPermission()) {
+            presenter.onLocationPermissionResult(true);
+        } else {
+            locationPermissionLauncher.launch(new String[]{
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION});
+        }
+    }
+
+    /**
+     * @see IMainContract.View#showLocationError()
+     */
+    @Override
+    public void showLocationError() {
+        Toast.makeText(this, R.string.locationError, Toast.LENGTH_LONG).show();
+    }
+
+    /**
+     * Checks if the user has already given the location permission (approximate is enough).
+     * @return true if the permission is granted
+     */
+    private boolean hasLocationPermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED;
+    }
+
+    /**
+     * Called when the user answers the permission dialog.
+     * @param answers for each permission asked, true if the user allowed it
+     */
+    private void onLocationPermissionAnswer(Map<String, Boolean> answers) {
+        // vale con que haya dado la aproximada o la precisa
+        boolean granted = Boolean.TRUE.equals(answers.get(Manifest.permission.ACCESS_COARSE_LOCATION))
+                || Boolean.TRUE.equals(answers.get(Manifest.permission.ACCESS_FINE_LOCATION));
+        presenter.onLocationPermissionResult(granted);
     }
 }
