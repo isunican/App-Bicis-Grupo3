@@ -54,14 +54,22 @@ public class StationsPresenter implements IStationsContract.Presenter {
         }
     }
 
+    //AÑADO
     /**
+     * Quita los filtros mostrando otra vez todas las estaciones.
+     * Si falla al hacerlo, pide a la vista que muestre un error.
+     * Si no había ningún filtro aplicado, no pasa nada: se muestra la lista completa.
      * @see IStationsContract.Presenter#onFilterCleared()
      */
     @Override
     public void onFilterCleared() {
-        view.showStations(stations);
+        try {
+            view.showStations(stations);
+        } catch (RuntimeException error) {
+            view.mostrarErrorQuitarFiltros();
+        }
     }
-
+//
     /**
      * Converts the text introduced by the user into the minimum number of free bikes.
      * @param text the text introduced by the user

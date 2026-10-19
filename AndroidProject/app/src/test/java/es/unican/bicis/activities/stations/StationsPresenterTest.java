@@ -7,6 +7,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import static org.mockito.Mockito.doThrow;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -125,7 +127,66 @@ public class StationsPresenterTest {
         verify(mockView).showStations(allStations);
     }
 
-    // ---------- Sin resultados ----------
+    // ---------- Sin resultados
+
+
+
+
+//AÑADO
+
+    // Con un filtro aplicado, se quita y se ve la lista completa.
+    @Test
+    public void testQuitarFiltrosTrasUnFiltroMuestraListaCompleta() {
+        initPresenterWith(allStations);
+        sut.onFilterApplied("3");
+        clearInvocations(mockView);
+
+        sut.onFilterCleared();
+
+        verify(mockView).showStations(allStations);
+        verify(mockView, never()).mostrarErrorQuitarFiltros();
+    }
+
+    // Con varios filtros aplicados, una sola acción los quita todos.
+    @Test
+    public void testQuitarFiltrosTrasVariosFiltrosMuestraListaCompleta() {
+        initPresenterWith(allStations);
+        sut.onFilterApplied("1");
+        sut.onFilterApplied("3");
+        sut.onFilterApplied("5");
+        clearInvocations(mockView);
+
+        sut.onFilterCleared();
+
+        verify(mockView).showStations(allStations);
+        verify(mockView, never()).mostrarErrorQuitarFiltros();
+    }
+
+    // Si falla al quitar los filtros, se muestra el error.
+    @Test
+    public void testQuitarFiltrosConFalloMuestraError() {
+        initPresenterWith(allStations);
+        sut.onFilterApplied("3");
+        clearInvocations(mockView);
+        doThrow(new RuntimeException("fallo simulado")).when(mockView).showStations(allStations);
+
+        sut.onFilterCleared();
+
+        verify(mockView).mostrarErrorQuitarFiltros();
+    }
+
+    //Sin filtros aplicados, la lista sigue completa y no hay error.
+    @Test
+    public void testQuitarFiltrosSinFiltroAplicadoMantieneListaCompleta() {
+        initPresenterWith(allStations);
+
+        sut.onFilterCleared();
+
+        verify(mockView).showStations(allStations);
+        verify(mockView, never()).mostrarErrorQuitarFiltros();
+        verify(mockView, never()).showInvalidMinFreeBikes();
+    }
+//
 
     @Test
     public void testFilterWithoutResultsShowsMessage() {
