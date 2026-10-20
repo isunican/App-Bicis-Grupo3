@@ -17,6 +17,7 @@ robolectric = "4.17"
 sonarqube = "7.5.0.8588"
 playServicesLocation = "21.3.0"
 playServicesLocationVersion = "21.4.0"
+testRules = "1.7.0"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -40,6 +41,9 @@ mockito-android = { group = "org.mockito", name = "mockito-android", version.ref
 roboelectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric"}
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 gms-play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocationVersion" }
+test-rules = { group = "androidx.test", name = "rules", version.ref = "testRules" }
+
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
