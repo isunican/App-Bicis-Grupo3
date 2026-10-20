@@ -15,8 +15,7 @@ hilt = "2.60.1"
 mockito = "5.24.0"
 robolectric = "4.17"
 sonarqube = "7.5.0.8588"
-playServicesLocation = "21.3.0"
-playServicesLocationVersion = "21.4.0"
+playServicesLocation = "21.4.0"
 testRules = "1.7.0"
 
 [libraries]
@@ -40,7 +39,6 @@ mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mo
 mockito-android = { group = "org.mockito", name = "mockito-android", version.ref = "mockito"}
 roboelectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric"}
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
-gms-play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocationVersion" }
 test-rules = { group = "androidx.test", name = "rules", version.ref = "testRules" }
 
 
