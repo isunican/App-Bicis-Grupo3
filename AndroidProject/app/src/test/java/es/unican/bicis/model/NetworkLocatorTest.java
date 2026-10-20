@@ -9,6 +9,9 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Pruebas unitarias de NetworkLocator (HU 532319 Detectar la ciudad segun mi ubicacion).
+ */
 public class NetworkLocatorTest {
 
     private Network tuebici;
@@ -16,9 +19,11 @@ public class NetworkLocatorTest {
     private Network bicing;
     private List<Network> redes;
 
+    /**
+     * Crea las tres redes de networks.json antes de cada test.
+     */
     @Before
     public void setUp() {
-        // las mismas tres redes que tenemos en networks.json
         tuebici = crearRed("tuebici", 43.4623, -3.8099);
         bicimad = crearRed("bicimad", 40.4168, -3.7038);
         bicing = crearRed("bicing", 41.3850, 2.1734);
@@ -29,7 +34,13 @@ public class NetworkLocatorTest {
         redes.add(bicing);
     }
 
-    // para no repetir lo mismo en cada test
+    /**
+     * Crea una red con las coordenadas indicadas (pueden ser null).
+     * @param id identificador de la red
+     * @param lat latitud
+     * @param lon longitud
+     * @return la red creada
+     */
     private Network crearRed(String id, Double lat, Double lon) {
         Location loc = new Location();
         loc.setLatitude(lat);
@@ -41,29 +52,36 @@ public class NetworkLocatorTest {
         return red;
     }
 
-    // UNL.1a
+    /**
+     * UNL.1a: el usuario esta en Santander, devuelve TUeBICI.
+     */
     @Test
     public void testUsuarioEnSantander() {
         Network res = NetworkLocator.findNearestNetwork(redes, 43.4600, -3.8000, NetworkLocator.MAX_DISTANCE_KM);
         assertEquals(tuebici, res);
     }
 
-    // UNL.1b - no hace falta estar justo en el centro, a 5km tambien vale
+    /**
+     * UNL.1b: el usuario esta a unos 5 km del centro de Madrid, devuelve BiciMAD.
+     */
     @Test
     public void testUsuarioCercaDeMadrid() {
         Network res = NetworkLocator.findNearestNetwork(redes, 40.4618, -3.7038, NetworkLocator.MAX_DISTANCE_KM);
         assertEquals(bicimad, res);
     }
 
-    // UNL.1c - Paris, no hay ninguna red nuestra cerca
+    /**
+     * UNL.1c: el usuario esta en Paris, no hay ninguna red cerca y devuelve null.
+     */
     @Test
     public void testUsuarioLejos() {
         Network res = NetworkLocator.findNearestNetwork(redes, 48.8566, 2.3522, NetworkLocator.MAX_DISTANCE_KM);
         assertNull(res);
     }
 
-    // UNL.1d - meto otra red en Madrid un poco mas al norte y me pongo al lado,
-    // tiene que devolver esa y no bicimad aunque bicimad este antes en la lista
+    /**
+     * UNL.1d: hay dos redes en Madrid, devuelve la mas cercana aunque no sea la primera de la lista.
+     */
     @Test
     public void testDosRedesMismaCiudad() {
         Network otraMadrid = crearRed("otra-madrid", 40.4500, -3.7038);
@@ -73,7 +91,9 @@ public class NetworkLocatorTest {
         assertEquals(otraMadrid, res);
     }
 
-    // UNL.1e - todas estas tienen algo mal y se las tiene que saltar
+    /**
+     * UNL.1e: las redes con datos incorrectos se ignoran y devuelve la valida.
+     */
     @Test
     public void testRedesConDatosMal() {
         List<Network> lista = new ArrayList<>();
@@ -89,20 +109,25 @@ public class NetworkLocatorTest {
         assertEquals(tuebici, res);
     }
 
-    // UNL.1f
+    /**
+     * UNL.1f: con la lista vacia devuelve null.
+     */
     @Test
     public void testListaVacia() {
         assertNull(NetworkLocator.findNearestNetwork(new ArrayList<>(), 43.4623, -3.8099, NetworkLocator.MAX_DISTANCE_KM));
     }
 
-    // UNL.1g - si llega null no deberia dar NullPointerException
+    /**
+     * UNL.1g: con la lista null devuelve null sin lanzar excepcion.
+     */
     @Test
     public void testListaNull() {
         assertNull(NetworkLocator.findNearestNetwork(null, 43.4623, -3.8099, NetworkLocator.MAX_DISTANCE_KM));
     }
 
-    // UNL.1h - el limite. Calculo la distancia exacta desde un punto al sur de Santander
-    // y la uso como maximo: con eso tiene que entrar, y con un poco menos ya no
+    /**
+     * UNL.1h: valor limite, una red justo a la distancia maxima se acepta y un poco mas lejos no.
+     */
     @Test
     public void testLimiteDistancia() {
         double d = NetworkLocator.distanceKm(43.3000, -3.8099, 43.4623, -3.8099);
@@ -111,14 +136,18 @@ public class NetworkLocatorTest {
         assertNull(NetworkLocator.findNearestNetwork(redes, 43.3000, -3.8099, d - 0.01));
     }
 
-    // UNL.2a - en linea recta salen unos 339km, dejo 1km de margen
+    /**
+     * UNL.2a: la distancia en linea recta entre Santander y Madrid es de unos 339 km.
+     */
     @Test
     public void testDistanciaSantanderMadrid() {
         double d = NetworkLocator.distanceKm(43.4623, -3.8099, 40.4168, -3.7038);
         assertEquals(338.8, d, 1.0);
     }
 
-    // UNL.2b
+    /**
+     * UNL.2b: la distancia de un punto a si mismo es 0.
+     */
     @Test
     public void testDistanciaMismoPunto() {
         assertEquals(0.0, NetworkLocator.distanceKm(40.4168, -3.7038, 40.4168, -3.7038), 0.001);

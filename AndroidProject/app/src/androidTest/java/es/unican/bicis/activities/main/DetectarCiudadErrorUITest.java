@@ -57,16 +57,27 @@ public class DetectarCiudadErrorUITest {
     private ActivityScenario<MainView> escenario;
     private View decorView;
 
+    /**
+     * Cierra la aplicacion despues de cada test.
+     */
     @After
     public void tearDown() {
         escenario.close();
     }
 
+    /**
+     * Abre la aplicacion y guarda su decorView para poder comprobar los Toast.
+     */
     private void abrirApp() {
         escenario = ActivityScenario.launch(MainView.class);
         escenario.onActivity(activity -> decorView = activity.getWindow().getDecorView());
     }
 
+    /**
+     * Comprueba que sale el mensaje de error de ubicacion y que la lista tiene las 3 redes.
+     * Como los Toast salen en cola, se reintenta durante 10 segundos como maximo.
+     * @throws InterruptedException si se interrumpe la espera
+     */
     private void comprobarMensajeErrorYLista() throws InterruptedException {
         for (int i = 0; i < 20; i++) {
             try {
@@ -85,7 +96,10 @@ public class DetectarCiudadErrorUITest {
         onView(withId(R.id.lvNetworks)).check(matches(hasChildCount(3)));
     }
 
-    // A1.c.1
+    /**
+     * A1.c.1: no se puede obtener la ubicacion del dispositivo.
+     * @throws InterruptedException si se interrumpe la espera
+     */
     @Test
     public void testUbicacionNoDisponible() throws InterruptedException {
         ubicacion = null;
@@ -93,7 +107,10 @@ public class DetectarCiudadErrorUITest {
         comprobarMensajeErrorYLista();
     }
 
-    // A1.c.2
+    /**
+     * A1.c.2: el usuario esta en Paris y no hay ninguna red a menos de 20 km.
+     * @throws InterruptedException si se interrumpe la espera
+     */
     @Test
     public void testUbicacionSinRedCerca() throws InterruptedException {
         ubicacion = new double[]{48.8566, 2.3522};
