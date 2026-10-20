@@ -3,29 +3,31 @@ package es.unican.bicis.model;
 import java.util.List;
 
 /**
- * Clase para saber en que red de bicis esta el usuario a partir de su ubicacion.
- * Se busca la red mas cercana a sus coordenadas.
+ * Finds the bike sharing network of the city where the user is, using the user's coordinates.
+ * The nearest network to the user is chosen.
  */
 public class NetworkLocator {
 
-    // Distancia maxima (en km) para considerar que el usuario esta en la ciudad de una red
+    /** Maximum distance (km) to consider that the user is in the city of a network */
     public static final double MAX_DISTANCE_KM = 20.0;
 
-    // Radio de la Tierra en km
+    /** Radius of the Earth in km */
     private static final double RADIO_TIERRA_KM = 6371.0;
 
-    // Constructor privado porque solo tiene metodos estaticos
+    /**
+     * Private constructor, this class only has static methods.
+     */
     private NetworkLocator() {
     }
 
     /**
-     * Devuelve la red mas cercana a la posicion del usuario.
+     * Returns the network that is nearest to the position of the user.
      *
-     * @param networks lista de redes
-     * @param lat latitud del usuario
-     * @param lon longitud del usuario
-     * @param maxKm distancia maxima en km
-     * @return la red mas cercana, o null si no hay ninguna a menos de maxKm
+     * @param networks list of networks
+     * @param lat latitude of the user
+     * @param lon longitude of the user
+     * @param maxKm maximum distance in km
+     * @return the nearest network, or null if there is none closer than maxKm
      */
     public static Network findNearestNetwork(List<Network> networks, double lat, double lon, double maxKm) {
         if (networks == null) {
@@ -36,7 +38,7 @@ public class NetworkLocator {
         double menorDistancia = maxKm;
 
         for (Network n : networks) {
-            // Si la red no tiene coordenadas validas la saltamos
+            // networks without valid coordinates are skipped
             if (n == null || n.getLocation() == null || !n.getLocation().hasValidCoordinates()) {
                 continue;
             }
@@ -52,13 +54,13 @@ public class NetworkLocator {
     }
 
     /**
-     * Calcula la distancia en km entre dos puntos usando la formula de Haversine
+     * Calculates the distance in km between two points using the Haversine formula.
      *
-     * @param lat1 latitud del punto 1
-     * @param lon1 longitud del punto 1
-     * @param lat2 latitud del punto 2
-     * @param lon2 longitud del punto 2
-     * @return distancia en km
+     * @param lat1 latitude of point 1
+     * @param lon1 longitude of point 1
+     * @param lat2 latitude of point 2
+     * @param lon2 longitude of point 2
+     * @return distance in km
      */
     public static double distanceKm(double lat1, double lon1, double lat2, double lon2) {
         double dLat = Math.toRadians(lat2 - lat1);

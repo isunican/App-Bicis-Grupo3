@@ -12,7 +12,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
 
 /**
- * Obtiene la ubicacion real del dispositivo.
+ * Gets the real location of the device.
  */
 public class DeviceLocationProvider implements ILocationProvider {
 
@@ -21,7 +21,7 @@ public class DeviceLocationProvider implements ILocationProvider {
 
     /**
      * Constructor.
-     * @param context contexto de la aplicacion
+     * @param context the application context
      */
     public DeviceLocationProvider(Context context) {
         this.context = context;
@@ -29,13 +29,13 @@ public class DeviceLocationProvider implements ILocationProvider {
     }
 
     /**
-     * Pide la ubicacion actual del dispositivo y la devuelve por el callback.
-     * @param cb callback que recibe la ubicacion o el error
+     * Requests the current location of the device and returns it through the callback.
+     * @param cb the callback that receives the location or the error
      */
     @SuppressLint("MissingPermission")
     @Override
     public void requestCurrentLocation(LocationResultCallback cb) {
-        // sin permiso no se puede pedir la ubicacion
+        // without permission the location cannot be requested
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
             cb.onFailure(new Exception("No hay permiso de ubicacion"));
@@ -47,7 +47,7 @@ public class DeviceLocationProvider implements ILocationProvider {
                     if (location != null) {
                         cb.onSuccess(location.getLatitude(), location.getLongitude());
                     } else {
-                        // pasa si el GPS esta apagado o no hay señal
+                        // happens if the GPS is off or there is no signal
                         cb.onFailure(new Exception("No se ha podido obtener la ubicacion"));
                     }
                 })
