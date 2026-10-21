@@ -55,7 +55,7 @@ public class MainPresenter implements IMainContract.Presenter {
     public void onLocationPermissionResult(boolean granted) {
         // sin permiso no podemos saber donde esta, se queda en la lista de redes
         if (!granted) {
-            view.showLocationError();
+            view.showLocationPermissionDenied();
             return;
         }
 
@@ -68,14 +68,13 @@ public class MainPresenter implements IMainContract.Presenter {
                 if (red != null) {
                     view.showNetworkStations(red);
                 } else {
-                    // esta en una ciudad sin red cerca
-                    view.showLocationError();
+                    view.showNoNetworkNearby();
                 }
             }
 
             @Override
             public void onFailure(Throwable e) {
-                view.showLocationError();
+                view.showLocationUnavailable();
             }
         });
     }

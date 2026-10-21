@@ -189,11 +189,27 @@ public class MainView extends AppCompatActivity implements IMainContract.View {
     }
 
     /**
-     * @see IMainContract.View#showLocationError()
+     * @see IMainContract.View#showLocationPermissionDenied()
      */
     @Override
-    public void showLocationError() {
-        Toast.makeText(this, R.string.locationError, Toast.LENGTH_LONG).show();
+    public void showLocationPermissionDenied() {
+        Toast.makeText(this, R.string.locationPermissionDenied, Toast.LENGTH_LONG).show();
+    }
+
+    /**
+     * @see IMainContract.View#showLocationUnavailable()
+     */
+    @Override
+    public void showLocationUnavailable() {
+        Toast.makeText(this, R.string.locationUnavailable, Toast.LENGTH_LONG).show();
+    }
+
+    /**
+     * @see IMainContract.View#showNoNetworkNearby()
+     */
+    @Override
+    public void showNoNetworkNearby() {
+        Toast.makeText(this, R.string.noNetworkNearby, Toast.LENGTH_LONG).show();
     }
 
     /**
@@ -211,8 +227,11 @@ public class MainView extends AppCompatActivity implements IMainContract.View {
      */
     @Override
     public void showNetworkStations(Network network) {
-        Toast.makeText(this, getString(R.string.networkDetected, network.getName()),
-                Toast.LENGTH_LONG).show();
+        // se muestra la ciudad, y si no la tiene el nombre de la red
+        String ciudad = network.getLocation() != null && network.getLocation().getCity() != null
+                ? network.getLocation().getCity()
+                : network.getName();
+        Toast.makeText(this, getString(R.string.cityDetected, ciudad), Toast.LENGTH_LONG).show();
     }
 
     /**
@@ -229,6 +248,7 @@ public class MainView extends AppCompatActivity implements IMainContract.View {
      * @param answers for each permission asked, true if the user allowed it
      */
     private void onLocationPermissionAnswer(Map<String, Boolean> answers) {
+        // vale con que haya dado la aproximada o la precisa
         boolean granted = Boolean.TRUE.equals(answers.get(Manifest.permission.ACCESS_COARSE_LOCATION))
                 || Boolean.TRUE.equals(answers.get(Manifest.permission.ACCESS_FINE_LOCATION));
         presenter.onLocationPermissionResult(granted);
