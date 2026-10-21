@@ -1,6 +1,11 @@
+
 @startuml architecture
 
 hide empty members
+
+' ==========================================
+' Arquitectura existente - Redes de bicicletas
+' ==========================================
 
 MainView ..|> IMainContract.View
 MainPresenter ..|> IMainContract.Presenter
@@ -55,5 +60,43 @@ interface NetworkDetailsCallback {
     + onFailure(e : Throwable)
 }
 
+
+' ==========================================
+' HU 532317 - Quitar los filtros aplicados
+' ==========================================
+
+interface "IStationsContract.Presenter" as IStationsPresenter {
+    + init(view : View, stations : List<Station>)
+    + onFilterApplied(minFreeBikesText : String)
+    + onFilterCleared()
+}
+
+interface "IStationsContract.View" as IStationsView {
+    + showStations(stations : List<Station>)
+    + showNoStationsWithMinFreeBikes(minFreeBikes : int)
+    + showInvalidMinFreeBikes()
+    + mostrarErrorQuitarFiltros()
+}
+
+class StationsPresenter {
+    - view : IStationsContract.View
+    - stations : List<Station>
+    {static} ~ MIN_FILTER_VALUE : int
+    + init(view : View, stations : List<Station>)
+    + onFilterApplied(minFreeBikesText : String)
+    + onFilterCleared()
+    - parseMinFreeBikes(text : String) : Integer
+}
+
+class Station
+class StationFilter {
+    {static} + filterByMinFreeBikes(stations : List<Station>, minFreeBikes : int) : List<Station>
+}
+
+StationsPresenter ..|> IStationsPresenter
+StationsPresenter --> IStationsView : view
+StationsPresenter --> StationFilter : <<use>>
+StationsPresenter --> Station : stations
+IStationsView ..> Station : <<use>>
 
 @enduml
