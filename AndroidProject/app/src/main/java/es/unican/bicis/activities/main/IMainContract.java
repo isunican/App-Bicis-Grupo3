@@ -114,11 +114,25 @@ public interface IMainContract {
         public void requestLocationPermission();
 
         /**
-         * The view is requested to display a message indicating that the location of the user
+         * The view is requested to display a message indicating that the user has not given
+         * the location permission. The list of networks stays visible so the user can pick one.
+         * Only the Presenter should call this method
+         */
+        public void showLocationPermissionDenied();
+
+        /**
+         * The view is requested to display a message indicating that the location of the device
          * could not be obtained. The list of networks stays visible so the user can pick one.
          * Only the Presenter should call this method
          */
-        public void showLocationError();
+        public void showLocationUnavailable();
+
+        /**
+         * The view is requested to display a message indicating that there is no bike sharing
+         * network close to the user. The list of networks stays visible so the user can pick one.
+         * Only the Presenter should call this method
+         */
+        public void showNoNetworkNearby();
 
         /**
          * Returns the provider that gives the location of the device. Like the repository,
@@ -129,7 +143,8 @@ public interface IMainContract {
         public ILocationProvider getLocationProvider();
 
         /**
-         * The view is requested to show the stations of the network of the user's city.
+         * The view is requested to show the city and the stations of the network detected
+         * from the user's location.
          * Only the Presenter should call this method
          * @param network the network detected from the user's location
          */

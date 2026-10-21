@@ -84,27 +84,45 @@ public class MainPresenterTest {
     }
 
     /**
+     * Hace que el proveedor de ubicacion falso devuelva las coordenadas indicadas.
+     * @param lat latitud
+     * @param lon longitud
+     */
+    private void ubicacionEn(double lat, double lon) {
+        doAnswer(invocation -> {
+            LocationResultCallback cb = invocation.getArgument(0);
+            cb.onSuccess(lat, lon);
+            return null;
+        }).when(mockLocation).requestCurrentLocation(any());
+    }
+
+    /**
+     * Comprueba que no se ha mostrado ningun mensaje de error de ubicacion.
+     */
+    private void comprobarQueNoHayErroresDeUbicacion() {
+        verify(mockView, never()).showLocationPermissionDenied();
+        verify(mockView, never()).showLocationUnavailable();
+        verify(mockView, never()).showNoNetworkNearby();
+    }
+
+    /**
      * UMP.1a: permiso concedido y el usuario esta en Santander, se muestran las estaciones de TUeBICI.
      */
     @Test
     public void testUbicacionEnSantander() {
         repositorioDevuelveRedes();
-        doAnswer(invocation -> {
-            LocationResultCallback cb = invocation.getArgument(0);
-            cb.onSuccess(43.4623, -3.8099);
-            return null;
-        }).when(mockLocation).requestCurrentLocation(any());
+        ubicacionEn(43.4623, -3.8099);
 
         sut.init(mockView);
         sut.onLocationPermissionResult(true);
 
         verify(mockView).requestLocationPermission();
         verify(mockView).showNetworkStations(tuebici);
-        verify(mockView, never()).showLocationError();
+        comprobarQueNoHayErroresDeUbicacion();
     }
 
     /**
-     * UMP.1b: el usuario no da el permiso, se muestra el error y no se pide la ubicacion.
+     * UMP.1b: el usuario no da el permiso, se muestra su mensaje y no se pide la ubicacion.
      */
     @Test
     public void testPermisoDenegado() {
@@ -113,13 +131,13 @@ public class MainPresenterTest {
         sut.init(mockView);
         sut.onLocationPermissionResult(false);
 
-        verify(mockView).showLocationError();
+        verify(mockView).showLocationPermissionDenied();
         verify(mockLocation, never()).requestCurrentLocation(any());
         verify(mockView, never()).showNetworkStations(any());
     }
 
     /**
-     * UMP.1c: hay permiso pero falla la ubicacion, se muestra el error.
+     * UMP.1c: hay permiso pero no se puede obtener la ubicacion, se muestra su mensaje.
      */
     @Test
     public void testFallaLaUbicacion() {
@@ -133,7 +151,7 @@ public class MainPresenterTest {
         sut.init(mockView);
         sut.onLocationPermissionResult(true);
 
-        verify(mockView).showLocationError();
+        verify(mockView).showLocationUnavailable();
         verify(mockView, never()).showNetworkStations(any());
     }
 
@@ -152,5 +170,38 @@ public class MainPresenterTest {
 
         verify(mockView).showLoadError();
         verify(mockView, never()).requestLocationPermission();
+    }
+
+    /**
+     * UMP.1e: el usuario esta en Reinosa, no hay ninguna red a 20 km o menos y se muestra su mensaje.
+     */
+    @Test
+    public void testNoHayRedCerca() {
+        repositorioDevuelveRedes();
+        ubicacionEn(43.0018, -4.1376);
+
+        sut.init(mockView);
+        sut.onLocationPermissionResult(true);
+
+        verify(mockView).showNoNetworkNearby();
+        verify(mockView, never()).showNetworkStations(any());
+    }
+
+    /**
+     * UMP.1f: hay dos redes cerca del usuario, se muestran las estaciones de la mas cercana.
+     */
+    @Test
+    public void testVariasRedesCerca() {
+        Network otraSantander = crearRed("otra-santander", 43.4500, -3.8099);
+        redes.add(otraSantander);
+        repositorioDevuelveRedes();
+        ubicacionEn(43.4520, -3.8099);
+
+        sut.init(mockView);
+        sut.onLocationPermissionResult(true);
+
+        verify(mockView).showNetworkStations(otraSantander);
+        verify(mockView, never()).showNetworkStations(tuebici);
+        comprobarQueNoHayErroresDeUbicacion();
     }
 }

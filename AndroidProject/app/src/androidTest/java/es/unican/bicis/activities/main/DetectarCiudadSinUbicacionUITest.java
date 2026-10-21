@@ -28,11 +28,11 @@ import es.unican.bicis.injection.LocationModule;
 import es.unican.bicis.location.ILocationProvider;
 
 /**
- * Prueba 2 de la HU Detectar la ciudad segun mi ubicacion
+ * Prueba 4 de la HU Detectar la ciudad segun mi ubicacion: no se puede obtener la ubicacion.
  */
 @HiltAndroidTest
 @UninstallModules(LocationModule.class)
-public class DetectarCiudadErrorUITest {
+public class DetectarCiudadSinUbicacionUITest {
 
     @Rule(order = 0)
     public HiltAndroidRule hiltRule = new HiltAndroidRule(this);
@@ -42,46 +42,37 @@ public class DetectarCiudadErrorUITest {
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION);
 
-    // si es null la ubicacion falla
-    private double[] ubicacion;
-
+    // ubicacion falsa que siempre falla, como si el GPS no respondiera
     @BindValue
-    ILocationProvider ubicacionFalsa = cb -> {
-        if (ubicacion == null) {
-            cb.onFailure(new Exception("sin ubicacion"));
-        } else {
-            cb.onSuccess(ubicacion[0], ubicacion[1]);
-        }
-    };
+    ILocationProvider ubicacionFalsa = cb -> cb.onFailure(new Exception("sin ubicacion"));
 
     private ActivityScenario<MainView> escenario;
     private View decorView;
 
     /**
-     * Cierra la aplicacion despues de cada test.
+     * Cierra la aplicacion despues del test.
      */
     @After
     public void tearDown() {
-        escenario.close();
+        if (escenario != null) {
+            escenario.close();
+        }
     }
 
     /**
-     * Abre la aplicacion y guarda su decorView para poder comprobar los Toast.
-     */
-    private void abrirApp() {
-        escenario = ActivityScenario.launch(MainView.class);
-        escenario.onActivity(activity -> decorView = activity.getWindow().getDecorView());
-    }
-
-    /**
-     * Comprueba que sale el mensaje de error de ubicacion y que la lista tiene las 3 redes.
-     * Como los Toast salen en cola, se reintenta durante 10 segundos como maximo.
+     * Prueba 4: no se puede obtener la ubicacion, sale su mensaje y se muestra la lista
+     * con todas las ciudades.
      * @throws InterruptedException si se interrumpe la espera
      */
-    private void comprobarMensajeErrorYLista() throws InterruptedException {
+    @Test
+    public void testNoSePuedeObtenerLaUbicacion() throws InterruptedException {
+        escenario = ActivityScenario.launch(MainView.class);
+        escenario.onActivity(activity -> decorView = activity.getWindow().getDecorView());
+
+        // los Toast salen en cola, asi que se reintenta hasta que aparezca (max 10 s)
         for (int i = 0; i < 20; i++) {
             try {
-                onView(withText(R.string.locationError))
+                onView(withText(R.string.locationUnavailable))
                         .inRoot(withDecorView(not(decorView)))
                         .check(matches(isDisplayed()));
                 break;
@@ -94,27 +85,5 @@ public class DetectarCiudadErrorUITest {
         }
 
         onView(withId(R.id.lvNetworks)).check(matches(hasChildCount(3)));
-    }
-
-    /**
-     * A1.c.1: no se puede obtener la ubicacion del dispositivo.
-     * @throws InterruptedException si se interrumpe la espera
-     */
-    @Test
-    public void testUbicacionNoDisponible() throws InterruptedException {
-        ubicacion = null;
-        abrirApp();
-        comprobarMensajeErrorYLista();
-    }
-
-    /**
-     * A1.c.2: el usuario esta en Paris y no hay ninguna red a menos de 20 km.
-     * @throws InterruptedException si se interrumpe la espera
-     */
-    @Test
-    public void testUbicacionSinRedCerca() throws InterruptedException {
-        ubicacion = new double[]{48.8566, 2.3522};
-        abrirApp();
-        comprobarMensajeErrorYLista();
     }
 }
