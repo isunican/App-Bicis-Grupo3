@@ -54,11 +54,16 @@ public class StationsPresenter implements IStationsContract.Presenter {
         }
     }
 
-    //AÑADO
     /**
-     * Quita los filtros mostrando otra vez todas las estaciones.
-     * Si falla al hacerlo, pide a la vista que muestre un error.
-     * Si no había ningún filtro aplicado, no pasa nada: se muestra la lista completa.
+     * Removes the applied station filters and restores the complete
+     * list of stations.
+     *
+     * If no filters are currently applied, the complete list is
+     * displayed again without any additional changes.
+     *
+     * If the view fails to display the stations, the presenter
+     * requests the view to show an error message.
+     *
      * @see IStationsContract.Presenter#onFilterCleared()
      */
     @Override

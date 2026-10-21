@@ -1,3 +1,4 @@
+
 package es.unican.bicis.activities.stations;
 
 import java.util.List;
@@ -32,16 +33,17 @@ public interface IStationsContract {
          * @param minFreeBikesText the text introduced by the user
          */
         public void onFilterApplied(String minFreeBikesText);
-//AÑADO
+
         /**
-         * El usuario quiere quitar los filtros aplicados.
-         * Si se quitan, la vista vuelve a mostrar todas las estaciones.
-         * Si falla, se pide a la vista que muestre un error
-         * (ver {@link View#mostrarErrorQuitarFiltros()}).
-         * Solo la vista debe llamar a este método
+         * Notifies the presenter that the user wants to remove
+         * all applied station filters.
+         *
+         * If successful, the complete list of stations is restored.
+         * If the operation fails, the view displays an error message.
+         *
+         * Only the view should call this method.
          */
         public void onFilterCleared();
-//
     }
 
     /**
@@ -71,13 +73,16 @@ public interface IStationsContract {
          * Only the Presenter should call this method
          */
         public void showInvalidMinFreeBikes();
-//AÑADO
+
         /**
-         * Se pide a la vista que avise de que no se han podido quitar los filtros.
-         * La vista mantiene la lista y el filtro que ya se veían.
-         * Solo el presenter debe llamar a este método
+         * Requests the view to display an error message when
+         * the applied station filters cannot be removed.
+         *
+         * The currently displayed stations and filter settings
+         * should remain unchanged if the operation fails.
+         *
+         * Only the presenter should call this method.
          */
         public void mostrarErrorQuitarFiltros();
-//
     }
 }
