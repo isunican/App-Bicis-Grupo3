@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import com.google.gson.JsonParseException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -56,7 +57,7 @@ public class Utils {
              BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
             NetworkResponse response = new GsonBuilder().create().fromJson(reader, NetworkResponse.class);
             return response != null ? response.getNetwork() : null;
-        } catch (IOException e) {
+        } catch (IOException | JsonParseException e) {
             return null;
         }
     }
