@@ -8,11 +8,17 @@ class Network {
     - href : String
     - company : String[]
     - gbfsHref : String
-    - ebikes : boolean
+    - ebikes : Boolean
+    + countOperators() : Integer
+    + hasOnlyBasicInfo() : boolean
 }
 
 class Location {
     - city : String
+    - country : String
+    - latitude : Double
+    - longitude : Double
+    + hasValidCoordinates() : boolean
 }
 
 class NetworksResponse {
