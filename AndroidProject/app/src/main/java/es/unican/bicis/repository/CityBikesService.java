@@ -4,6 +4,8 @@ import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Service singletons for the <a href="https://api.citybik.es/v2/">CityBikes API</a>
  */
@@ -23,6 +25,9 @@ public class CityBikesService {
                 .addInterceptor(chain -> chain.proceed(chain.request().newBuilder()
                         .header("User-Agent", "Bicis-2026/1.0")
                         .build()))
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(10, TimeUnit.SECONDS)
+                .callTimeout(20, TimeUnit.SECONDS)
                 .build();
 
         retrofit = new Retrofit.Builder()
