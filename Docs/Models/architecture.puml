@@ -56,7 +56,9 @@ interface IMainContract.View {
     + showNetworkDetails(network : Network)
     + showInfoActivity()
     + requestLocationPermission()
-    + showLocationError()
+    + showLocationPermissionDenied()
+    + showLocationUnavailable()
+    + showNoNetworkNearby()
     + getLocationProvider() : ILocationProvider
     + showNetworkStations(network : Network)
 }
