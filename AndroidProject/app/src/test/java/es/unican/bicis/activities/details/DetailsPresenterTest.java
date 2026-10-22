@@ -127,8 +127,8 @@ public class DetailsPresenterTest {
 
         sut.init(mockView, network);
 
-        verify(mockView).showLatitude("90.0");
-        verify(mockView).showLongitude("-180.0");
+        verify(mockView).showLatitude("90.0000");
+        verify(mockView).showLongitude("-180.0000");
     }
 
     @Test
@@ -138,8 +138,8 @@ public class DetailsPresenterTest {
 
         sut.init(mockView, network);
 
-        verify(mockView).showLatitude("-90.0");
-        verify(mockView).showLongitude("180.0");
+        verify(mockView).showLatitude("-90.0000");
+        verify(mockView).showLongitude("180.0000");
     }
 
     @Test

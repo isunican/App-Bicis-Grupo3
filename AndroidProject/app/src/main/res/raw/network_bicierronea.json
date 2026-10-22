@@ -1,0 +1,87 @@
+{
+  "network": {
+    "id": "bicierronea",
+    "name": "Bici Errónea",
+    "location": {
+      "latitude": 43.0016,
+      "longitude": -4.1374,
+      "city": "Reinosa",
+      "country": "ES"
+    },
+    "href": "/v2/networks/bicierronea",
+    "stations": [
+      {
+        "id": "e1",
+        "name": "Centro",
+        "latitude": 43.0,
+        "longitude": -4.0,
+        "timestamp": "2026-10-22T10:00:00.000000+00:00Z",
+        "free_bikes": 4,
+        "empty_slots": 8,
+        "extra": {
+          "ebikes": 1
+        }
+      },
+      {
+        "id": "e2",
+        "name": "Hospital",
+        "latitude": 43.0,
+        "longitude": -4.0,
+        "timestamp": "2026-10-22T10:00:00.000000+00:00Z",
+        "free_bikes": -3,
+        "empty_slots": 10,
+        "extra": {
+          "ebikes": 0
+        }
+      },
+      {
+        "id": "e3",
+        "name": "Estación",
+        "latitude": 43.0,
+        "longitude": -4.0,
+        "timestamp": "2026-10-22T10:00:00.000000+00:00Z",
+        "free_bikes": "cinco",
+        "empty_slots": 6,
+        "extra": {
+          "ebikes": 0
+        }
+      },
+      {
+        "id": "e4",
+        "name": "Parque",
+        "latitude": 43.0,
+        "longitude": -4.0,
+        "timestamp": "2026-10-22T10:00:00.000000+00:00Z",
+        "free_bikes": 2,
+        "empty_slots": -1,
+        "extra": {
+          "ebikes": 0
+        }
+      },
+      {
+        "id": "e5",
+        "name": "Colegio",
+        "latitude": 43.0,
+        "longitude": -4.0,
+        "timestamp": "2026-10-22T10:00:00.000000+00:00Z",
+        "free_bikes": 1,
+        "empty_slots": 9,
+        "extra": {
+          "ebikes": "muchas"
+        }
+      },
+      {
+        "id": "e6",
+        "name": "Ría",
+        "latitude": 43.0,
+        "longitude": -4.0,
+        "timestamp": "2026-10-22T10:00:00.000000+00:00Z",
+        "free_bikes": 7.5,
+        "empty_slots": 3,
+        "extra": {
+          "ebikes": -2
+        }
+      }
+    ]
+  }
+}
