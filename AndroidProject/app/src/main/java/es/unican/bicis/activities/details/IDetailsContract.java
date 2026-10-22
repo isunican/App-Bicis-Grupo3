@@ -22,6 +22,13 @@ public interface IDetailsContract {
          */
         public void init(View view, Network network);
 
+        /**
+         * The presenter is informed that the user has clicked the button to see the stations
+         * of the network.
+         * Only the View should call this method
+         */
+        public void onStationsClicked();
+
     }
 
     /**
@@ -88,6 +95,13 @@ public interface IDetailsContract {
          * Only the Presenter should call this method
          */
         public void showNoDetailsAvailable();
+
+        /**
+         * The view is requested to display the list of stations of the given network.
+         * Only the Presenter should call this method
+         * @param network the network whose stations must be shown
+         */
+        public void showStations(Network network);
     }
 
 }

@@ -16,6 +16,9 @@ public class DetailsPresenter implements IDetailsContract.Presenter{
     /** The view that is controlled by this presenter */
     private IDetailsContract.View view;
 
+    /** The network whose details are shown */
+    private Network network;
+
     /**
      * @see IDetailsContract.Presenter#init(IDetailsContract.View, Network)
      * @param view the view to control
@@ -24,6 +27,7 @@ public class DetailsPresenter implements IDetailsContract.Presenter{
     @Override
     public void init(IDetailsContract.View view, Network network) {
         this.view = view;
+        this.network = network;
 
         if (network == null) {
             view.showNoDetailsAvailable();
@@ -55,6 +59,16 @@ public class DetailsPresenter implements IDetailsContract.Presenter{
             view.showOperators(formatOperators(network.getCompany()));
         }
     }
+    /**
+     * @see IDetailsContract.Presenter#onStationsClicked()
+     */
+     @Override
+     public void onStationsClicked() {
+                if (network == null) {
+                        return;
+                }
+                view.showStations(network);
+     }
 
     /**
      * Returns the given text, or NOT_AVAILABLE if it is null or blank.
