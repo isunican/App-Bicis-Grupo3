@@ -70,8 +70,8 @@ public class DetailsPresenterITest {
 
         verify(mockView).showName("Bicing");
         verify(mockView).showLocation("Barcelona, ES");
-        verify(mockView).showLatitude("41.3851");
-        verify(mockView).showLongitude("2.1734");
+        verify(mockView).showLatitude("41.3850639");
+        verify(mockView).showLongitude("2.1734035");
         verify(mockView).showEbikes(DetailsPresenter.YES);
         verify(mockView).showOperatorsCount("3");
         verify(mockView).showOperators(
@@ -105,13 +105,13 @@ public class DetailsPresenterITest {
      * Usa res/raw/network_bicinorte.json (Anexo 1 del plan).
      */
     @Test
-    public void init_biciNorte_missingDataShownAsNotAvailable() {
-        sut.init(mockView, loadNetwork("bicinorte"));
+    public void init_tuebicibici_missingDataShownAsNotAvailable() {
+        sut.init(mockView, loadNetwork("tuebici"));
 
-        verify(mockView).showName("Bici Norte");
-        verify(mockView).showLocation("Bilbao, ES");
-        verify(mockView).showLatitude("43.2630");
-        verify(mockView).showLongitude(NA);
+        verify(mockView).showName("TUeBICI");
+        verify(mockView).showLocation("Santander, ES");
+        verify(mockView).showLatitude("43.46230569999999");
+        verify(mockView).showLongitude("-3.8099803");
         verify(mockView).showEbikes(NA);
         verify(mockView).showOperatorsCount(NA);
         verify(mockView).showOperators(NA);
@@ -120,16 +120,16 @@ public class DetailsPresenterITest {
     }
 
     /**
-     * IDP.6c: Bici Sur, una red sin datos aparte de nombre, ciudad y pais.
+     * IDP.6c: Bicing, una red sin datos aparte de nombre, ciudad y pais.
      * Debe mostrar solo el mensaje de "sin informacion".
-     * Usa res/raw/network_bicisur.json (Anexo 1 del plan).
+     * Usa res/raw/network_bicing.json (Anexo 1 del plan).
      */
     @Test
-    public void init_biciSur_showsNoDetailsMessage() {
-        sut.init(mockView, loadNetwork("bicisur"));
+    public void init_bicimad_showsNoDetailsMessage() {
+        sut.init(mockView, loadNetwork("bicing"));
 
-        verify(mockView).showName("Bici Sur");
-        verify(mockView).showLocation("Cádiz, ES");
+        verify(mockView).showName("Bicing");
+        verify(mockView).showLocation("Barcelona, ES");
         verify(mockView).showNoDetailsAvailable();
         verify(mockView, never()).showLatitude(anyString());
         verify(mockView, never()).showLongitude(anyString());
