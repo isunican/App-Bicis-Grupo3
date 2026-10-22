@@ -7,6 +7,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.ListView;
 import android.widget.Toast;
+import es.unican.bicis.activities.stations.StationsView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -138,12 +139,14 @@ public class MainView extends AppCompatActivity implements IMainContract.View {
      * @see IMainContract.View#showNetworkDetails(Network)
      * @param network the network
      */
+
     @Override
     public void showNetworkDetails(Network network) {
-        Intent intent = new Intent(this, DetailsView.class);
-        intent.putExtra(DetailsView.INTENT_NETWORK, Parcels.wrap(network));
+        Intent intent = new Intent(this, StationsView.class);
+        intent.putExtra(StationsView.INTENT_NETWORK, Parcels.wrap(network));
         startActivity(intent);
     }
+
 
     /**
      * @see IMainContract.View#showInfoActivity()
