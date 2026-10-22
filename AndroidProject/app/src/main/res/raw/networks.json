@@ -47,6 +47,16 @@
                 "UTE BICIS SANTANDER"
             ],
             "system": "Nextbike"
+        },
+        {
+            "id": "bicinorte",
+            "name": "Bici Norte",
+            "location": {
+                "latitude": 43.263,
+                "city": "Bilbao",
+                "country": "ES"
+            },
+            "href": "/v2/networks/bicinorte"
         }
     ]
 }
