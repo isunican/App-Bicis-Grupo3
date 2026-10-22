@@ -57,6 +57,6 @@ public class DetailsViewUITest {
 
         // Comprobar la ciudad
         onView(withId(R.id.tvCity))
-                .check(matches(withText("Barcelona")));
+                .check(matches(withText("Barcelona, ES")));
     }
 }
