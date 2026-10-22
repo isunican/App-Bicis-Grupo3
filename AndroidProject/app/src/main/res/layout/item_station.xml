@@ -23,24 +23,17 @@
         android:id="@+id/tvStationBikes"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
+        android:layout_weight="2"
         android:gravity="center"
         android:textSize="14sp" />
 
-    <TextView
-        android:id="@+id/tvStationSlots"
+    <ImageView
+        android:id="@+id/ivStationElectric"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="24dp"
         android:layout_weight="1"
-        android:gravity="center"
-        android:textSize="14sp" />
-
-    <TextView
-        android:id="@+id/tvStationElectric"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:gravity="center"
-        android:textSize="14sp" />
+        android:src="@drawable/ic_ebike"
+        android:contentDescription="@string/hasEbikes"
+        android:visibility="invisible" />
 
 </LinearLayout>

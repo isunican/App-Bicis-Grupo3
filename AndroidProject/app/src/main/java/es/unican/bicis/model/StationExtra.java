@@ -21,5 +21,7 @@ public class StationExtra {
 
     @JsonAdapter(IntegerAdapter.class)
     @SerializedName("ebikes")               protected Integer ebikes;
+    @JsonAdapter(IntegerAdapter.class)
+    @SerializedName("slots")                protected Integer slots;
 
 }

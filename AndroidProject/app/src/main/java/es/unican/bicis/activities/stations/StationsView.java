@@ -137,8 +137,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
      */
     @Override
     public void showLoadError() {
-        showMessage("No se han podido cargar las estaciones\n" +
-                "Comprueba tu conexión a internet");
+        showMessage("No se han podido cargar las estaciones. Comprueba tu conexión");
     }
 
     /**
@@ -157,4 +156,5 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         finish();
         return true;
     }
+
 }
