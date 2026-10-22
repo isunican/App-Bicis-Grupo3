@@ -5,4 +5,21 @@
     <string name="loadCorrect">Se han cargado %d redes</string>
     <string name="loadError">Ha habido un error cargando las redes</string>
     <string name="info_text">Aplicación creada para el Proyecto Integrado Curso 2026-2027</string>
+
+    <!-- Lista de estaciones -->
+    <string name="stationsEmpty">Esta red no tiene estaciones disponibles</string>
+    <string name="stationsLoadError">No se han podido cargar las estaciones\nComprueba tu conexión a internet</string>
+    <string name="stationsLocationCount">%1$s · %2$d estaciones</string>
+    <string name="menuNetworkInfo">Información de la red</string>
+
+    <!-- Filtro de estaciones por bicis libres -->
+    <string name="menuFilter">Filtrar por bicis libres</string>
+    <string name="filterTitle">Filtrar por bicis libres</string>
+    <string name="filterHint">Mínimo de bicis libres</string>
+    <string name="filterApply">Aplicar</string>
+    <string name="filterClear">Quitar filtro</string>
+    <string name="filterCancel">Cancelar</string>
+    <string name="filterInvalid">Introduce un número entero mayor que 0</string>
+    <string name="filterActive">Con al menos %d bicis libres</string>
+    <string name="filterNoResults">No hay estaciones con al menos %d bicis libres</string>
 </resources>

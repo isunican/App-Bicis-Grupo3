@@ -4,10 +4,12 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 
 import java.util.List;
+import java.util.ArrayList;
 
 import es.unican.bicis.R;
 import es.unican.bicis.common.Utils;
 import es.unican.bicis.model.Network;
+import es.unican.bicis.model.Station;
 
 /**
  * Implementation of {@link INetworksRepository} that provides static data loaded from a
@@ -59,6 +61,32 @@ public class JsonNetworksRepository implements INetworksRepository {
         } else {
             cb.onFailure(new Throwable("Network not found in local data: " + networkId));
         }
+    }
+
+    /**
+     * Returns the stations of the network with the given id from its local json resource.
+     * @see INetworksRepository#requestStations(StationsCallback, String)
+     * @param cb the callback that will process the returned stations
+     * @param networkId id of the network
+     */
+    @Override
+    public void requestStations(StationsCallback cb, String networkId) {
+        @SuppressLint("DiscouragedApi") int detailResId = context.getResources()
+                .getIdentifier("network_" + networkId, "raw", context.getPackageName());
+        if (detailResId == 0) {
+            cb.onFailure(new Throwable("Network not found in local data: " + networkId));
+            return;
+        }
+        Network network = Utils.parseNetwork(context, detailResId);
+        if (network == null) {
+            cb.onFailure(new Throwable("Local data could not be read: " + networkId));
+            return;
+        }
+        List<Station> stations = network.getStations();
+        if (stations == null) {
+            stations = new ArrayList<>();
+        }
+        cb.onSuccess(stations);
     }
 
 }

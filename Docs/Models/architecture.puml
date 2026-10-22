@@ -43,6 +43,7 @@ interface IMainContract.Presenter {
 interface INetworksRepository {
     + requestNetworks(cb : NetworksCallback )
     + requestNetwork(cb: NetworkDetailsCallback , networkId : String)
+    + requestStations(cb : StationsCallback, networkId : String)
 }
 
 interface NetworksCallback {
@@ -55,5 +56,75 @@ interface NetworkDetailsCallback {
     + onFailure(e : Throwable)
 }
 
+
+' ==========================================
+' HU 532377 Listar estaciones y HU 532376 Filtrar estaciones por bicis libres
+' ==========================================
+
+MainView ..> StationsView : <<use>>
+StationsView ..|> IStationsContract.View
+StationsPresenter ..|> IStationsContract.Presenter
+StationsView --> StationsPresenter : presenter
+StationsPresenter --> IStationsContract.View : view
+StationsView --> INetworksRepository : repository
+StationsView ..> StationsArrayAdapter : <<use>>
+StationsView ..> DetailsView : <<use>>
+StationsPresenter ..> StationFilter : <<use>>
+StationsPresenter ..> StationUtils : <<use>>
+INetworksRepository ..> StationsCallback : <<use>>
+
+class StationsView {
+    - openFilterDialog()
+    - showMessage(message : String)
+}
+
+class StationsArrayAdapter
+
+class StationsPresenter {
+    ~ {static} MIN_FILTER_VALUE : int = 1
+    - network : Network
+    - stations : List<Station>
+    - loadFailed : boolean
+    - load(networkId : String)
+    - showAllStations()
+    - parseMinFreeBikes(text : String) : Integer
+    - formatLocation(location : Location) : String
+}
+
+class StationFilter {
+    + {static} filterByMinFreeBikes(stations : List<Station>, minFreeBikes : int) : List<Station>
+    + {static} hasValidFreeBikes(station : Station) : boolean
+}
+
+class StationUtils {
+    + {static} sortByFreeBikes(stations : List<Station>) : List<Station>
+    + {static} formatValue(value : Integer) : String
+    + {static} formatText(text : String) : String
+}
+
+interface IStationsContract.View {
+    + getNetworksRepository() : INetworksRepository
+    + showNetworkInfo(name : String, location : String)
+    + showStations(stations : List<Station>)
+    + showNoStations()
+    + showLoadError()
+    + showNoStationsWithMinFreeBikes(minFreeBikes : int)
+    + showInvalidMinFreeBikes()
+    + showFilterActive(minFreeBikes : int)
+    + showFilterInactive()
+    + showNetworkDetails(network : Network)
+}
+
+interface IStationsContract.Presenter {
+    + init(view : View, network : Network)
+    + onFilterApplied(minFreeBikesText : String)
+    + onFilterCleared()
+    + onInfoClicked()
+}
+
+interface StationsCallback {
+    + onSuccess(stations : List<Station>)
+    + onFailure(e : Throwable)
+}
 
 @enduml

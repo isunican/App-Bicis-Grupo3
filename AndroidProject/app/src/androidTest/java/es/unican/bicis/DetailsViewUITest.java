@@ -51,12 +51,17 @@ public class DetailsViewUITest {
                 .inAdapterView(withId(R.id.lvNetworks))
                 .perform(click());
 
+        // Al pulsar una red se abre la lista de estaciones:
+        // el detalle se abre con el botón de información de la barra superior
+        onView(withId(R.id.menuItemNetworkInfo))
+                .perform(click());
+
         // Comprobar el nombre de la red
         onView(withId(R.id.tvName))
                 .check(matches(withText("Bicing")));
 
         // Comprobar la ciudad
         onView(withId(R.id.tvCity))
-                .check(matches(withText("Barcelona")));
+                .check(matches(withText("Barcelona, ES")));
     }
 }

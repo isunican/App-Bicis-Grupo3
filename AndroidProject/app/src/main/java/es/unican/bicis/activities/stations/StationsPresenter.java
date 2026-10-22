@@ -3,13 +3,17 @@ package es.unican.bicis.activities.stations;
 import java.util.ArrayList;
 import java.util.List;
 
+import es.unican.bicis.common.StationUtils;
+import es.unican.bicis.model.Location;
+import es.unican.bicis.model.Network;
 import es.unican.bicis.model.Station;
 import es.unican.bicis.model.StationFilter;
+import es.unican.bicis.repository.StationsCallback;
 
 /**
- * The presenter of the stations activity of the application.
- * It receives the minimum number of free bikes introduced by the user, checks it,
- * filters the stations and decides what the view must show.
+ * The presenter of the stations activity of the application. It controls {@link StationsView}.
+ * It loads the stations of a network, sorts them by free bikes, filters them by a minimum
+ * number of free bikes introduced by the user and decides what the view must show.
  */
 public class StationsPresenter implements IStationsContract.Presenter {
 
@@ -19,19 +23,74 @@ public class StationsPresenter implements IStationsContract.Presenter {
     /** The view that is controlled by this presenter */
     private IStationsContract.View view;
 
-    /** All the stations of the network, without filters */
+    /** The network whose stations are shown */
+    private Network network;
+
+    /** All the stations of the network, sorted by free bikes and without filters */
     private List<Station> stations = new ArrayList<>();
 
+    /** Whether the stations could not be loaded */
+    private boolean loadFailed = false;
+
     /**
-     * @see IStationsContract.Presenter#init(IStationsContract.View, List)
+     * @see IStationsContract.Presenter#init(IStationsContract.View, Network)
      * @param view the view to control
-     * @param stations all the stations of the network
+     * @param network the network whose stations must be shown
      */
     @Override
-    public void init(IStationsContract.View view, List<Station> stations) {
+    public void init(IStationsContract.View view, Network network) {
         this.view = view;
-        this.stations = stations == null ? new ArrayList<>() : stations;
-        view.showStations(this.stations);
+        this.network = network;
+        this.stations = new ArrayList<>();
+        this.loadFailed = false;
+
+        if (network == null) {
+            loadFailed = true;
+            view.showLoadError();
+            return;
+        }
+
+        view.showNetworkInfo(StationUtils.formatText(network.getName()),
+                formatLocation(network.getLocation()));
+
+        if (network.getId() == null || network.getId().trim().isEmpty()) {
+            loadFailed = true;
+            view.showLoadError();
+            return;
+        }
+
+        load(network.getId());
+    }
+
+    /**
+     * Requests the stations of the network to the repository and sends them to the view.
+     * @param networkId id of the network
+     */
+    private void load(String networkId) {
+        view.getNetworksRepository().requestStations(new StationsCallback() {
+
+            /**
+             * Sorts the received stations by free bikes and shows them.
+             * @param loadedStations the stations of the network
+             */
+            @Override
+            public void onSuccess(List<Station> loadedStations) {
+                stations = StationUtils.sortByFreeBikes(loadedStations);
+                loadFailed = false;
+                showAllStations();
+            }
+
+            /**
+             * Shows the load error when the stations cannot be retrieved.
+             * @param e the information about the failure
+             */
+            @Override
+            public void onFailure(Throwable e) {
+                stations = new ArrayList<>();
+                loadFailed = true;
+                view.showLoadError();
+            }
+        }, networkId);
     }
 
     /**
@@ -46,6 +105,7 @@ public class StationsPresenter implements IStationsContract.Presenter {
             return;
         }
 
+        view.showFilterActive(minFreeBikes);
         List<Station> filtered = StationFilter.filterByMinFreeBikes(stations, minFreeBikes);
         if (filtered.isEmpty()) {
             view.showNoStationsWithMinFreeBikes(minFreeBikes);
@@ -59,7 +119,32 @@ public class StationsPresenter implements IStationsContract.Presenter {
      */
     @Override
     public void onFilterCleared() {
-        view.showStations(stations);
+        view.showFilterInactive();
+        showAllStations();
+    }
+
+    /**
+     * @see IStationsContract.Presenter#onInfoClicked()
+     */
+    @Override
+    public void onInfoClicked() {
+        if (network != null) {
+            view.showNetworkDetails(network);
+        }
+    }
+
+    /**
+     * Shows all the stations of the network, or the corresponding message
+     * if they could not be loaded or there are none.
+     */
+    private void showAllStations() {
+        if (loadFailed) {
+            view.showLoadError();
+        } else if (stations.isEmpty()) {
+            view.showNoStations();
+        } else {
+            view.showStations(stations);
+        }
     }
 
     /**
@@ -77,5 +162,26 @@ public class StationsPresenter implements IStationsContract.Presenter {
         } catch (NumberFormatException e) {
             return null;
         }
+    }
+
+    /**
+     * Builds the location text with the city and the country of the network.
+     * @param location the location of the network
+     * @return "city, country", only one of them if the other is missing, or "-" if both are missing
+     */
+    private String formatLocation(Location location) {
+        if (location == null) {
+            return StationUtils.NO_DATA;
+        }
+        String city = StationUtils.formatText(location.getCity());
+        String country = StationUtils.formatText(location.getCountry());
+
+        if (city.equals(StationUtils.NO_DATA)) {
+            return country;
+        }
+        if (country.equals(StationUtils.NO_DATA)) {
+            return city;
+        }
+        return city + ", " + country;
     }
 }
