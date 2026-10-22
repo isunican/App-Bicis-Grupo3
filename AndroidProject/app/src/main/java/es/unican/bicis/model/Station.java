@@ -45,4 +45,15 @@ public class Station {
         return extra.getEbikes();
     }
 
+    /**
+     * Devuelve la capacidad de la estación, si el servicio informa de ella.
+     * @return número de anclajes de la estación, o null si la red no informa de ese dato
+     */
+    public Integer getSlots() {
+        if (extra == null) {
+            return null;
+        }
+        return extra.getSlots();
+    }
+
 }

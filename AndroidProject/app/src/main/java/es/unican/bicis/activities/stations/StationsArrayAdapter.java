@@ -1,4 +1,3 @@
-
 package es.unican.bicis.activities.stations;
 
 import android.content.Context;
@@ -6,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -19,8 +19,8 @@ import es.unican.bicis.model.Station;
 
 /**
  * Adapter that displays the stations of a bike sharing network.
- * Each row contains the station name, free bikes,
- * empty slots and electric bikes.
+ * Each row contains the station name, the bikes as "available/total"
+ * and an icon if the station has electric bikes.
  */
 public class StationsArrayAdapter extends ArrayAdapter<Station> {
 
@@ -46,23 +46,19 @@ public class StationsArrayAdapter extends ArrayAdapter<Station> {
 
         TextView tvName = row.findViewById(R.id.tvStationName);
         TextView tvBikes = row.findViewById(R.id.tvStationBikes);
-        TextView tvSlots = row.findViewById(R.id.tvStationSlots);
-        TextView tvElectric = row.findViewById(R.id.tvStationElectric);
+        ImageView ivElectric = row.findViewById(R.id.ivStationElectric);
 
         if (station != null) {
             tvName.setText(StationUtils.formatText(station.getName()));
-            tvBikes.setText(StationUtils.formatValue(station.getFreeBikes()));
-            tvSlots.setText(StationUtils.formatValue(station.getEmptySlots()));
-
-            // The current Station model does not provide
-            // the number of electric bikes.
-            tvElectric.setText(StationUtils.NO_DATA);
+            tvBikes.setText(StationUtils.formatBikes(
+                    station.getFreeBikes(), station.getEmptySlots(), station.getSlots()));
         } else {
             tvName.setText(StationUtils.NO_DATA);
-            tvBikes.setText(StationUtils.NO_DATA);
-            tvSlots.setText(StationUtils.NO_DATA);
-            tvElectric.setText(StationUtils.NO_DATA);
+            tvBikes.setText(StationUtils.formatBikes(null, null, null));
         }
+
+        // INVISIBLE (not GONE) so that the columns stay aligned in every row
+        ivElectric.setVisibility(StationUtils.hasEbikes(station) ? View.VISIBLE : View.INVISIBLE);
 
         return row;
     }

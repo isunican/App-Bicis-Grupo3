@@ -87,4 +87,37 @@ public class StationUtils {
         }
         return text;
     }
+
+    /**
+     * Devuelve el texto de las bicis de una estación: "[disponibles]/[totales]".
+     * Las bicis totales son las disponibles más los huecos libres. Si falta alguno de los
+     * dos, se usa la capacidad de la estación (slots) si el servicio la da.
+     * Un dato que no se conoce se muestra con un guion, por ejemplo "-/12" o "5/-".
+     * @param freeBikes bicis disponibles, puede ser null
+     * @param emptySlots huecos libres, puede ser null
+     * @param slots capacidad de la estación, puede ser null
+     * @return el texto, por ejemplo "5/12"
+     */
+    public static String formatBikes(Integer freeBikes, Integer emptySlots, Integer slots) {
+        Integer total = slots;
+        if (freeBikes != null && emptySlots != null) {
+            total = freeBikes + emptySlots;
+        }
+        return formatValue(freeBikes) + "/" + formatValue(total);
+    }
+
+    /**
+     * Indica si se muestra el icono de bicis eléctricas de una estación.
+     * @param station la estación
+     * @return true si la estación tiene alguna bici eléctrica; false si no tiene,
+     *         si no se sabe o si el dato es anómalo
+     */
+    public static boolean hasEbikes(Station station) {
+        if (station == null) {
+            return false;
+        }
+        Integer ebikes = station.getEbikes();
+        return ebikes != null && ebikes > 0;
+    }
+
 }

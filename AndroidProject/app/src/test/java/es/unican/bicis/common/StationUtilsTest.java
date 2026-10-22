@@ -2,6 +2,7 @@ package es.unican.bicis.common;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 import org.junit.Test;
 
@@ -9,6 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import es.unican.bicis.model.Station;
+import es.unican.bicis.model.StationExtra;
 
 public class StationUtilsTest {
 
@@ -62,5 +64,52 @@ public class StationUtilsTest {
         assertEquals("0", StationUtils.formatValue(0));
         assertEquals("7", StationUtils.formatValue(7));
         assertEquals("Plaza Mayor", StationUtils.formatText("Plaza Mayor"));
+    }
+
+    // ---------- formatBikes (ULE.2 del plan de pruebas) ----------
+
+    @Test
+    public void formatBikesTodosLosDatos() {
+        assertEquals("5/12", StationUtils.formatBikes(5, 7, null));    // ULE.2a
+        assertEquals("0/20", StationUtils.formatBikes(0, 20, null));   // ULE.2b
+        assertEquals("12/12", StationUtils.formatBikes(12, 0, null));  // ULE.2c
+        assertEquals("0/0", StationUtils.formatBikes(0, 0, null));     // ULE.2d
+    }
+
+    @Test
+    public void formatBikesDatosAusentes() {
+        assertEquals("-/12", StationUtils.formatBikes(null, 4, 12));   // ULE.2e
+        assertEquals("-/-", StationUtils.formatBikes(null, 4, null));  // ULE.2f
+        assertEquals("5/-", StationUtils.formatBikes(5, null, null));  // ULE.2g
+        assertEquals("-/-", StationUtils.formatBikes(null, null, null)); // ULE.2h
+    }
+
+    @Test
+    public void formatBikesSumaMandaSobreSlots() {
+        assertEquals("5/12", StationUtils.formatBikes(5, 7, 20));      // ULE.2k
+    }
+
+    // ---------- hasEbikes (ULE.3 del plan de pruebas) ----------
+
+    private Station conEbikes(Integer ebikes) {
+        StationExtra extra = new StationExtra();
+        extra.setEbikes(ebikes);
+        Station s = new Station();
+        s.setExtra(extra);
+        return s;
+    }
+
+    @Test
+    public void hasEbikesConBicisElectricas() {
+        assertTrue(StationUtils.hasEbikes(conEbikes(2)));    // ULE.3a
+        assertTrue(StationUtils.hasEbikes(conEbikes(1)));    // ULE.3b
+    }
+
+    @Test
+    public void hasEbikesSinBicisElectricasONoSeSabe() {
+        assertFalse(StationUtils.hasEbikes(conEbikes(0)));      // ULE.3c
+        assertFalse(StationUtils.hasEbikes(conEbikes(null)));   // ULE.3d
+        assertFalse(StationUtils.hasEbikes(new Station()));     // ULE.3e
+        assertFalse(StationUtils.hasEbikes(null));
     }
 }
