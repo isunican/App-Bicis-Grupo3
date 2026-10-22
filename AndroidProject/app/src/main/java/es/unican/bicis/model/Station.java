@@ -8,6 +8,8 @@ import org.parceler.Parcel;
 import lombok.Getter;
 import lombok.Setter;
 
+import com.google.gson.annotations.JsonAdapter;
+
 /**
  * A station of a bike sharing network, as defined in the
  * <a href="https://api.citybik.es/v2/">CityBikes API</a>.
@@ -50,6 +52,17 @@ public class Station {
             return null;
         }
         return extra.getEbikes();
+    }
+
+    /**
+     * Devuelve la capacidad de la estación, si el servicio informa de ella.
+     * @return número de anclajes de la estación, o null si la red no informa de ese dato
+     */
+    public Integer getSlots() {
+        if (extra == null) {
+            return null;
+        }
+        return extra.getSlots();
     }
 
 }

@@ -28,13 +28,12 @@ public class IntegerAdapterTest {
         assertEquals(Integer.valueOf(0), station.getEmptySlots());
     }
 
-    /** UIA.1b: número entero negativo. */
+    /** UIA.1b: número entero negativo: no es un número de bicis válido. */
     @Test
-    public void testNegativeIntegerIsReadAsItIs() {
-        // The value is read; it is the filter who decides that it is not valid
+    public void testNegativeIntegerIsNull() {
         Station station = parse("{\"free_bikes\": -2}");
 
-        assertEquals(Integer.valueOf(-2), station.getFreeBikes());
+        assertNull(station.getFreeBikes());
     }
 
     /** UIA.1c: campo ausente. */

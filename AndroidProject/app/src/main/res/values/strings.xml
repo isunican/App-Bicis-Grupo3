@@ -4,11 +4,17 @@
     <string name="info">Info</string>
     <string name="loadCorrect">Se han cargado %d redes</string>
     <string name="loadError">Ha habido un error cargando las redes</string>
+    <string name="seeStations">Ver estaciones</string>
+    <string name="hasEbikes">Tiene bicis eléctricas</string>
     <string name="info_text">Aplicación creada para el Proyecto Integrado Curso 2026-2027</string>
+    <string name="locationPermissionDenied">No has dado permiso para usar tu ubicación. Elige una ciudad de la lista</string>
+    <string name="locationUnavailable">No se ha podido obtener tu ubicación. Elige una ciudad de la lista</string>
+    <string name="noNetworkNearby">No hay ninguna red de bicis en tu ciudad. Elige una ciudad de la lista</string>
+    <string name="cityDetected">Ciudad detectada: %s</string>
 
     <!-- Lista de estaciones -->
     <string name="stationsEmpty">Esta red no tiene estaciones disponibles</string>
-    <string name="stationsLoadError">No se han podido cargar las estaciones\nComprueba tu conexión a internet</string>
+    <string name="stationsLoadError">No se han podido cargar las estaciones. Comprueba tu conexión</string>
     <string name="menuNetworkInfo">Información de la red</string>
 
     <!-- Filtro de estaciones por bicis libres -->

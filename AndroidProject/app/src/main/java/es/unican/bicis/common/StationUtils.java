@@ -3,6 +3,8 @@ package es.unican.bicis.common;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.text.Collator;
+import java.util.Locale;
 
 import es.unican.bicis.model.Station;
 
@@ -22,7 +24,8 @@ public class StationUtils {
     /**
      * Devuelve una copia de la lista ordenada de más a menos bicis disponibles.
      * Las estaciones sin dato de bicis (null) van al final.
-     * Si dos estaciones tienen las mismas bicis, se mantiene su orden original.
+     * Si dos estaciones tienen las mismas bicis (o ninguna tiene el dato), se ordenan
+     * por nombre sin distinguir mayúsculas ni tildes, y las que no tienen nombre van al final.
      * @param stations estaciones de la red (puede ser null)
      * @return nueva lista ordenada, o una lista vacía si stations es null
      */
@@ -33,8 +36,32 @@ public class StationUtils {
         }
         sorted.addAll(stations);
         Comparator<Integer> masAMenos = Comparator.nullsLast(Comparator.<Integer>reverseOrder());
-        sorted.sort(Comparator.comparing(Station::getFreeBikes, masAMenos));
+        sorted.sort(Comparator.comparing(Station::getFreeBikes, masAMenos)
+                .thenComparing(StationUtils::nameOrNull, byName()));
         return sorted;
+    }
+
+    /**
+     * Comparador de nombres en español que no distingue mayúsculas ni tildes
+     * ("Árboles" va antes que "Ayuntamiento"). Los null van al final.
+     * @return el comparador
+     */
+    private static Comparator<String> byName() {
+        Collator collator = Collator.getInstance(Locale.forLanguageTag("es-ES"));
+        collator.setStrength(Collator.PRIMARY);
+        return Comparator.nullsLast(collator::compare);
+    }
+
+    /**
+     * @param station la estación
+     * @return su nombre, o null si no tiene o está en blanco
+     */
+    private static String nameOrNull(Station station) {
+        String name = station.getName();
+        if (name == null || name.trim().isEmpty()) {
+            return null;
+        }
+        return name.trim();
     }
 
     /**
@@ -60,4 +87,37 @@ public class StationUtils {
         }
         return text;
     }
+
+    /**
+     * Devuelve el texto de las bicis de una estación: "[disponibles]/[totales]".
+     * Las bicis totales son las disponibles más los huecos libres. Si falta alguno de los
+     * dos, se usa la capacidad de la estación (slots) si el servicio la da.
+     * Un dato que no se conoce se muestra con un guion, por ejemplo "-/12" o "5/-".
+     * @param freeBikes bicis disponibles, puede ser null
+     * @param emptySlots huecos libres, puede ser null
+     * @param slots capacidad de la estación, puede ser null
+     * @return el texto, por ejemplo "5/12"
+     */
+    public static String formatBikes(Integer freeBikes, Integer emptySlots, Integer slots) {
+        Integer total = slots;
+        if (freeBikes != null && emptySlots != null) {
+            total = freeBikes + emptySlots;
+        }
+        return formatValue(freeBikes) + "/" + formatValue(total);
+    }
+
+    /**
+     * Indica si se muestra el icono de bicis eléctricas de una estación.
+     * @param station la estación
+     * @return true si la estación tiene alguna bici eléctrica; false si no tiene,
+     *         si no se sabe o si el dato es anómalo
+     */
+    public static boolean hasEbikes(Station station) {
+        if (station == null) {
+            return false;
+        }
+        Integer ebikes = station.getEbikes();
+        return ebikes != null && ebikes > 0;
+    }
+
 }

@@ -295,4 +295,5 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         finish();
         return true;
     }
+
 }

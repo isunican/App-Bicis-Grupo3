@@ -12,10 +12,19 @@ MainPresenter --> MainView : view
 MainView ..> InfoView : <<use>>
 MainView ..> DetailsView : <<use>>
 
+MainView --> ILocationProvider : locationProvider
+DeviceLocationProvider ..|> ILocationProvider
+LocationModule ..> DeviceLocationProvider : <<create>>
+ILocationProvider ..> LocationResultCallback : <<use>>
+MainPresenter ..> NetworkLocator : <<use>>
+
 class MainView {
+    - onLocationPermissionAnswer(answers : Map<String, Boolean>)
+    - hasLocationPermission() : boolean
 }
 
 class MainPresenter {
+    - networks : List<Network>
     -load()
 }
 
@@ -23,6 +32,20 @@ class InfoView
 class DetailsView
 class ApiNetworksRepository
 class JsonNetworksRepository
+
+class NetworkLocator {
+    + {static} MAX_DISTANCE_KM : double = 20
+    + {static} findNearestNetwork(networks : List<Network>, lat : double, lon : double, maxKm : double) : Network
+    + {static} distanceKm(lat1 : double, lon1 : double, lat2 : double, lon2 : double) : double
+}
+
+class DeviceLocationProvider {
+    + requestCurrentLocation(cb : LocationResultCallback)
+}
+
+class LocationModule {
+    + {static} provideLocationProvider(application : Application) : ILocationProvider
+}
 
 interface IMainContract.View {
     + init()
@@ -32,12 +55,19 @@ interface IMainContract.View {
     + showLoadError()
     + showNetworkDetails(network : Network)
     + showInfoActivity()
+    + requestLocationPermission()
+    + showLocationPermissionDenied()
+    + showLocationUnavailable()
+    + showNoNetworkNearby()
+    + getLocationProvider() : ILocationProvider
+    + showNetworkStations(network : Network)
 }
 
 interface IMainContract.Presenter {
     + init(View view)
     + onNetworkClicked(network : Network)
     + onMenuInfoClicked()
+    + onLocationPermissionResult(granted : boolean)
 }
 
 interface INetworksRepository {
@@ -56,12 +86,20 @@ interface NetworkDetailsCallback {
     + onFailure(e : Throwable)
 }
 
+interface ILocationProvider {
+    + requestCurrentLocation(cb : LocationResultCallback)
+}
+
+interface LocationResultCallback {
+    + onSuccess(latitude : double, longitude : double)
+    + onFailure(e : Throwable)
+}
 
 ' ==========================================
 ' HU 532377 Listar estaciones y HU 532376 Filtrar estaciones por bicis libres
 ' ==========================================
 
-MainView ..> StationsView : <<use>>
+DetailsView ..> StationsView : <<use>>
 StationsView ..|> IStationsContract.View
 StationsPresenter ..|> IStationsContract.Presenter
 StationsView --> StationsPresenter : presenter
@@ -102,6 +140,8 @@ class StationUtils {
     + {static} sortByFreeBikes(stations : List<Station>) : List<Station>
     + {static} formatValue(value : Integer) : String
     + {static} formatText(text : String) : String
+    + {static} formatBikes(freeBikes : Integer, emptySlots : Integer, slots : Integer) : String
+    + {static} hasEbikes(station : Station) : boolean
 }
 
 interface IStationsContract.View {

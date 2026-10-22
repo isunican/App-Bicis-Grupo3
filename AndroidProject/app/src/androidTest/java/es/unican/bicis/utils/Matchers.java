@@ -50,13 +50,19 @@ public class Matchers {
         };
     }
 
-    /** TextView su texto es un entero mayor o igual que min. */
+    /**
+     * TextView cuyo número de bicis libres es mayor o igual que min.
+     * Admite el formato "disponibles/totales" de la lista de estaciones (por ejemplo, "5/12").
+     */
     public static Matcher<View> hasNumberAtLeast(final int min) {
         return new BoundedMatcher<View, TextView>(TextView.class) {
             @Override
             protected boolean matchesSafely(TextView textView) {
                 try {
-                    return Integer.parseInt(textView.getText().toString().trim()) >= min;
+                    String text = textView.getText().toString().trim();
+                    int slash = text.indexOf('/');
+                    String free = slash >= 0 ? text.substring(0, slash) : text;
+                    return Integer.parseInt(free.trim()) >= min;
                 } catch (NumberFormatException e) {
                     return false;
                 }

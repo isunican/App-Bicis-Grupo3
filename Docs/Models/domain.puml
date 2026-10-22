@@ -43,10 +43,12 @@ class Station {
     - freeBikes : Integer
     - emptySlots : Integer
     + getEbikes() : Integer
+    + getSlots() : Integer
 }
 
 class StationExtra {
     - ebikes : Integer
+    - slots : Integer
 }
 
 class StationFilter {

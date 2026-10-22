@@ -23,11 +23,15 @@ public final class StationsUITestUtils {
     private StationsUITestUtils() {
     }
 
-    /** Abre la pantalla de estaciones de la red dada pulsándola en la lista de redes. */
+    /**
+     * Abre la pantalla de estaciones de la red dada: se pulsa la red en la lista de redes,
+     * que abre su detalle, y después el botón "Ver estaciones" del detalle.
+     */
     public static void openStations(String networkName) {
         onData(networkNamed(networkName))
                 .inAdapterView(withId(R.id.lvNetworks))
                 .perform(click());
+        onView(withId(R.id.btnStations)).perform(click());
     }
 
     /** Pulsa el icono del embudo de la barra superior. */
