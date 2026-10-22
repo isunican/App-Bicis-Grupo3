@@ -1,4 +1,3 @@
-
 package es.unican.bicis.activities.stations;
 
 import android.os.Bundle;
@@ -21,31 +20,39 @@ import javax.inject.Inject;
 import dagger.hilt.android.AndroidEntryPoint;
 
 import es.unican.bicis.R;
-import es.unican.bicis.common.StationUtils;
-import es.unican.bicis.model.Location;
 import es.unican.bicis.model.Network;
 import es.unican.bicis.model.Station;
 import es.unican.bicis.repository.INetworksRepository;
-import es.unican.bicis.repository.StationsCallback;
 
 /**
  * Displays the stations of a bike sharing network.
- * Handles successful loading, empty lists and loading errors.
+ * It follows the MVP pattern: all the logic is in {@link StationsPresenter},
+ * this view only displays what the presenter gives to it.
  */
 @AndroidEntryPoint
-public class StationsView extends AppCompatActivity {
+public class StationsView extends AppCompatActivity implements IStationsContract.View {
 
+    /** Key for the intent that contains the network */
     public static final String INTENT_NETWORK = "INTENT_NETWORK";
 
+    /** The repository to access the data. This is automatically injected by Hilt in this class */
     @Inject
     INetworksRepository repository;
 
+    /** The presenter of this view */
+    private IStationsContract.Presenter presenter;
+
+    /** View elements */
     private TextView tvNetworkName;
     private TextView tvNetworkLocation;
     private TextView tvStationsMessage;
     private ListView lvStations;
     private View stationsHeader;
 
+    /**
+     * @see AppCompatActivity#onCreate(Bundle)
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,130 +60,90 @@ public class StationsView extends AppCompatActivity {
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
         ActionBar bar = getSupportActionBar();
         if (bar != null) {
-            bar.setDisplayHomeAsUpEnabled(true);
+            bar.setDisplayHomeAsUpEnabled(true);  // show back button in action bar
         }
 
+        // Link to view elements
         tvNetworkName = findViewById(R.id.tvNetworkName);
         tvNetworkLocation = findViewById(R.id.tvNetworkLocation);
         tvStationsMessage = findViewById(R.id.tvStationsMessage);
         lvStations = findViewById(R.id.lvStations);
         stationsHeader = findViewById(R.id.stationsHeader);
 
-        Parcelable wrapped = IntentCompat.getParcelableExtra(
-                getIntent(), INTENT_NETWORK, Parcelable.class);
-
-        Network network = wrapped == null
-                ? null
-                : Parcels.unwrap(wrapped);
-
-        if (network == null) {
-            showLoadError();
-            return;
+        // Get Network from the intent that triggered this activity
+        Parcelable wrapped = IntentCompat.getParcelableExtra(getIntent(), INTENT_NETWORK, Parcelable.class);
+        Network network = null;
+        if (wrapped != null) {
+            network = Parcels.unwrap(wrapped);
         }
 
-        tvNetworkName.setText(
-                StationUtils.formatText(network.getName()));
-
-        tvNetworkLocation.setText(
-                formatLocation(network.getLocation()));
-
-        if (network.getId() == null ||
-                network.getId().trim().isEmpty()) {
-            showLoadError();
-            return;
-        }
-
-        loadStations(network.getId());
+        // The presenter decides what to show
+        presenter = new StationsPresenter();
+        presenter.init(this, network);
     }
 
     /**
-     * Requests the stations asynchronously.
+     * @see IStationsContract.View#getNetworksRepository()
+     * @return the repository to access the data
      */
-    /**private void loadStations(String networkId) {
-        repository.requestStations(new StationsCallback() {
-
-            @Override
-            public void onSuccess(List<Station> stations) {
-                runOnUiThread(() -> showStations(stations));
-            }
-
-            @Override
-            public void onFailure(Throwable error) {
-                runOnUiThread(() -> showLoadError());
-            }
-
-        }, networkId);
-    }**/
-
-
-    private void loadStations(String networkId) {
-
-        // Comportamiento provisional:
-        // Solo se muestran estaciones de TUeBICI (Santander).
-        // Las demás redes quedan sin información de estaciones.
-
-        if (!"tuebici".equalsIgnoreCase(networkId)) {
-            showStations(new java.util.ArrayList<Station>());
-            return;
-        }
-
-        repository.requestStations(new StationsCallback() {
-
-            @Override
-            public void onSuccess(List<Station> stations) {
-                runOnUiThread(() -> showStations(stations));
-            }
-
-            @Override
-            public void onFailure(Throwable error) {
-                runOnUiThread(() -> showLoadError());
-            }
-
-        }, networkId);
+    @Override
+    public INetworksRepository getNetworksRepository() {
+        return repository;
     }
 
-
+    /**
+     * @see IStationsContract.View#showNetworkName(String)
+     * @param name the name of the network
+     */
+    @Override
+    public void showNetworkName(String name) {
+        tvNetworkName.setText(name);
+    }
 
     /**
-     * Displays the stations or the empty-list message.
+     * @see IStationsContract.View#showNetworkLocation(String)
+     * @param location the text shown below the name of the network
      */
-    private void showStations(List<Station> stations) {
-        if (stations == null || stations.isEmpty()) {
-            showMessage(
-                    "Esta red no tiene estaciones disponibles");
-            return;
-        }
+    @Override
+    public void showNetworkLocation(String location) {
+        tvNetworkLocation.setText(location);
+    }
 
-        List<Station> sorted =
-                StationUtils.sortByFreeBikes(stations);
-
-        StationsArrayAdapter adapter =
-                new StationsArrayAdapter(this, sorted);
-
+    /**
+     * @see IStationsContract.View#showStations(List)
+     * @param stations the stations already sorted
+     */
+    @Override
+    public void showStations(List<Station> stations) {
+        StationsArrayAdapter adapter = new StationsArrayAdapter(this, stations);
         lvStations.setAdapter(adapter);
         lvStations.setVisibility(View.VISIBLE);
         stationsHeader.setVisibility(View.VISIBLE);
         tvStationsMessage.setVisibility(View.GONE);
-
-        String location = formatLocationFromHeader();
-        tvNetworkLocation.setText(
-                location + " · " + stations.size() + " estaciones");
     }
 
     /**
-     * Displays an error when stations cannot be loaded.
+     * @see IStationsContract.View#showNoStations()
      */
-    private void showLoadError() {
-        showMessage(
-                "No se han podido cargar las estaciones\n" +
-                        "Comprueba tu conexión a internet");
+    @Override
+    public void showNoStations() {
+        showMessage("Esta red no tiene estaciones disponibles");
     }
 
     /**
-     * Displays a message instead of the station list.
+     * @see IStationsContract.View#showLoadError()
+     */
+    @Override
+    public void showLoadError() {
+        showMessage("No se han podido cargar las estaciones\n" +
+                "Comprueba tu conexión a internet");
+    }
+
+    /**
+     * Hides the list and displays a message instead.
+     * @param message the message to show
      */
     private void showMessage(String message) {
         lvStations.setVisibility(View.GONE);
@@ -185,41 +152,9 @@ public class StationsView extends AppCompatActivity {
         tvStationsMessage.setVisibility(View.VISIBLE);
     }
 
-    /**
-     * Formats the city and country.
-     */
-    private String formatLocation(Location location) {
-        if (location == null) {
-            return StationUtils.NO_DATA;
-        }
-
-        String city =
-                StationUtils.formatText(location.getCity());
-        String country =
-                StationUtils.formatText(location.getCountry());
-
-        if (city.equals(StationUtils.NO_DATA)) {
-            return country;
-        }
-
-        if (country.equals(StationUtils.NO_DATA)) {
-            return city;
-        }
-
-        return city + ", " + country;
-    }
-
-    /**
-     * Returns the location already displayed in the header.
-     */
-    private String formatLocationFromHeader() {
-        return tvNetworkLocation.getText().toString();
-    }
-
     @Override
     public boolean onSupportNavigateUp() {
         finish();
         return true;
     }
 }
-
