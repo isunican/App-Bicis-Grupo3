@@ -8,4 +8,5 @@
 
     <!-- AÑADO -->
     <string name="clearFilterError">No se han podido quitar los filtros. Inténtalo de nuevo.</string>
+    <string name="filterClearButton">Quitar filtros</string>
 </resources>
