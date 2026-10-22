@@ -12,6 +12,7 @@ import static es.unican.bicis.utils.StationsUITestUtils.applyFilter;
 import static es.unican.bicis.utils.StationsUITestUtils.checkHeader;
 import static es.unican.bicis.utils.StationsUITestUtils.openStations;
 import static org.hamcrest.CoreMatchers.anything;
+import static org.hamcrest.CoreMatchers.startsWith;
 
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 
@@ -41,11 +42,11 @@ public class FiltrarEstacionesSinDatoUITest {
     public void testUI4_EstacionesSinDatoNoAparecenConFiltro() {
         openStations(TUEBICI);
 
-        // Lista completa: las dos estaciones sin dato van al final con un guion
+        // Lista completa: las dos estaciones sin dato van al final con un guion (formato "-/total")
         for (int pos : new int[]{40, 41}) {
             onData(anything()).inAdapterView(withId(R.id.lvStations)).atPosition(pos)
                     .onChildView(withId(R.id.tvStationBikes))
-                    .check(matches(withText("-")));
+                    .check(matches(withText(startsWith("-/"))));
         }
         onData(stationNamed(SIN_DATO_1)).inAdapterView(withId(R.id.lvStations))
                 .check(matches(isDisplayed()));
