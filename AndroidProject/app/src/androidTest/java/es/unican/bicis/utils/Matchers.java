@@ -1,6 +1,7 @@
 package es.unican.bicis.utils;
 
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.TextView;
 
 import androidx.test.espresso.matcher.BoundedMatcher;
@@ -71,6 +72,34 @@ public class Matchers {
             @Override
             public void describeTo(Description description) {
                 description.appendText("TextView con un número >= " + min);
+            }
+        };
+    }
+
+    /**
+     * Lista (AdapterView) que contiene alguna estación con el nombre dado.
+     * Se usa con not(...) para comprobar que una estación NO aparece en la lista,
+     * ya que onData(...).check(doesNotExist()) falla si el dato no está en el adaptador.
+     */
+    public static Matcher<View> listContainsStation(final String name) {
+        return new BoundedMatcher<View, AdapterView>(AdapterView.class) {
+            @Override
+            protected boolean matchesSafely(AdapterView adapterView) {
+                if (adapterView.getAdapter() == null) {
+                    return false;
+                }
+                for (int i = 0; i < adapterView.getAdapter().getCount(); i++) {
+                    Object item = adapterView.getAdapter().getItem(i);
+                    if (item instanceof Station && name.equals(((Station) item).getName())) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            @Override
+            public void describeTo(Description description) {
+                description.appendText("lista que contiene la estación " + name);
             }
         };
     }

@@ -1,17 +1,19 @@
 package es.unican.bicis.activities.stations;
 
 import static androidx.test.espresso.Espresso.onData;
-import static androidx.test.espresso.assertion.ViewAssertions.doesNotExist;
+import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
+import static es.unican.bicis.utils.Matchers.listContainsStation;
 import static es.unican.bicis.utils.Matchers.stationNamed;
 import static es.unican.bicis.utils.StationsUITestUtils.TUEBICI;
 import static es.unican.bicis.utils.StationsUITestUtils.applyFilter;
 import static es.unican.bicis.utils.StationsUITestUtils.checkHeader;
 import static es.unican.bicis.utils.StationsUITestUtils.openStations;
 import static org.hamcrest.CoreMatchers.anything;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.startsWith;
 
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
@@ -56,9 +58,9 @@ public class FiltrarEstacionesSinDatoUITest {
         // Con filtro 1 desaparecen
         applyFilter("1");
         checkHeader("Santander, ES · 30 estaciones");
-        onData(stationNamed(SIN_DATO_1)).inAdapterView(withId(R.id.lvStations))
-                .check(doesNotExist());
-        onData(stationNamed(SIN_DATO_2)).inAdapterView(withId(R.id.lvStations))
-                .check(doesNotExist());
+        onView(withId(R.id.lvStations))
+                .check(matches(not(listContainsStation(SIN_DATO_1))));
+        onView(withId(R.id.lvStations))
+                .check(matches(not(listContainsStation(SIN_DATO_2))));
     }
 }
