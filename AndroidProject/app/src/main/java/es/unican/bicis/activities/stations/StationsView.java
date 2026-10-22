@@ -58,9 +58,6 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     private ListView lvStations;
     private View stationsHeader;
 
-    /** Location text of the network, shown in the header */
-    private String networkLocation = "";
-
     /** Filter dialog currently open (null if it is closed) and its input field */
     private AlertDialog filterDialog;
     private EditText filterInput;
@@ -177,14 +174,20 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     }
 
     /**
-     * @see IStationsContract.View#showNetworkInfo(String, String)
+     * @see IStationsContract.View#showNetworkName(String)
      * @param name the name of the network
-     * @param location the city and country of the network
      */
     @Override
-    public void showNetworkInfo(String name, String location) {
-        networkLocation = location;
+    public void showNetworkName(String name) {
         tvNetworkName.setText(name);
+    }
+
+    /**
+     * @see IStationsContract.View#showNetworkLocation(String)
+     * @param location the location text of the network
+     */
+    @Override
+    public void showNetworkLocation(String location) {
         tvNetworkLocation.setText(location);
     }
 
@@ -198,7 +201,6 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         lvStations.setVisibility(View.VISIBLE);
         stationsHeader.setVisibility(View.VISIBLE);
         tvStationsMessage.setVisibility(View.GONE);
-        tvNetworkLocation.setText(getString(R.string.stationsLocationCount, networkLocation, stations.size()));
     }
 
     /**
@@ -282,7 +284,6 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         stationsHeader.setVisibility(View.GONE);
         tvStationsMessage.setText(message);
         tvStationsMessage.setVisibility(View.VISIBLE);
-        tvNetworkLocation.setText(networkLocation);
     }
 
     /**

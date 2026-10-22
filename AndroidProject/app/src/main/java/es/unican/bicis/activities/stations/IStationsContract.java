@@ -59,44 +59,51 @@ public interface IStationsContract {
     public interface View {
 
         /**
-         * Returns a repository that can be called by the Presenter to retrieve the stations.
+         * Returns a repository that can be used to access the stations of a network.
          * Only the Presenter should call this method
-         * @return the repository to access the data
+         * @return the repository
          */
         public INetworksRepository getNetworksRepository();
 
         /**
-         * The view is requested to display the header of the network.
+         * The view is requested to display the name of the network.
          * Only the Presenter should call this method
          * @param name the name of the network, or "-" if not available
-         * @param location the city and country of the network, or "-" if not available
          */
-        public void showNetworkInfo(String name, String location);
+        public void showNetworkName(String name);
 
         /**
-         * The view is requested to display the given list of stations, in the given order.
+         * The view is requested to display the location of the network in the header.
          * Only the Presenter should call this method
-         * @param stations the stations to display (never empty)
+         * @param location the text with city and country, optionally followed by the
+         *                 number of stations (e.g. "Santander, España · 42 estaciones")
+         */
+        public void showNetworkLocation(String location);
+
+        /**
+         * The view is requested to display the list of stations, in the given order.
+         * Only the Presenter should call this method
+         * @param stations the stations already sorted (never null nor empty)
          */
         public void showStations(List<Station> stations);
 
         /**
-         * The view is requested to display a message indicating that the network
-         * has no stations.
+         * The view is requested to hide the list and display a message indicating
+         * that the network has no stations.
          * Only the Presenter should call this method
          */
         public void showNoStations();
 
         /**
-         * The view is requested to display a message indicating that the stations
-         * could not be loaded.
+         * The view is requested to hide the list and display a message indicating
+         * that the stations could not be loaded.
          * Only the Presenter should call this method
          */
         public void showLoadError();
 
         /**
-         * The view is requested to display a message indicating that no station
-         * has at least the given number of free bikes.
+         * The view is requested to hide the list and display a message indicating
+         * that no station has at least the given number of free bikes.
          * Only the Presenter should call this method
          * @param minFreeBikes the minimum number of free bikes requested
          */

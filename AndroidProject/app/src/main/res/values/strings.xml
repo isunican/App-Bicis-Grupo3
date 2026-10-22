@@ -9,7 +9,6 @@
     <!-- Lista de estaciones -->
     <string name="stationsEmpty">Esta red no tiene estaciones disponibles</string>
     <string name="stationsLoadError">No se han podido cargar las estaciones\nComprueba tu conexión a internet</string>
-    <string name="stationsLocationCount">%1$s · %2$d estaciones</string>
     <string name="menuNetworkInfo">Información de la red</string>
 
     <!-- Filtro de estaciones por bicis libres -->

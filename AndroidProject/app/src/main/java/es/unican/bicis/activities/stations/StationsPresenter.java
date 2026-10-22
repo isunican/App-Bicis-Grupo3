@@ -8,12 +8,14 @@ import es.unican.bicis.model.Location;
 import es.unican.bicis.model.Network;
 import es.unican.bicis.model.Station;
 import es.unican.bicis.model.StationFilter;
+import es.unican.bicis.repository.INetworksRepository;
 import es.unican.bicis.repository.StationsCallback;
 
 /**
  * The presenter of the stations activity of the application. It controls {@link StationsView}.
- * It loads the stations of a network, sorts them by free bikes, filters them by a minimum
- * number of free bikes introduced by the user and decides what the view must show.
+ * It loads the stations of a network and sorts them by free bikes (HU 532377 Listar estaciones),
+ * filters them by a minimum number of free bikes introduced by the user (HU 532376 Filtrar
+ * estaciones) and decides what the view must show.
  */
 public class StationsPresenter implements IStationsContract.Presenter {
 
@@ -25,6 +27,9 @@ public class StationsPresenter implements IStationsContract.Presenter {
 
     /** The network whose stations are shown */
     private Network network;
+
+    /** City and country of the network, as shown in the header */
+    private String location;
 
     /** All the stations of the network, sorted by free bikes and without filters */
     private List<Station> stations = new ArrayList<>();
@@ -50,16 +55,19 @@ public class StationsPresenter implements IStationsContract.Presenter {
             return;
         }
 
-        view.showNetworkInfo(StationUtils.formatText(network.getName()),
-                formatLocation(network.getLocation()));
+        // Header: always shown, even if the stations cannot be loaded
+        location = formatLocation(network.getLocation());
+        view.showNetworkName(StationUtils.formatText(network.getName()));
+        view.showNetworkLocation(location);
 
-        if (network.getId() == null || network.getId().trim().isEmpty()) {
+        String id = network.getId();
+        if (id == null || id.trim().isEmpty()) {
             loadFailed = true;
             view.showLoadError();
             return;
         }
 
-        load(network.getId());
+        load(id);
     }
 
     /**
@@ -67,11 +75,13 @@ public class StationsPresenter implements IStationsContract.Presenter {
      * @param networkId id of the network
      */
     private void load(String networkId) {
-        view.getNetworksRepository().requestStations(new StationsCallback() {
+        INetworksRepository repository = view.getNetworksRepository();
+
+        StationsCallback callback = new StationsCallback() {
 
             /**
              * Sorts the received stations by free bikes and shows them.
-             * @param loadedStations the stations of the network
+             * @param loadedStations the stations of the network (may be null or empty)
              */
             @Override
             public void onSuccess(List<Station> loadedStations) {
@@ -90,7 +100,9 @@ public class StationsPresenter implements IStationsContract.Presenter {
                 loadFailed = true;
                 view.showLoadError();
             }
-        }, networkId);
+        };
+
+        repository.requestStations(callback, networkId);
     }
 
     /**
@@ -109,8 +121,9 @@ public class StationsPresenter implements IStationsContract.Presenter {
         List<Station> filtered = StationFilter.filterByMinFreeBikes(stations, minFreeBikes);
         if (filtered.isEmpty()) {
             view.showNoStationsWithMinFreeBikes(minFreeBikes);
+            view.showNetworkLocation(location);
         } else {
-            view.showStations(filtered);
+            showStationList(filtered);
         }
     }
 
@@ -143,8 +156,17 @@ public class StationsPresenter implements IStationsContract.Presenter {
         } else if (stations.isEmpty()) {
             view.showNoStations();
         } else {
-            view.showStations(stations);
+            showStationList(stations);
         }
+    }
+
+    /**
+     * Shows the given stations and their number in the header.
+     * @param list the stations to show (not empty)
+     */
+    private void showStationList(List<Station> list) {
+        view.showStations(list);
+        view.showNetworkLocation(location + " · " + list.size() + " estaciones");
     }
 
     /**

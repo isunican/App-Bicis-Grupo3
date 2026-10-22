@@ -83,10 +83,12 @@ class StationsArrayAdapter
 class StationsPresenter {
     ~ {static} MIN_FILTER_VALUE : int = 1
     - network : Network
+    - location : String
     - stations : List<Station>
     - loadFailed : boolean
     - load(networkId : String)
     - showAllStations()
+    - showStationList(list : List<Station>)
     - parseMinFreeBikes(text : String) : Integer
     - formatLocation(location : Location) : String
 }
@@ -104,7 +106,8 @@ class StationUtils {
 
 interface IStationsContract.View {
     + getNetworksRepository() : INetworksRepository
-    + showNetworkInfo(name : String, location : String)
+    + showNetworkName(name : String)
+    + showNetworkLocation(location : String)
     + showStations(stations : List<Station>)
     + showNoStations()
     + showLoadError()
