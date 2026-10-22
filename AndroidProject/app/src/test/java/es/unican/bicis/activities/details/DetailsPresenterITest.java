@@ -113,23 +113,20 @@ public class DetailsPresenterITest {
         verify(mockView).showLatitude("43.46230569999999");
         verify(mockView).showLongitude("-3.8099803");
         verify(mockView).showEbikes(NA);
-        verify(mockView).showOperatorsCount(NA);
-        verify(mockView).showOperators(NA);
+        verify(mockView).showOperatorsCount("1");
+        verify(mockView).showOperators("• UTE BICIS SANTANDER");
         verify(mockView, never()).showNoDetailsAvailable();
         verifyNoMoreInteractions(mockView);
     }
 
-    /**
-     * IDP.6c: Bicing, una red sin datos aparte de nombre, ciudad y pais.
-     * Debe mostrar solo el mensaje de "sin informacion".
-     * Usa res/raw/network_bicing.json (Anexo 1 del plan).
-     */
-    @Test
-    public void init_bicimad_showsNoDetailsMessage() {
-        sut.init(mockView, loadNetwork("bicing"));
 
-        verify(mockView).showName("Bicing");
-        verify(mockView).showLocation("Barcelona, ES");
+    /** IDP.6c: Bici Sur, una red sin datos aparte de nombre, ciudad y pais. */
+    @Test
+    public void init_biciSur_showsNoDetailsMessage() {
+        sut.init(mockView, loadNetwork("prueba"));
+
+        verify(mockView).showName("Bici Sur");
+        verify(mockView).showLocation("Cádiz, ES");
         verify(mockView).showNoDetailsAvailable();
         verify(mockView, never()).showLatitude(anyString());
         verify(mockView, never()).showLongitude(anyString());
