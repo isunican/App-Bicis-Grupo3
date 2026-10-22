@@ -2,6 +2,7 @@ package es.unican.bicis.activities.details;
 
 import es.unican.bicis.model.Location;
 import es.unican.bicis.model.Network;
+import java.util.Locale;
 
 public class DetailsPresenter implements IDetailsContract.Presenter{
     /** Text shown when a value is not available or is invalid */
@@ -16,6 +17,9 @@ public class DetailsPresenter implements IDetailsContract.Presenter{
     /** The view that is controlled by this presenter */
     private IDetailsContract.View view;
 
+    /** The network whose details are shown */
+    private Network network;
+
     /**
      * @see IDetailsContract.Presenter#init(IDetailsContract.View, Network)
      * @param view the view to control
@@ -24,6 +28,7 @@ public class DetailsPresenter implements IDetailsContract.Presenter{
     @Override
     public void init(IDetailsContract.View view, Network network) {
         this.view = view;
+        this.network = network;
 
         if (network == null) {
             view.showNoDetailsAvailable();
@@ -55,6 +60,16 @@ public class DetailsPresenter implements IDetailsContract.Presenter{
             view.showOperators(formatOperators(network.getCompany()));
         }
     }
+    /**
+     * @see IDetailsContract.Presenter#onStationsClicked()
+     */
+     @Override
+     public void onStationsClicked() {
+                if (network == null) {
+                        return;
+                }
+                view.showStations(network);
+     }
 
     /**
      * Returns the given text, or NOT_AVAILABLE if it is null or blank.
@@ -102,7 +117,7 @@ public class DetailsPresenter implements IDetailsContract.Presenter{
         if (latitude < -90 || latitude > 90) {
             return NOT_AVAILABLE;
         }
-        return String.valueOf(latitude);
+        return String.format(Locale.ROOT, "%.4f", latitude);
     }
 
     /**
@@ -118,7 +133,7 @@ public class DetailsPresenter implements IDetailsContract.Presenter{
         if (longitude < -180 || longitude > 180) {
             return NOT_AVAILABLE;
         }
-        return String.valueOf(longitude);
+        return String.format(Locale.ROOT, "%.4f", longitude);
     }
 
     /**

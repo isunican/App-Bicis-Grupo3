@@ -1,0 +1,65 @@
+{
+  "network": {
+    "id": "biciparcial",
+    "name": "Bici Parcial",
+    "location": {
+      "latitude": 43.4098,
+      "longitude": -3.4163,
+      "city": "Laredo",
+      "country": "ES"
+    },
+    "href": "/v2/networks/biciparcial",
+    "stations": [
+      {
+        "id": "p1",
+        "name": "Mercado",
+        "latitude": 43.0,
+        "longitude": -4.0,
+        "timestamp": "2026-10-22T10:00:00.000000+00:00Z",
+        "free_bikes": 6,
+        "empty_slots": 6
+      },
+      {
+        "id": "p2",
+        "name": "Puerto",
+        "latitude": 43.0,
+        "longitude": -4.0,
+        "timestamp": "2026-10-22T10:00:00.000000+00:00Z",
+        "empty_slots": 4,
+        "extra": {
+          "slots": 12
+        }
+      },
+      {
+        "id": "p3",
+        "name": "Iglesia",
+        "latitude": 43.0,
+        "longitude": -4.0,
+        "timestamp": "2026-10-22T10:00:00.000000+00:00Z",
+        "free_bikes": 5,
+        "extra": {
+          "ebikes": 1
+        }
+      },
+      {
+        "id": "p4",
+        "name": "Playa",
+        "latitude": 43.0,
+        "longitude": -4.0,
+        "timestamp": "2026-10-22T10:00:00.000000+00:00Z",
+        "extra": {}
+      },
+      {
+        "id": "p5",
+        "latitude": 43.0,
+        "longitude": -4.0,
+        "timestamp": "2026-10-22T10:00:00.000000+00:00Z",
+        "free_bikes": 3,
+        "empty_slots": 7,
+        "extra": {
+          "ebikes": 0
+        }
+      }
+    ]
+  }
+}

@@ -1,5 +1,6 @@
 package es.unican.bicis.activities.details;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -126,8 +127,8 @@ public class DetailsPresenterTest {
 
         sut.init(mockView, network);
 
-        verify(mockView).showLatitude("90.0");
-        verify(mockView).showLongitude("-180.0");
+        verify(mockView).showLatitude("90.0000");
+        verify(mockView).showLongitude("-180.0000");
     }
 
     @Test
@@ -137,8 +138,8 @@ public class DetailsPresenterTest {
 
         sut.init(mockView, network);
 
-        verify(mockView).showLatitude("-90.0");
-        verify(mockView).showLongitude("180.0");
+        verify(mockView).showLatitude("-90.0000");
+        verify(mockView).showLongitude("180.0000");
     }
 
     @Test
@@ -226,4 +227,29 @@ public class DetailsPresenterTest {
         verify(mockView, never()).showName(anyString());
     }
 
+    // ---------- Navegación a la lista de estaciones ----------
+
+    @Test
+    public void testOnStationsClickedShowsStationsOfTheNetwork() {
+        Network network = createNetwork("tuebici", "TUeBICI", "Santander", "ES",
+                +                43.4623, -3.8099, null, new String[]{"UTE BICIS SANTANDER"});
+        sut.init(mockView, network);
+        sut.onStationsClicked();
+        verify(mockView).showStations(network);
+    }
+    @Test
+    public void testOnStationsClickedWithoutDetailsShowsStations() {
+        // A network without detailed info can still have stations
+        Network network = createNetwork("bicisur", "BiciSur", "Cádiz", null,
+                null, null, null, null);
+        sut.init(mockView, network);
+        sut.onStationsClicked();
+        verify(mockView).showStations(network);
+    }
+    @Test
+public void testOnStationsClickedNullNetworkDoesNothing() {
+        sut.init(mockView, null);
+        sut.onStationsClicked();
+        verify(mockView, never()).showStations(any());
+        }
 }
