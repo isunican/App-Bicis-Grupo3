@@ -2,6 +2,7 @@ package es.unican.bicis.activities.details;
 
 import es.unican.bicis.model.Location;
 import es.unican.bicis.model.Network;
+import java.util.Locale;
 
 public class DetailsPresenter implements IDetailsContract.Presenter{
     /** Text shown when a value is not available or is invalid */
@@ -116,7 +117,7 @@ public class DetailsPresenter implements IDetailsContract.Presenter{
         if (latitude < -90 || latitude > 90) {
             return NOT_AVAILABLE;
         }
-        return String.valueOf(latitude);
+        return String.format(Locale.ROOT, "%.4f", latitude);
     }
 
     /**
@@ -132,7 +133,7 @@ public class DetailsPresenter implements IDetailsContract.Presenter{
         if (longitude < -180 || longitude > 180) {
             return NOT_AVAILABLE;
         }
-        return String.valueOf(longitude);
+        return String.format(Locale.ROOT, "%.4f", longitude);
     }
 
     /**
