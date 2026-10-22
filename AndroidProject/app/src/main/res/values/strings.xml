@@ -7,4 +7,8 @@
     <string name="seeStations">Ver estaciones</string>
     <string name="hasEbikes">Tiene bicis eléctricas</string>
     <string name="info_text">Aplicación creada para el Proyecto Integrado Curso 2026-2027</string>
+    <string name="locationPermissionDenied">No has dado permiso para usar tu ubicación. Elige una ciudad de la lista</string>
+    <string name="locationUnavailable">No se ha podido obtener tu ubicación. Elige una ciudad de la lista</string>
+    <string name="noNetworkNearby">No hay ninguna red de bicis en tu ciudad. Elige una ciudad de la lista</string>
+    <string name="cityDetected">Ciudad detectada: %s</string>
 </resources>

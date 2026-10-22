@@ -2,6 +2,7 @@ package es.unican.bicis.activities.main;
 
 import java.util.List;
 
+import es.unican.bicis.location.ILocationProvider;
 import es.unican.bicis.model.Network;
 import es.unican.bicis.repository.INetworksRepository;
 
@@ -36,6 +37,13 @@ public interface IMainContract {
          * Only the View should call this method
          */
         public void onMenuInfoClicked();
+
+        /**
+         * The presenter is informed of the user's answer to the location permission request.
+         * Only the View should call this method
+         * @param granted true if the user has given the location permission, false otherwise
+         */
+        public void onLocationPermissionResult(boolean granted);
 
     }
 
@@ -97,6 +105,50 @@ public interface IMainContract {
          * Only the Presenter should call this method
          */
         public void showInfoActivity();
+
+        /**
+         * The view is requested to ask the user for the location permission. If the permission
+         * was already given, the view must inform the presenter directly.
+         * Only the Presenter should call this method
+         */
+        public void requestLocationPermission();
+
+        /**
+         * The view is requested to display a message indicating that the user has not given
+         * the location permission. The list of networks stays visible so the user can pick one.
+         * Only the Presenter should call this method
+         */
+        public void showLocationPermissionDenied();
+
+        /**
+         * The view is requested to display a message indicating that the location of the device
+         * could not be obtained. The list of networks stays visible so the user can pick one.
+         * Only the Presenter should call this method
+         */
+        public void showLocationUnavailable();
+
+        /**
+         * The view is requested to display a message indicating that there is no bike sharing
+         * network close to the user. The list of networks stays visible so the user can pick one.
+         * Only the Presenter should call this method
+         */
+        public void showNoNetworkNearby();
+
+        /**
+         * Returns the provider that gives the location of the device. Like the repository,
+         * it is created in the view because it needs Android.
+         * Only the Presenter should call this method
+         * @return the location provider
+         */
+        public ILocationProvider getLocationProvider();
+
+        /**
+         * The view is requested to show the city and the stations of the network detected
+         * from the user's location.
+         * Only the Presenter should call this method
+         * @param network the network detected from the user's location
+         */
+        public void showNetworkStations(Network network);
 
     }
 }
