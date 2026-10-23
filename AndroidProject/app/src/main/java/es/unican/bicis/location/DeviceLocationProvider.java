@@ -16,7 +16,7 @@ import androidx.core.location.LocationManagerCompat;
 public class DeviceLocationProvider implements ILocationProvider {
 
     /** Maximum age of the last known location to be used directly (2 minutes) */
-    private static final long MAX_AGE_MS = 2 * 60 * 1000;
+    private static final long MAX_AGE_MS = 2L * 60 * 1000;
 
     private final Context context;
     private final LocationManager locationManager;
