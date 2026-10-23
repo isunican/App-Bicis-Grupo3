@@ -7,7 +7,10 @@ import es.unican.bicis.model.Station;
 import es.unican.bicis.repository.INetworksRepository;
 
 /**
- * Contract between the view and the presenter of the list of stations of a network.
+ * The Presenter-View contract for the Stations activity.
+ * The Stations activity shows the stations of a bike sharing network,
+ * allows to filter them by a minimum number of free bikes and gives access
+ * to the detailed information of the network.
  */
 public interface IStationsContract {
 
@@ -19,12 +22,38 @@ public interface IStationsContract {
 
         /**
          * Links the presenter with its view and the network whose stations must be shown.
-         * The presenter shows the header of the network and requests its stations.
+         * The presenter shows the network header and requests its stations to the repository.
          * Only the View should call this method
          * @param view the view controlled by this presenter
          * @param network the network whose stations must be shown
          */
         public void init(View view, Network network);
+
+        /**
+         * The presenter is informed that the user wants to filter the stations
+         * by a minimum number of free bikes.
+         * Only the View should call this method
+         * @param minFreeBikesText the text introduced by the user
+         */
+        public void onFilterApplied(String minFreeBikesText);
+
+        /**
+         * Notifies the presenter that the user wants to remove
+         * all applied station filters.
+         *
+         * If successful, the complete list of stations is restored.
+         * If the operation fails, the view displays an error message.
+         *
+         * Only the view should call this method.
+         */
+        public void onFilterCleared();
+
+        /**
+         * The presenter is informed that the user wants to see the detailed
+         * information of the network.
+         * Only the View should call this method
+         */
+        public void onInfoClicked();
 
     }
 
@@ -76,6 +105,52 @@ public interface IStationsContract {
          * Only the Presenter should call this method
          */
         public void showLoadError();
-    }
 
+        /**
+         * The view is requested to hide the list and display a message indicating
+         * that no station has at least the given number of free bikes.
+         * Only the Presenter should call this method
+         * @param minFreeBikes the minimum number of free bikes requested
+         */
+        public void showNoStationsWithMinFreeBikes(int minFreeBikes);
+
+        /**
+         * The view is requested to display an error indicating that the introduced
+         * value is not valid (it must be an integer greater than 0).
+         * The filter that was active before, if any, remains unchanged.
+         * Only the Presenter should call this method
+         */
+        public void showInvalidMinFreeBikes();
+
+        /**
+         * Requests the view to display an error message when
+         * the applied station filters cannot be removed.
+         *
+         * The currently displayed stations and filter settings
+         * should remain unchanged if the operation fails.
+         *
+         * Only the presenter should call this method.
+         */
+        public void mostrarErrorQuitarFiltros();
+        /**
+         * The view is requested to indicate that a filter is active.
+         * Only the Presenter should call this method
+         * @param minFreeBikes the minimum number of free bikes of the active filter
+         */
+        public void showFilterActive(int minFreeBikes);
+
+        /**
+         * The view is requested to indicate that no filter is active.
+         * Only the Presenter should call this method
+         */
+        public void showFilterInactive();
+
+        /**
+         * The view is requested to open the detailed view of the given network.
+         * Only the Presenter should call this method
+         * @param network the network
+         */
+        public void showNetworkDetails(Network network);
+
+    }
 }

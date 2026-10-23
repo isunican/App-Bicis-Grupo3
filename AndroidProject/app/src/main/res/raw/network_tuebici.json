@@ -70,7 +70,6 @@
                 "latitude": 43.462731,
                 "longitude": -3.80133,
                 "timestamp": "2026-09-24T11:11:30.549462+00:00Z",
-                "free_bikes": 3,
                 "empty_slots": 7,
                 "extra": {
                     "uid": "506607574",
@@ -106,7 +105,7 @@
                 "latitude": 43.458824,
                 "longitude": -3.818334,
                 "timestamp": "2026-09-24T11:11:30.549675+00:00Z",
-                "free_bikes": 5,
+                "free_bikes": "sin dato",
                 "empty_slots": 3,
                 "extra": {
                     "uid": "506614775",

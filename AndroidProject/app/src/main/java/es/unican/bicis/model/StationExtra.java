@@ -1,5 +1,6 @@
 package es.unican.bicis.model;
 
+import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 
 import org.parceler.Parcel;
