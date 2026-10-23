@@ -31,4 +31,13 @@
     <string name="filterInvalid">Introduce un número entero mayor que 0</string>
     <string name="filterActive">Con al menos %d bicis libres</string>
     <string name="filterNoResults">No hay estaciones con al menos %d bicis libres</string>
+
+    <!-- Ver información detallada de la red (US532200) -->
+    <string name="detailsTitle">Detalles de la red</string>
+    <string name="detailsLatitude">Latitud</string>
+    <string name="detailsLongitude">Longitud</string>
+    <string name="detailsEbikes">Bicis eléctricas</string>
+    <string name="detailsOperatorsCount">Nº de empresas</string>
+    <string name="detailsOperators">Empresas operadoras</string>
+    <string name="detailsNoInfo">No hay información detallada disponible para esta red</string>
 </resources>
