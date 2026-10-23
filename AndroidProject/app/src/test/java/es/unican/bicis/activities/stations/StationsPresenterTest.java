@@ -2,14 +2,19 @@ package es.unican.bicis.activities.stations;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import static org.mockito.Mockito.doThrow;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -28,6 +33,9 @@ import es.unican.bicis.repository.StationsCallback;
 
 /**
  * Unit tests for {@link StationsPresenter}.
+ * The view and the repository are replaced by Mockito mocks.
+ * Loading of the stations (UPR.2): HU 532377 Listar estaciones.
+ * Filter by free bikes and access to the details (UPR.1, UPR.3, UPR.4): HU 532376 Filtrar estaciones.
  */
 public class StationsPresenterTest {
 
@@ -35,12 +43,28 @@ public class StationsPresenterTest {
     private INetworksRepository mockRepository;
     private StationsPresenter sut;
 
+    private Network network;
+    private Station s0;
+    private Station s3;
+    private Station s5;
+    private Station sNull;
+    private List<Station> allStations;
+
     @Before
     public void setUp() {
         mockView = mock(IStationsContract.View.class);
         mockRepository = mock(INetworksRepository.class);
         when(mockView.getNetworksRepository()).thenReturn(mockRepository);
         sut = new StationsPresenter();
+
+        network = createNetwork("tuebici", "TUeBICI", "Santander", "ES");
+        s0 = createStation("Estacion 0", 0);
+        s3 = createStation("Estacion 3", 3);
+        s5 = createStation("Estacion 5", 5);
+        sNull = createStation("Estacion sin dato", null);
+
+        // ordenadas de más a menos bicis libres, que es como las muestra el presenter
+        allStations = Arrays.asList(s5, s3, s0, sNull);
     }
 
     private Network createNetwork(String id, String name, String city, String country) {
@@ -48,11 +72,11 @@ public class StationsPresenterTest {
         location.setCity(city);
         location.setCountry(country);
 
-        Network network = new Network();
-        network.setId(id);
-        network.setName(name);
-        network.setLocation(location);
-        return network;
+        Network n = new Network();
+        n.setId(id);
+        n.setName(name);
+        n.setLocation(location);
+        return n;
     }
 
     private Station createStation(String name, Integer freeBikes) {
@@ -80,8 +104,21 @@ public class StationsPresenterTest {
         }).when(mockRepository).requestStations(any(StationsCallback.class), anyString());
     }
 
-    // ---------- Caso de éxito ----------
+    /**
+     * Loads the given stations in the presenter and forgets the calls made during
+     * the initial load, so that the filter tests only check what happens afterwards.
+     */
+    private void initPresenterWith(List<Station> stations) {
+        repositoryReturns(stations);
+        sut.init(mockView, network);
+        clearInvocations(mockView);
+    }
 
+    // =====================================================================
+    // Carga de estaciones (HU 532377 Listar estaciones)
+    // =====================================================================
+
+    /** UPR.2a: se muestran la cabecera y las estaciones ordenadas de más a menos bicis. */
     @Test
     @SuppressWarnings("unchecked")
     public void testInitShowsStationsSortedByFreeBikes() {
@@ -105,6 +142,7 @@ public class StationsPresenterTest {
         verify(mockView, never()).showLoadError();
     }
 
+    /** UPR.2b: se piden las estaciones de cualquier red, no solo de TUeBICI. */
     @Test
     public void testInitAnyNetworkRequestsItsStations() {
         repositoryReturns(Arrays.asList(createStation("Estación", 1)));
@@ -115,8 +153,7 @@ public class StationsPresenterTest {
         verify(mockView).showStations(anyList());
     }
 
-    // ---------- Datos ausentes en la cabecera ----------
-
+    /** UPR.2c: red sin nombre ni país: se muestra "-" y solo la ciudad. */
     @Test
     public void testInitMissingNameAndCountry() {
         repositoryReturns(Arrays.asList(createStation("Estación", 1)));
@@ -127,19 +164,19 @@ public class StationsPresenterTest {
         verify(mockView).showNetworkLocation("Santander");
     }
 
+    /** UPR.2d: red sin ubicación: se muestra "-". */
     @Test
     public void testInitNullLocationShowsDash() {
-        Network network = createNetwork("id", "Red", null, null);
-        network.setLocation(null);
+        Network n = createNetwork("id", "Red", null, null);
+        n.setLocation(null);
         repositoryReturns(new ArrayList<>());
 
-        sut.init(mockView, network);
+        sut.init(mockView, n);
 
         verify(mockView).showNetworkLocation(StationUtils.NO_DATA);
     }
 
-    // ---------- Red sin estaciones ----------
-
+    /** UPR.2e: red sin estaciones (lista vacía): mensaje de lista vacía. */
     @Test
     public void testInitEmptyListShowsNoStations() {
         repositoryReturns(new ArrayList<>());
@@ -151,6 +188,7 @@ public class StationsPresenterTest {
         verify(mockView, never()).showLoadError();
     }
 
+    /** UPR.2f: el repositorio devuelve null: mensaje de lista vacía. */
     @Test
     public void testInitNullListShowsNoStations() {
         repositoryReturns(null);
@@ -161,8 +199,7 @@ public class StationsPresenterTest {
         verify(mockView, never()).showStations(anyList());
     }
 
-    // ---------- Error de carga ----------
-
+    /** UPR.2g: falla la carga de estaciones: mensaje de error y se mantiene la cabecera. */
     @Test
     public void testInitRepositoryFailureShowsLoadError() {
         repositoryFails();
@@ -175,6 +212,7 @@ public class StationsPresenterTest {
         verify(mockView, never()).showNoStations();
     }
 
+    /** UPR.2h: no llega ninguna red: mensaje de error y no se piden estaciones. */
     @Test
     public void testInitNullNetworkShowsLoadError() {
         sut.init(mockView, null);
@@ -184,6 +222,7 @@ public class StationsPresenterTest {
         verify(mockRepository, never()).requestStations(any(StationsCallback.class), anyString());
     }
 
+    /** UPR.2i: red sin id: mensaje de error y no se piden estaciones. */
     @Test
     public void testInitBlankIdShowsLoadErrorWithoutRequest() {
         sut.init(mockView, createNetwork("  ", "Red", "Ciudad", "ES"));
@@ -193,4 +232,259 @@ public class StationsPresenterTest {
         verify(mockRepository, never()).requestStations(any(StationsCallback.class), anyString());
     }
 
+    // =====================================================================
+    // Filtro por bicis libres (HU 532376 Filtrar estaciones)
+    // =====================================================================
+
+    /** UPR.1a: filtro "3": solo las estaciones con 3 o más bicis, en orden. */
+    @Test
+    public void testFilterShowsOnlyStationsWithAtLeastMinimum() {
+        initPresenterWith(Arrays.asList(s0, s3, s5, sNull));
+
+        sut.onFilterApplied("3");
+
+        verify(mockView).showFilterActive(3);
+        verify(mockView).showStations(Arrays.asList(s5, s3));
+        verify(mockView).showNetworkLocation("Santander, ES · 2 estaciones");
+        verify(mockView, never()).showNoStationsWithMinFreeBikes(anyInt());
+        verify(mockView, never()).showInvalidMinFreeBikes();
+    }
+
+    /** UPR.1b: filtro "5": se incluye la estación con exactamente 5 bicis (valor límite). */
+    @Test
+    public void testFilterIncludesStationsEqualToMinimum() {
+        initPresenterWith(Arrays.asList(s0, s3, s5, sNull));
+
+        sut.onFilterApplied("5");
+
+        verify(mockView).showStations(Arrays.asList(s5));
+    }
+
+    /** UPR.1c: filtro "1", el menor valor válido (valor límite). */
+    @Test
+    public void testFilterMinimumValueOne() {
+        initPresenterWith(Arrays.asList(s0, s3, s5, sNull));
+
+        sut.onFilterApplied("1");
+
+        verify(mockView).showStations(Arrays.asList(s5, s3));
+    }
+
+    /** UPR.1d: filtro " 5 " con espacios: se acepta. */
+    @Test
+    public void testFilterAcceptsValueWithSpaces() {
+        initPresenterWith(Arrays.asList(s0, s3, s5, sNull));
+
+        sut.onFilterApplied(" 5 ");
+
+        verify(mockView).showStations(Arrays.asList(s5));
+    }
+
+    // ---------- Sin resultados
+
+//AÑADO
+
+    // Con un filtro aplicado, se quita y se ve la lista completa.
+    @Test
+    public void testQuitarFiltrosTrasUnFiltroMuestraListaCompleta() {
+        initPresenterWith(allStations);
+        sut.onFilterApplied("3");
+        clearInvocations(mockView);
+
+        sut.onFilterCleared();
+
+        verify(mockView).showStations(allStations);
+        verify(mockView, never()).mostrarErrorQuitarFiltros();
+    }
+
+    // Con varios filtros aplicados, una sola acción los quita todos.
+    @Test
+    public void testQuitarFiltrosTrasVariosFiltrosMuestraListaCompleta() {
+        initPresenterWith(allStations);
+        sut.onFilterApplied("1");
+        sut.onFilterApplied("3");
+        sut.onFilterApplied("5");
+        clearInvocations(mockView);
+
+        sut.onFilterCleared();
+
+        verify(mockView).showStations(allStations);
+        verify(mockView, never()).mostrarErrorQuitarFiltros();
+    }
+
+    // Si falla al quitar los filtros, se muestra el error.
+    @Test
+    public void testQuitarFiltrosConFalloMuestraError() {
+        initPresenterWith(allStations);
+        sut.onFilterApplied("3");
+        clearInvocations(mockView);
+        doThrow(new RuntimeException("fallo simulado")).when(mockView).showStations(allStations);
+
+        sut.onFilterCleared();
+
+        verify(mockView).mostrarErrorQuitarFiltros();
+    }
+
+    //Sin filtros aplicados, la lista sigue completa y no hay error.
+    @Test
+    public void testQuitarFiltrosSinFiltroAplicadoMantieneListaCompleta() {
+        initPresenterWith(allStations);
+
+        sut.onFilterCleared();
+
+        verify(mockView).showStations(allStations);
+        verify(mockView, never()).mostrarErrorQuitarFiltros();
+        verify(mockView, never()).showInvalidMinFreeBikes();
+    }
+//
+
+    /** UPR.1e: filtro "6", mayor que todas: mensaje de sin resultados. */
+    @Test
+    public void testFilterWithoutResultsShowsMessage() {
+        initPresenterWith(Arrays.asList(s0, s3, s5, sNull));
+
+        sut.onFilterApplied("6");
+
+        verify(mockView).showFilterActive(6);
+        verify(mockView).showNoStationsWithMinFreeBikes(6);
+        verify(mockView).showNetworkLocation("Santander, ES");
+        verify(mockView, never()).showStations(anyList());
+        verify(mockView, never()).showInvalidMinFreeBikes();
+    }
+
+    /** UPR.1f: red sin estaciones y filtro "1": mensaje de sin resultados. */
+    @Test
+    public void testFilterWithoutStationsShowsMessage() {
+        initPresenterWith(new ArrayList<>());
+
+        sut.onFilterApplied("1");
+
+        verify(mockView).showNoStationsWithMinFreeBikes(1);
+    }
+
+    /** UPR.1g: filtro "0": valor no válido (valor límite). */
+    @Test
+    public void testFilterZeroIsInvalid() {
+        assertInvalid("0");
+    }
+
+    /** UPR.1h: filtro "-1": valor no válido. */
+    @Test
+    public void testFilterNegativeIsInvalid() {
+        assertInvalid("-1");
+    }
+
+    /** UPR.1i: filtro "abc": valor no válido. */
+    @Test
+    public void testFilterTextIsInvalid() {
+        assertInvalid("abc");
+    }
+
+    /** UPR.1j: filtro "2.5": valor no válido. */
+    @Test
+    public void testFilterDecimalIsInvalid() {
+        assertInvalid("2.5");
+    }
+
+    /** UPR.1k: filtro vacío: valor no válido. */
+    @Test
+    public void testFilterEmptyIsInvalid() {
+        assertInvalid("");
+    }
+
+    /** UPR.1l: filtro null: valor no válido. */
+    @Test
+    public void testFilterNullIsInvalid() {
+        assertInvalid(null);
+    }
+
+    /** UPR.1m: filtro "99999999999", fuera del rango de int: valor no válido. */
+    @Test
+    public void testFilterTooBigNumberIsInvalid() {
+        assertInvalid("99999999999");
+    }
+
+    private void assertInvalid(String input) {
+        initPresenterWith(Arrays.asList(s0, s3, s5, sNull));
+
+        sut.onFilterApplied(input);
+
+        verify(mockView).showInvalidMinFreeBikes();
+        verify(mockView, never()).showFilterActive(anyInt());
+        verify(mockView, never()).showStations(anyList());
+        verify(mockView, never()).showNoStationsWithMinFreeBikes(anyInt());
+    }
+
+    /** UPR.1n: las estaciones sin dato de bicis no se muestran al filtrar. */
+    @Test
+    public void testStationsWithoutDataAreNotShownWhenFiltering() {
+        initPresenterWith(Arrays.asList(sNull, s3));
+
+        sut.onFilterApplied("1");
+
+        verify(mockView).showStations(Arrays.asList(s3));
+    }
+
+    /** UPR.1o: solo hay estaciones sin dato: mensaje de sin resultados. */
+    @Test
+    public void testOnlyStationsWithoutDataShowsNoResults() {
+        initPresenterWith(Arrays.asList(sNull));
+
+        sut.onFilterApplied("1");
+
+        verify(mockView).showNoStationsWithMinFreeBikes(1);
+    }
+
+    /** UPR.3a: al quitar el filtro se vuelven a mostrar todas las estaciones. */
+    @Test
+    public void testClearFilterShowsAllStations() {
+        initPresenterWith(Arrays.asList(s0, s3, s5, sNull));
+        sut.onFilterApplied("3");
+        clearInvocations(mockView);
+
+        sut.onFilterCleared();
+
+        verify(mockView).showFilterInactive();
+        verify(mockView).showStations(Arrays.asList(s5, s3, s0, sNull));
+        verify(mockView).showNetworkLocation("Santander, ES · 4 estaciones");
+    }
+
+    /** UPR.3b: quitar el filtro tras un error de carga: se mantiene el error. */
+    @Test
+    public void testClearFilterAfterLoadErrorShowsLoadError() {
+        repositoryFails();
+        sut.init(mockView, network);
+        sut.onFilterApplied("1");
+        clearInvocations(mockView);
+
+        sut.onFilterCleared();
+
+        verify(mockView).showFilterInactive();
+        verify(mockView).showLoadError();
+        verify(mockView, never()).showStations(anyList());
+    }
+
+    // =====================================================================
+    // Acceso al detalle de la red
+    // =====================================================================
+
+    /** UPR.4a: botón de información: se abre el detalle de la red. */
+    @Test
+    public void testInfoClickedOpensNetworkDetails() {
+        initPresenterWith(Arrays.asList(s3));
+
+        sut.onInfoClicked();
+
+        verify(mockView).showNetworkDetails(network);
+    }
+
+    /** UPR.4b: botón de información sin red: no se abre nada. */
+    @Test
+    public void testInfoClickedWithoutNetworkDoesNothing() {
+        sut.init(mockView, null);
+
+        sut.onInfoClicked();
+
+        verify(mockView, never()).showNetworkDetails(any());
+    }
 }

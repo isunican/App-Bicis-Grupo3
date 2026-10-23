@@ -1,5 +1,6 @@
 package es.unican.bicis.model;
 
+import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 
 import org.parceler.Parcel;
@@ -14,6 +15,8 @@ import com.google.gson.annotations.JsonAdapter;
  * <a href="https://api.citybik.es/v2/">CityBikes API</a>.
  * The #SerializedName annotation is a JSON annotation that defines the name of the property
  * as defined in the JSON response.
+ * Numeric values use tolerant adapters: if a value is missing or has an invalid format,
+ * the field is null, meaning "not available", instead of making the whole response fail.
  * Getters and setters are automatically generated at compile time by Lombok.
  */
 @Parcel
@@ -23,12 +26,18 @@ public class Station {
 
     @SerializedName("id")                   protected String id;
     @SerializedName("name")                 protected String name;
+
+    @JsonAdapter(DoubleAdapter.class)
     @SerializedName("latitude")             protected Double latitude;
+
+    @JsonAdapter(DoubleAdapter.class)
     @SerializedName("longitude")            protected Double longitude;
+
     @SerializedName("timestamp")            protected String timestamp;
 
     @JsonAdapter(IntegerAdapter.class)
     @SerializedName("free_bikes")           protected Integer freeBikes;
+
     @JsonAdapter(IntegerAdapter.class)
     @SerializedName("empty_slots")          protected Integer emptySlots;
 
