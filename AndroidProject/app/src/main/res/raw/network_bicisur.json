@@ -1,0 +1,12 @@
+{
+  "network": {
+    "id": "bicisur",
+    "name": "Bici Sur",
+    "location": {
+      "city": "Cádiz",
+      "country": "ES"
+    },
+    "href": "/v2/networks/bicisur",
+    "stations": []
+  }
+}

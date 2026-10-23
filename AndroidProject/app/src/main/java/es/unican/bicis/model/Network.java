@@ -4,6 +4,7 @@ import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 
 import org.parceler.Parcel;
+import java.util.List;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -11,10 +12,8 @@ import lombok.Setter;
 /**
  * A bike sharing network (a city-level bike rental system), as defined in the
  * <a href="https://api.citybik.es/v2/">CityBikes API</a>.
- *
  * The #SerializedName annotation is a GSON annotation that defines the name of the property
  * as defined in the json response.
- *
  * Getters are automatically generated at compile time by Lombok.
  */
 @Parcel
@@ -36,6 +35,8 @@ public class Network {
 
     @JsonAdapter(BooleanAdapter.class)
     @SerializedName("ebikes")               protected Boolean ebikes;
+
+    @SerializedName("stations")             protected List<Station> stations;
 
     //@return [el numero de compañias] o [null] si la compañia es un array de textos vacios
     public Integer countOperators() {

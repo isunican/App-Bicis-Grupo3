@@ -1,7 +1,9 @@
 package es.unican.bicis.activities.details;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.appcompat.app.ActionBar;
@@ -12,6 +14,7 @@ import androidx.core.content.IntentCompat;
 import org.parceler.Parcels;
 
 import es.unican.bicis.R;
+import es.unican.bicis.activities.stations.StationsView;
 import es.unican.bicis.model.Network;
 
 /**
@@ -21,19 +24,25 @@ import es.unican.bicis.model.Network;
  */
 public class DetailsView extends AppCompatActivity implements IDetailsContract.View {
 
-    /** Key for the intent that contains the network */
+    /**
+     * Key for the intent that contains the network
+     */
     public static final String INTENT_NETWORK = "INTENT_NETWORK";
 
-    /** The presenter of this view */
+    /**
+     * The presenter of this view
+     */
     private IDetailsContract.Presenter presenter;
 
-    /** View elements */
+    /**
+     * View elements
+     */
     private TextView tvName;
     private TextView tvCity;
 
     /**
-     * @see AppCompatActivity#onCreate(Bundle)
      * @param savedInstanceState
+     * @see AppCompatActivity#onCreate(Bundle)
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +61,8 @@ public class DetailsView extends AppCompatActivity implements IDetailsContract.V
         // Link to view elements
         tvName = findViewById(R.id.tvName);
         tvCity = findViewById(R.id.tvCity);
+        Button btnStations = findViewById(R.id.btnStations);
+        btnStations.setOnClickListener(v -> presenter.onStationsClicked());
 
         // Get Network from the intent that triggered this activity
         Parcelable wrapped = IntentCompat.getParcelableExtra(getIntent(), INTENT_NETWORK, Parcelable.class);
@@ -66,8 +77,8 @@ public class DetailsView extends AppCompatActivity implements IDetailsContract.V
     }
 
     /**
-     * @see IDetailsContract.View#showName(String)
      * @param name the name of the network
+     * @see IDetailsContract.View#showName(String)
      */
     @Override
     public void showName(String name) {
@@ -75,8 +86,8 @@ public class DetailsView extends AppCompatActivity implements IDetailsContract.V
     }
 
     /**
-     * @see IDetailsContract.View#showLocation(String)
      * @param location the city and country of the network
+     * @see IDetailsContract.View#showLocation(String)
      */
     @Override
     public void showLocation(String location) {
@@ -84,8 +95,8 @@ public class DetailsView extends AppCompatActivity implements IDetailsContract.V
     }
 
     /**
-     * @see IDetailsContract.View#showLatitude(String)
      * @param latitude the latitude as text
+     * @see IDetailsContract.View#showLatitude(String)
      */
     @Override
     public void showLatitude(String latitude) {
@@ -93,8 +104,8 @@ public class DetailsView extends AppCompatActivity implements IDetailsContract.V
     }
 
     /**
-     * @see IDetailsContract.View#showLongitude(String)
      * @param longitude the longitude as text
+     * @see IDetailsContract.View#showLongitude(String)
      */
     @Override
     public void showLongitude(String longitude) {
@@ -102,8 +113,8 @@ public class DetailsView extends AppCompatActivity implements IDetailsContract.V
     }
 
     /**
-     * @see IDetailsContract.View#showEbikes(String)
      * @param ebikes "Sí", "No" or "-"
+     * @see IDetailsContract.View#showEbikes(String)
      */
     @Override
     public void showEbikes(String ebikes) {
@@ -111,8 +122,8 @@ public class DetailsView extends AppCompatActivity implements IDetailsContract.V
     }
 
     /**
-     * @see IDetailsContract.View#showOperatorsCount(String)
      * @param count the number of companies as text
+     * @see IDetailsContract.View#showOperatorsCount(String)
      */
     @Override
     public void showOperatorsCount(String count) {
@@ -120,8 +131,8 @@ public class DetailsView extends AppCompatActivity implements IDetailsContract.V
     }
 
     /**
-     * @see IDetailsContract.View#showOperators(String)
      * @param operators the formatted list of companies
+     * @see IDetailsContract.View#showOperators(String)
      */
     @Override
     public void showOperators(String operators) {
@@ -136,4 +147,14 @@ public class DetailsView extends AppCompatActivity implements IDetailsContract.V
         // TODO: pending view element in layout (hide details and show tvNoDetails message)
     }
 
+    /**
+     * @param network the network whose stations must be shown
+     * @see IDetailsContract.View#showStations(Network)
+     */
+    @Override
+    public void showStations(Network network) {
+        Intent intent = new Intent(this, StationsView.class);
+        intent.putExtra(StationsView.INTENT_NETWORK, Parcels.wrap(network));
+        startActivity(intent);
+    }
 }
