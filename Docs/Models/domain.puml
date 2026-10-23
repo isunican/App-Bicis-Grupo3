@@ -8,11 +8,17 @@ class Network {
     - href : String
     - company : String[]
     - gbfsHref : String
-    - ebikes : boolean
+    - ebikes : Boolean
+    + countOperators() : Integer
+    + hasOnlyBasicInfo() : boolean
 }
 
 class Location {
     - city : String
+    - country : String
+    - latitude : Double
+    - longitude : Double
+    + hasValidCoordinates() : boolean
 }
 
 class NetworksResponse {
@@ -26,5 +32,32 @@ class NetworkResponse {
 Network *--> "1" Location : location
 NetworksResponse *--> "*" Network : networks
 NetworkResponse *--> "1" Network : network
+
+' HU 532377 Listar estaciones / HU 532376 Filtrar estaciones por bicis libres
+class Station {
+    - id : String
+    - name : String
+    - latitude : Double
+    - longitude : Double
+    - timestamp : String
+    - freeBikes : Integer
+    - emptySlots : Integer
+    + getEbikes() : Integer
+    + getSlots() : Integer
+}
+
+class StationExtra {
+    - ebikes : Integer
+    - slots : Integer
+}
+
+class StationFilter {
+    + {static} filterByMinFreeBikes(stations : List<Station>, minFreeBikes : int) : List<Station>
+    + {static} hasValidFreeBikes(station : Station) : boolean
+}
+
+Network *--> "*" Station : stations
+Station *--> "0..1" StationExtra : extra
+StationFilter ..> Station : <<use>>
 
 @enduml

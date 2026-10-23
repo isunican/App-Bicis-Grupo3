@@ -105,6 +105,8 @@ dependencies {
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
+    androidTestImplementation libs.test.rules
+
 
     // Parceler (automatically implements methods to create parcels)
     implementation libs.parceler.api
@@ -137,4 +139,7 @@ dependencies {
 
     // Roboelectric (to get a proper Context object in unit tests)
     testImplementation libs.roboelectric
+
+    // Location (to get the current location of the device)
+    implementation libs.play.services.location
 }

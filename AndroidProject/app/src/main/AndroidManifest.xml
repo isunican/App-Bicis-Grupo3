@@ -3,6 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <application
         android:name=".BicisApp"
@@ -19,6 +21,10 @@
             android:name=".activities.info.InfoView"
             android:exported="false"
             android:parentActivityName=".activities.main.MainView" />
+        <activity
+            android:name=".activities.stations.StationsView"
+            android:exported="false"
+            android:parentActivityName=".activities.details.DetailsView" />
         <activity
             android:name=".activities.details.DetailsView"
             android:exported="false"
