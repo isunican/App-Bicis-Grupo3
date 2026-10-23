@@ -29,6 +29,7 @@ import dagger.hilt.android.AndroidEntryPoint;
 import es.unican.bicis.R;
 import es.unican.bicis.activities.info.InfoView;
 import es.unican.bicis.activities.details.DetailsView;
+import es.unican.bicis.activities.stations.StationsView;
 import es.unican.bicis.location.ILocationProvider;
 import es.unican.bicis.model.Network;
 import es.unican.bicis.repository.INetworksRepository;
@@ -229,11 +230,21 @@ public class MainView extends AppCompatActivity implements IMainContract.View {
      */
     @Override
     public void showNetworkStations(Network network) {
+        // si la pantalla ya se ha cerrado no se hace nada (la ubicacion puede llegar tarde)
+        if (isFinishing() || isDestroyed()) {
+            return;
+        }
+
         // se muestra la ciudad, y si no la tiene el nombre de la red
         String ciudad = network.getLocation() != null && network.getLocation().getCity() != null
                 ? network.getLocation().getCity()
                 : network.getName();
         Toast.makeText(this, getString(R.string.cityDetected, ciudad), Toast.LENGTH_LONG).show();
+
+        // se abre directamente la lista de estaciones de esa red
+        Intent intent = new Intent(this, StationsView.class);
+        intent.putExtra(StationsView.INTENT_NETWORK, Parcels.wrap(network));
+        startActivity(intent);
     }
 
     /**
