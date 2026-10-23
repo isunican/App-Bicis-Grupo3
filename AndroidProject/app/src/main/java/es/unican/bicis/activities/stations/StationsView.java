@@ -228,6 +228,15 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         showMessage(getString(R.string.filterNoResults, minFreeBikes));
     }
 
+
+    /**
+     * @see IStationsContract.View#mostrarErrorQuitarFiltros()
+     */
+    @Override
+    public void mostrarErrorQuitarFiltros() {
+        showMessage(getString(R.string.clearFilterError));
+    }
+
     /**
      * @see IStationsContract.View#showInvalidMinFreeBikes()
      */

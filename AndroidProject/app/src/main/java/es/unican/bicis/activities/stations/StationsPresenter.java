@@ -142,7 +142,11 @@ public class StationsPresenter implements IStationsContract.Presenter {
     @Override
     public void onFilterCleared() {
         view.showFilterInactive();
-        showAllStations();
+        try {
+            showAllStations();
+        } catch (RuntimeException error) {
+            view.mostrarErrorQuitarFiltros();
+        }
     }
 
     /**
@@ -176,11 +180,6 @@ public class StationsPresenter implements IStationsContract.Presenter {
     private void showStationList(List<Station> list) {
         view.showStations(list);
         view.showNetworkLocation(location + " · " + list.size() + " estaciones");
-        try {
-            view.showStations(stations);
-        } catch (RuntimeException error) {
-            view.mostrarErrorQuitarFiltros();
-        }
     }
 //
     /**

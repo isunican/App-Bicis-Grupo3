@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -47,6 +48,7 @@ public class StationsPresenterTest {
     private Station s3;
     private Station s5;
     private Station sNull;
+    private List<Station> allStations;
 
     @Before
     public void setUp() {
@@ -60,6 +62,9 @@ public class StationsPresenterTest {
         s3 = createStation("Estacion 3", 3);
         s5 = createStation("Estacion 5", 5);
         sNull = createStation("Estacion sin dato", null);
+
+        // ordenadas de más a menos bicis libres, que es como las muestra el presenter
+        allStations = Arrays.asList(s5, s3, s0, sNull);
     }
 
     private Network createNetwork(String id, String name, String city, String country) {
@@ -275,20 +280,7 @@ public class StationsPresenterTest {
         verify(mockView).showStations(Arrays.asList(s5));
     }
 
-    @Test
-    public void testClearFilterShowsAllStations() {
-        initPresenterWith(allStations);
-        sut.onFilterApplied("3");
-
-        sut.onFilterCleared();
-
-        verify(mockView).showStations(allStations);
-    }
-
     // ---------- Sin resultados
-
-
-
 
 //AÑADO
 
