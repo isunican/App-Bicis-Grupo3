@@ -1,16 +1,16 @@
 package es.unican.bicis.activities.main;
 
 import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.Espresso.pressBack;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
-import static androidx.test.espresso.matcher.RootMatchers.withDecorView;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
-import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertNotNull;
 
 import android.Manifest;
 import android.content.Context;
-import android.view.View;
 
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -28,7 +28,7 @@ import es.unican.bicis.utils.MockLocationManager;
 
 /**
  * UI test for successful city detection using a mocked GPS location.
- * HU 532319 - Detect the user's city automatically.
+ * HU 532319 - Detect the user's city automatically (Prueba 1).
  */
 @HiltAndroidTest
 public class DetectarCiudadExitoUITest {
@@ -47,7 +47,6 @@ public class DetectarCiudadExitoUITest {
 
     private MockLocationManager mockLocationManager;
     private ActivityScenario<MainView> scenario;
-    private View decorView;
 
     /**
      * Sets the mocked GPS location to Santander before launching the activity.
@@ -88,8 +87,8 @@ public class DetectarCiudadExitoUITest {
     }
 
     /**
-     * Verifies that the application detects Santander from the mocked
-     * GPS location and displays the corresponding confirmation message.
+     * Prueba 1: the user is in Santander, the stations screen of TUeBICI opens
+     * directly and the name of the city is shown.
      *
      * @throws InterruptedException if the waiting thread is interrupted
      */
@@ -97,23 +96,14 @@ public class DetectarCiudadExitoUITest {
     public void testDetectarCiudadCorrectamente() throws InterruptedException {
         scenario = ActivityScenario.launch(MainView.class);
 
-        scenario.onActivity(activity ->
-                decorView = activity.getWindow().getDecorView()
-        );
-
-        String expectedMessage = InstrumentationRegistry
-                .getInstrumentation()
-                .getTargetContext()
-                .getString(R.string.cityDetected, "Santander");
-
-        // Toasts are queued (there may be some from previous tests), so it retries
-        // until the message appears (max 30 s)
+        // the stations screen opens when the location arrives, so it retries
+        // until it appears (max 30 s)
         for (int i = 0; i < 60; i++) {
             try {
-                onView(withText(expectedMessage))
-                        .inRoot(withDecorView(not(decorView)))
-                        .check(matches(isDisplayed()));
-                return;
+                onView(withId(R.id.tvNetworkName))
+                        .check(matches(isDisplayed()))
+                        .check(matches(withText("TUeBICI")));
+                break;
             } catch (RuntimeException | AssertionError e) {
                 if (i == 59) {
                     throw e;
@@ -121,5 +111,11 @@ public class DetectarCiudadExitoUITest {
                 Thread.sleep(500);
             }
         }
+
+        // the name of the detected city is shown
+        onView(withId(R.id.tvNetworkLocation)).check(matches(withText(containsString("Santander"))));
+
+        // back to the list so the next test starts clean
+        pressBack();
     }
 }
