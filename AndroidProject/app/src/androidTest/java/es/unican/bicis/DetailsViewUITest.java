@@ -50,61 +50,117 @@ public class DetailsViewUITest {
     public ActivityScenarioRule<MainView> activityRule =
             new ActivityScenarioRule<>(MainView.class);
 
-        /** Pulsa la red con ese nombre en la lista principal, sin depender de su posición. */
-        private void openDetails(String networkName) {
-            onData(networkNamed(networkName))
-                    .inAdapterView(withId(R.id.lvNetworks))
-                    .perform(click());
-        }
+    /** Pulsa la red con ese nombre en la lista principal, sin depender de su posición. */
+    private void openDetails(String networkName) {
+        onData(networkNamed(networkName))
+                .inAdapterView(withId(R.id.lvNetworks))
+                .perform(click());
+    }
 
-        /** Comprueba los cinco datos detallados de la vista. */
-        private void checkDetails(String latitude, String longitude, String ebikes,
-                String operatorsCount, String operators) {
-            onView(withId(R.id.tvLatitude)).check(matches(withText(latitude)));
-            onView(withId(R.id.tvLongitude)).check(matches(withText(longitude)));
-            onView(withId(R.id.tvEbikes)).check(matches(withText(ebikes)));
-            onView(withId(R.id.tvOperatorsCount)).check(matches(withText(operatorsCount)));
-            onView(withId(R.id.tvOperators)).check(matches(withText(operators)));
-        }
+    /** Comprueba los cinco datos detallados de la vista. */
+    private void checkDetails(String latitude, String longitude, String ebikes,
+            String operatorsCount, String operators) {
+        onView(withId(R.id.tvLatitude)).check(matches(withText(latitude)));
+        onView(withId(R.id.tvLongitude)).check(matches(withText(longitude)));
+        onView(withId(R.id.tvEbikes)).check(matches(withText(ebikes)));
+        onView(withId(R.id.tvOperatorsCount)).check(matches(withText(operatorsCount)));
+        onView(withId(R.id.tvOperators)).check(matches(withText(operators)));
+    }
 
-        /** A1.a.1: Bicing, red con todos los datos (Prueba 1). */
-        @Test
-        public void testA1a1_Bicing() {
-            openDetails("Bicing");
+    /** A1.a.1: Bicing, red con todos los datos (Prueba 1). */
+    @Test
+    public void testA1a1_Bicing() {
+        openDetails("Bicing");
 
-            onView(withId(R.id.tvName)).check(matches(withText("Bicing")));
-            onView(withId(R.id.tvCity)).check(matches(withText("Barcelona, ES")));
-            checkDetails("41.3851", "2.1734", "Sí", "3",
-                    "• Barcelona de Serveis Municipals, S.A. (BSM)\n• CESPA\n• PBSC");
-            onView(withId(R.id.tvNoDetails)).check(matches(not(isDisplayed())));
-        }
+        onView(withId(R.id.tvName)).check(matches(withText("Bicing")));
+        onView(withId(R.id.tvCity)).check(matches(withText("Barcelona, ES")));
+        checkDetails("41.3851", "2.1734", "Sí", "3",
+                "• Barcelona de Serveis Municipals, S.A. (BSM)\n• CESPA\n• PBSC");
+        onView(withId(R.id.tvNoDetails)).check(matches(not(isDisplayed())));
+    }
 
-        /** A1.b.1: BiciMAD, sin ebikes. Debe salir "-" y no "No" (Prueba 2). */
-        @Test
-        public void testA1b1_BiciMadSinEbikes() {
-            openDetails("BiciMAD");
+    /** A1.b.1: BiciMAD, sin ebikes. Debe salir "-" y no "No" (Prueba 2). */
+    @Test
+    public void testA1b1_BiciMadSinEbikes() {
+        openDetails("BiciMAD");
 
-            onView(withId(R.id.tvCity)).check(matches(withText("Madrid, ES")));
-            checkDetails("40.4168", "-3.7038", "-", "1",
-                    "• Empresa Municipal de Transportes de Madrid, S.A.");
-        }
+        onView(withId(R.id.tvCity)).check(matches(withText("Madrid, ES")));
+        checkDetails("40.4168", "-3.7038", "-", "1",
+                "• Empresa Municipal de Transportes de Madrid, S.A.");
+    }
 
-        /** A1.b.2: TUeBICI, sin ebikes (Prueba 2). */
-        @Test
-        public void testA1b2_TuebiciSinEbikes() {
-            openDetails("TUeBICI");
+    /** A1.b.2: TUeBICI, sin ebikes (Prueba 2). */
+    @Test
+    public void testA1b2_TuebiciSinEbikes() {
+        openDetails("TUeBICI");
 
-            onView(withId(R.id.tvCity)).check(matches(withText("Santander, ES")));
-            checkDetails("43.4623", "-3.8100", "-", "1", "• UTE BICIS SANTANDER");
-        }
+        onView(withId(R.id.tvCity)).check(matches(withText("Santander, ES")));
+        checkDetails("43.4623", "-3.8100", "-", "1", "• UTE BICIS SANTANDER");
+    }
 
-        /** A1.b.3: Bici Norte, sin longitude, ebikes ni company (Prueba 2). */
-        @Test
-        public void testA1b3_BiciNorteDatosAusentes() {
-            openDetails("Bici Norte");
+    /** A1.b.3: Bici Norte, sin longitude, ebikes ni company (Prueba 2). */
+    @Test
+    public void testA1b3_BiciNorteDatosAusentes() {
+        openDetails("Bici Norte");
 
-            onView(withId(R.id.tvCity)).check(matches(withText("Bilbao, ES")));
-            checkDetails("43.2630", "-", "-", "-", "-");
-            onView(withId(R.id.layoutDetails)).check(matches(isDisplayed()));
+        onView(withId(R.id.tvCity)).check(matches(withText("Bilbao, ES")));
+        checkDetails("43.2630", "-", "-", "-", "-");
+        onView(withId(R.id.layoutDetails)).check(matches(isDisplayed()));
+    }
+
+    /** A1.a.2: Bici Oeste, ebikes false. Debe salir "No" (Prueba 1). */
+    @Test
+    public void testA1a2_BiciOesteEbikesFalse() {
+        openDetails("Bici Oeste");
+
+        onView(withId(R.id.tvCity)).check(matches(withText("Oviedo, ES")));
+        checkDetails("43.3614", "-5.8494", "No", "2", "• Empresa A\n• Empresa B");
+    }
+
+    /** A1.c.1: Bici Coordenadas, latitud y longitud fuera de rango (Prueba 3). */
+    @Test
+    public void testA1c1_BiciCoordenadasFueraDeRango() {
+        openDetails("Bici Coordenadas");
+
+        checkDetails("-", "-", "Sí", "1", "• Empresa A");
+    }
+
+    /** A1.c.2: Bici Límites, coordenadas en los límites válidos (Prueba 3, AVL). */
+    @Test
+    public void testA1c2_BiciLimitesValoresLimite() {
+        openDetails("Bici Límites");
+
+        onView(withId(R.id.tvCity)).check(matches(withText("Ushuaia, AR")));
+        checkDetails("-90.0000", "180.0000", "Sí", "1", "• Empresa A");
+    }
+
+    /** A1.c.3: Bici Anómala, ebikes "si" y company con un elemento vacío (Prueba 3). */
+    @Test
+    public void testA1c3_BiciAnomalaEbikesYCompanyAnomalos() {
+        openDetails("Bici Anómala");
+
+        checkDetails("42.5987", "-5.5671", "-", "-", "-");
+    }
+
+    /** A1.c.4: Bici Texto, company como texto y ebikes 1. La app no se cierra (Prueba 3). */
+    @Test
+    public void testA1c4_BiciTextoTiposIncorrectos() {
+        openDetails("Bici Texto");
+
+        onView(withId(R.id.tvName)).check(matches(withText("Bici Texto")));
+        checkDetails("42.3439", "-3.6969", "-", "-", "-");
+    }
+
+    /** A1.d.1: Bici Sur, sin información detallada (Prueba 4). */
+    @Test
+    public void testA1d1_BiciSurSinInformacion() {
+        openDetails("Bici Sur");
+
+        onView(withId(R.id.tvName)).check(matches(withText("Bici Sur")));
+        onView(withId(R.id.tvCity)).check(matches(withText("Cádiz, ES")));
+        onView(withId(R.id.tvNoDetails)).check(matches(isDisplayed()));
+        onView(withId(R.id.tvNoDetails))
+                .check(matches(withText("No hay información detallada disponible para esta red")));
+        onView(withId(R.id.layoutDetails)).check(matches(not(isDisplayed())));
     }
 }

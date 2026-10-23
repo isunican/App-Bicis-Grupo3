@@ -49,6 +49,22 @@
             "system": "Nextbike"
         },
         {
+            "id": "bicioeste",
+            "name": "Bici Oeste",
+            "location": {
+                "latitude": 43.3614,
+                "longitude": -5.8494,
+                "city": "Oviedo",
+                "country": "ES"
+            },
+            "href": "/v2/networks/bicioeste",
+            "company": [
+                "Empresa A",
+                "Empresa B"
+            ],
+            "ebikes": false
+        },
+        {
             "id": "bicinorte",
             "name": "Bici Norte",
             "location": {
@@ -57,6 +73,74 @@
                 "country": "ES"
             },
             "href": "/v2/networks/bicinorte"
+        },
+        {
+            "id": "bicicoord",
+            "name": "Bici Coordenadas",
+            "location": {
+                "latitude": 95.5,
+                "longitude": -181.2,
+                "city": "Gijón",
+                "country": "ES"
+            },
+            "href": "/v2/networks/bicicoord",
+            "company": [
+                "Empresa A"
+            ],
+            "ebikes": true
+        },
+        {
+            "id": "bicilimites",
+            "name": "Bici Límites",
+            "location": {
+                "latitude": -90,
+                "longitude": 180,
+                "city": "Ushuaia",
+                "country": "AR"
+            },
+            "href": "/v2/networks/bicilimites",
+            "company": [
+                "Empresa A"
+            ],
+            "ebikes": true
+        },
+        {
+            "id": "bicianomala",
+            "name": "Bici Anómala",
+            "location": {
+                "latitude": 42.5987,
+                "longitude": -5.5671,
+                "city": "León",
+                "country": "ES"
+            },
+            "href": "/v2/networks/bicianomala",
+            "company": [
+                "",
+                "Empresa B"
+            ],
+            "ebikes": "si"
+        },
+        {
+            "id": "bicitexto",
+            "name": "Bici Texto",
+            "location": {
+                "latitude": 42.3439,
+                "longitude": -3.6969,
+                "city": "Burgos",
+                "country": "ES"
+            },
+            "href": "/v2/networks/bicitexto",
+            "company": "Empresa C",
+            "ebikes": 1
+        },
+        {
+            "id": "bicisur",
+            "name": "Bici Sur",
+            "location": {
+                "city": "Cádiz",
+                "country": "ES"
+            },
+            "href": "/v2/networks/bicisur"
         }
     ]
 }
