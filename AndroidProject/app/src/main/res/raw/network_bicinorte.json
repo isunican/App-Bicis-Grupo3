@@ -1,0 +1,54 @@
+{
+  "network": {
+    "id": "bicinorte",
+    "name": "Bici Norte",
+    "location": {
+      "latitude": 43.263,
+      "city": "Bilbao",
+      "country": "ES"
+    },
+    "href": "/v2/networks/bicinorte",
+    "stations": [
+      {
+        "id": "st01",
+        "name": "Moyua",
+        "latitude": 43.0,
+        "longitude": -4.0,
+        "timestamp": "2026-10-22T10:00:00.000000+00:00Z",
+        "free_bikes": 7,
+        "empty_slots": 5
+      },
+      {
+        "id": "st02",
+        "latitude": 43.0,
+        "longitude": -4.0,
+        "timestamp": "2026-10-22T10:00:00.000000+00:00Z",
+        "free_bikes": 3,
+        "empty_slots": 9
+      },
+      {
+        "id": "st03",
+        "name": "Abando",
+        "latitude": 43.0,
+        "longitude": -4.0,
+        "timestamp": "2026-10-22T10:00:00.000000+00:00Z"
+      },
+      {
+        "id": "st04",
+        "name": "Guggenheim",
+        "latitude": 43.0,
+        "longitude": -4.0,
+        "timestamp": "2026-10-22T10:00:00.000000+00:00Z",
+        "free_bikes": 2
+      },
+      {
+        "id": "st05",
+        "name": "  ",
+        "latitude": 43.0,
+        "longitude": -4.0,
+        "timestamp": "2026-10-22T10:00:00.000000+00:00Z",
+        "empty_slots": 4
+      }
+    ]
+  }
+}

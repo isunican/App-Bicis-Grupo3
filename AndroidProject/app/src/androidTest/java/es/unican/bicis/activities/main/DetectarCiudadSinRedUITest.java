@@ -88,21 +88,23 @@ public class DetectarCiudadSinRedUITest {
         escenario = ActivityScenario.launch(MainView.class);
         escenario.onActivity(activity -> decorView = activity.getWindow().getDecorView());
 
-        // los Toast salen en cola, asi que se reintenta hasta que aparezca (max 10 s)
-        for (int i = 0; i < 20; i++) {
+        // los Toast salen en cola (y puede haber de tests anteriores), asi que se reintenta
+        // hasta que aparezca (max 30 s)
+        for (int i = 0; i < 60; i++) {
             try {
                 onView(withText(R.string.noNetworkNearby))
                         .inRoot(withDecorView(not(decorView)))
                         .check(matches(isDisplayed()));
                 break;
             } catch (RuntimeException | AssertionError e) {
-                if (i == 19) {
+                if (i == 59) {
                     throw e;
                 }
                 Thread.sleep(500);
             }
         }
 
-        onView(withId(R.id.lvNetworks)).check(matches(hasChildCount(3)));
+        // en networks.json hay 4 redes de prueba (Bicing, BiciMAD, TUeBICI y Bici Norte)
+        onView(withId(R.id.lvNetworks)).check(matches(hasChildCount(4)));
     }
 }

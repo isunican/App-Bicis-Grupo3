@@ -1,4 +1,3 @@
-
 package es.unican.bicis.activities.main;
 
 import static androidx.test.espresso.Espresso.onView;
@@ -107,14 +106,16 @@ public class DetectarCiudadExitoUITest {
                 .getTargetContext()
                 .getString(R.string.cityDetected, "Santander");
 
-        for (int i = 0; i < 20; i++) {
+        // Toasts are queued (there may be some from previous tests), so it retries
+        // until the message appears (max 30 s)
+        for (int i = 0; i < 60; i++) {
             try {
                 onView(withText(expectedMessage))
                         .inRoot(withDecorView(not(decorView)))
                         .check(matches(isDisplayed()));
                 return;
             } catch (RuntimeException | AssertionError e) {
-                if (i == 19) {
+                if (i == 59) {
                     throw e;
                 }
                 Thread.sleep(500);

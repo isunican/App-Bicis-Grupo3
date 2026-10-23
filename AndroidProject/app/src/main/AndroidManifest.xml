@@ -22,6 +22,10 @@
             android:exported="false"
             android:parentActivityName=".activities.main.MainView" />
         <activity
+            android:name=".activities.stations.StationsView"
+            android:exported="false"
+            android:parentActivityName=".activities.details.DetailsView" />
+        <activity
             android:name=".activities.details.DetailsView"
             android:exported="false"
             android:parentActivityName=".activities.main.MainView" />
