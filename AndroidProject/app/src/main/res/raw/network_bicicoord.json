@@ -1,0 +1,43 @@
+{
+  "network": {
+    "id": "bicicoord",
+    "name": "Bici Coordenadas",
+    "location": {
+      "latitude": 95.5,
+      "longitude": -181.2,
+      "city": "Gijón",
+      "country": "ES"
+    },
+    "href": "/v2/networks/bicicoord",
+    "company": [
+      "Empresa A"
+    ],
+    "ebikes": true,
+    "stations": [
+      {
+        "id": "st01",
+        "name": "Plaza Mayor",
+        "latitude": 43.0,
+        "longitude": -4.0,
+        "timestamp": "2026-10-22T10:00:00.000000+00:00Z",
+        "free_bikes": 5,
+        "empty_slots": 5,
+        "extra": {
+          "ebikes": 1
+        }
+      },
+      {
+        "id": "st02",
+        "name": "El Muelle",
+        "latitude": 43.0,
+        "longitude": -4.0,
+        "timestamp": "2026-10-22T10:00:00.000000+00:00Z",
+        "free_bikes": 2,
+        "empty_slots": 8,
+        "extra": {
+          "ebikes": 0
+        }
+      }
+    ]
+  }
+}
