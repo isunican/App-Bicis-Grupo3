@@ -19,6 +19,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.IntentCompat;
+import androidx.appcompat.widget.SearchView;
 
 import org.parceler.Parcels;
 
@@ -95,14 +96,29 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     }
 
     /**
-     * This creates the menu that is shown in the action bar (the upper toolbar)
-     * @param menu The options menu in which you place your items.
+     * Creates the stations toolbar menu and configures the search field.
      *
-     * @return true because we are defining a new menu
+     * The search field is initially collapsed and expands when the user
+     * clicks the search icon.
+     *
+     * @param menu the options menu in which the items are placed
+     * @return true because the menu has been created
      */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_stations, menu);
+
+        MenuItem searchItem = menu.findItem(R.id.menuItemSearch);
+
+        if (searchItem != null) {
+            SearchView searchView = (SearchView) searchItem.getActionView();
+
+            if (searchView != null) {
+                searchView.setQueryHint(getString(R.string.menuSearch));
+                searchView.setIconifiedByDefault(true);
+            }
+        }
+
         return true;
     }
 

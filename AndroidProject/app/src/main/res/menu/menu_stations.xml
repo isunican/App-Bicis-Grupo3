@@ -6,7 +6,8 @@
         android:id="@+id/menuItemSearch"
         android:icon="@drawable/ic_search"
         android:title="@string/menuSearch"
-        app:showAsAction="always" />
+        app:actionViewClass="androidx.appcompat.widget.SearchView"
+        app:showAsAction="always|collapseActionView" />
 
     <item
         android:id="@+id/menuItemFilter"
