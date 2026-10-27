@@ -27,14 +27,16 @@ import es.unican.bicis.R;
 import es.unican.bicis.utils.MockLocationManager;
 
 /**
- * UI test for successful city detection using a mocked GPS location.
- * HU 532319 - Detect the user's city automatically (Prueba 1).
+ * Prueba 1 de la HU Detectar la ciudad segun mi ubicacion: caso de exito, se detecta la ciudad
+ * y se abren directamente sus estaciones.
  */
 @HiltAndroidTest
 public class DetectarCiudadExitoUITest {
 
+    /** Coordenadas de Santander, donde esta la red TUeBICI */
     private static final double SANTANDER_LATITUDE = 43.4623057;
     private static final double SANTANDER_LONGITUDE = -3.8099803;
+    /** Tiempo maximo de espera de la ubicacion simulada, en milisegundos */
     private static final long LOCATION_TIMEOUT_MS = 15000;
 
     @Rule(order = 0)
@@ -49,9 +51,8 @@ public class DetectarCiudadExitoUITest {
     private ActivityScenario<MainView> scenario;
 
     /**
-     * Sets the mocked GPS location to Santander before launching the activity.
-     *
-     * @throws InterruptedException if the waiting thread is interrupted
+     * Pone el GPS del dispositivo en Santander antes de abrir la aplicacion.
+     * @throws InterruptedException si se interrumpe la espera
      */
     @Before
     public void setUp() throws InterruptedException {
@@ -67,13 +68,13 @@ public class DetectarCiudadExitoUITest {
         );
 
         assertNotNull(
-                "The application did not receive the mocked GPS location",
+                "La aplicacion no ha recibido la ubicacion simulada",
                 mockLocationManager.awaitMockedLocation(LOCATION_TIMEOUT_MS)
         );
     }
 
     /**
-     * Closes the activity and restores the GPS configuration.
+     * Cierra la aplicacion y deja el GPS como estaba.
      */
     @After
     public void tearDown() {
@@ -87,17 +88,16 @@ public class DetectarCiudadExitoUITest {
     }
 
     /**
-     * Prueba 1: the user is in Santander, the stations screen of TUeBICI opens
-     * directly and the name of the city is shown.
-     *
-     * @throws InterruptedException if the waiting thread is interrupted
+     * Prueba 1: el usuario esta en Santander, se abre directamente la lista de estaciones
+     * de TUeBICI y sale el nombre de la ciudad.
+     * @throws InterruptedException si se interrumpe la espera
      */
     @Test
     public void testDetectarCiudadCorrectamente() throws InterruptedException {
         scenario = ActivityScenario.launch(MainView.class);
 
-        // the stations screen opens when the location arrives, so it retries
-        // until it appears (max 30 s)
+        // la lista de estaciones se abre cuando llega la ubicacion, asi que se reintenta
+        // hasta que aparezca (max 30 s)
         for (int i = 0; i < 60; i++) {
             try {
                 onView(withId(R.id.tvNetworkName))
@@ -112,10 +112,10 @@ public class DetectarCiudadExitoUITest {
             }
         }
 
-        // the name of the detected city is shown
+        // sale el nombre de la ciudad detectada
         onView(withId(R.id.tvNetworkLocation)).check(matches(withText(containsString("Santander"))));
 
-        // back to the list so the next test starts clean
+        // se vuelve a la lista para que el siguiente test empiece limpio
         pressBack();
     }
 }
