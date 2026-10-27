@@ -12,6 +12,9 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.database.MatrixCursor;
+import android.provider.BaseColumns;
+
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
@@ -20,6 +23,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.IntentCompat;
 import androidx.appcompat.widget.SearchView;
+import androidx.cursoradapter.widget.SimpleCursorAdapter;
 
 import org.parceler.Parcels;
 
@@ -63,6 +67,12 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     private AlertDialog filterDialog;
     private EditText filterInput;
 
+    /** Adapter used to display station name suggestions. */
+    private SimpleCursorAdapter suggestionsAdapter;
+
+    /** Search field displayed in the toolbar. */
+    private SearchView stationSearchView;
+
     /**
      * @see AppCompatActivity#onCreate(Bundle)
      * @param savedInstanceState
@@ -96,13 +106,10 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     }
 
     /**
-     * Creates the stations toolbar menu and configures the search field.
+     * Creates the stations toolbar menu and prepares the search suggestions.
      *
-     * The search field is initially collapsed and expands when the user
-     * clicks the search icon.
-     *
-     * @param menu the options menu in which the items are placed
-     * @return true because the menu has been created
+     * @param menu the options menu
+     * @return true if the menu has been created
      */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -111,16 +118,100 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         MenuItem searchItem = menu.findItem(R.id.menuItemSearch);
 
         if (searchItem != null) {
-            SearchView searchView = (SearchView) searchItem.getActionView();
+            stationSearchView = (SearchView) searchItem.getActionView();
 
-            if (searchView != null) {
-                searchView.setQueryHint(getString(R.string.menuSearch));
-                searchView.setIconifiedByDefault(true);
+            if (stationSearchView != null) {
+                stationSearchView.setQueryHint(getString(R.string.menuSearch));
+                stationSearchView.setIconifiedByDefault(true);
+
+                String[] from = {"station_name"};
+                int[] to = {android.R.id.text1};
+
+                suggestionsAdapter = new SimpleCursorAdapter(
+                        this,
+                        android.R.layout.simple_list_item_1,
+                        null,
+                        from,
+                        to,
+                        0
+                );
+
+                stationSearchView.setSuggestionsAdapter(suggestionsAdapter);
+
+                stationSearchView.setOnSuggestionListener(
+                        new SearchView.OnSuggestionListener() {
+                            @Override
+                            public boolean onSuggestionSelect(int position) {
+                                return selectSuggestion(position);
+                            }
+
+                            @Override
+                            public boolean onSuggestionClick(int position) {
+                                return selectSuggestion(position);
+                            }
+                        }
+                );
             }
         }
 
         return true;
     }
+
+    /**
+     * Displays the station names provided as search suggestions.
+     * This method will be connected to the Presenter once the
+     * search contract is available.
+     *
+     * @param stationNames names of the suggested stations
+     */
+    private void updateSearchSuggestions(List<String> stationNames) {
+        if (suggestionsAdapter == null) {
+            return;
+        }
+
+        MatrixCursor cursor = new MatrixCursor(
+                new String[]{BaseColumns._ID, "station_name"}
+        );
+
+        if (stationNames != null) {
+            for (int i = 0; i < stationNames.size(); i++) {
+                cursor.addRow(new Object[]{i, stationNames.get(i)});
+            }
+        }
+
+        suggestionsAdapter.changeCursor(cursor);
+    }
+
+    /**
+     * Places the selected station name into the search field.
+     *
+     * @param position position of the selected suggestion
+     * @return true if the selection was handled
+     */
+    private boolean selectSuggestion(int position) {
+        if (suggestionsAdapter == null || stationSearchView == null) {
+            return false;
+        }
+
+        android.database.Cursor cursor = suggestionsAdapter.getCursor();
+
+        if (cursor == null || !cursor.moveToPosition(position)) {
+            return false;
+        }
+
+        int column = cursor.getColumnIndex("station_name");
+
+        if (column < 0) {
+            return false;
+        }
+
+        String stationName = cursor.getString(column);
+        stationSearchView.setQuery(stationName, false);
+
+        return true;
+    }
+
+
 
     /**
      * This is called when an item in the action bar menu is selected.
