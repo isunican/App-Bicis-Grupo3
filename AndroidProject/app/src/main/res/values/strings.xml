@@ -31,4 +31,5 @@
     <string name="filterInvalid">Introduce un número entero mayor que 0</string>
     <string name="filterActive">Con al menos %d bicis libres</string>
     <string name="filterNoResults">No hay estaciones con al menos %d bicis libres</string>
+    <string name="menuSearch">Buscar estación por nombre</string>
 </resources>
