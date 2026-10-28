@@ -27,6 +27,7 @@ import androidx.cursoradapter.widget.SimpleCursorAdapter;
 
 import org.parceler.Parcels;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -72,6 +73,9 @@ public class StationsView extends AppCompatActivity implements IStationsContract
 
     /** Search field displayed in the toolbar. */
     private SearchView stationSearchView;
+
+    /** Stations currently displayed in the suggestions dropdown. */
+    private List<Station> suggestedStations = new ArrayList<>();
 
     /**
      * @see AppCompatActivity#onCreate(Bundle)
@@ -158,58 +162,37 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     }
 
     /**
-     * Displays the station names provided as search suggestions.
-     * This method will be connected to the Presenter once the
-     * search contract is available.
-     *
-     * @param stationNames names of the suggested stations
-     */
-    private void updateSearchSuggestions(List<String> stationNames) {
-        if (suggestionsAdapter == null) {
-            return;
-        }
-
-        MatrixCursor cursor = new MatrixCursor(
-                new String[]{BaseColumns._ID, "station_name"}
-        );
-
-        if (stationNames != null) {
-            for (int i = 0; i < stationNames.size(); i++) {
-                cursor.addRow(new Object[]{i, stationNames.get(i)});
-            }
-        }
-
-        suggestionsAdapter.changeCursor(cursor);
-    }
-
-    /**
-     * Places the selected station name into the search field.
+     * Notifies the presenter when the user selects a station suggestion.
      *
      * @param position position of the selected suggestion
      * @return true if the selection was handled
      */
     private boolean selectSuggestion(int position) {
-        if (suggestionsAdapter == null || stationSearchView == null) {
+        if (stationSearchView == null || presenter == null
+                || position < 0 || position >= suggestedStations.size()) {
             return false;
         }
 
-        android.database.Cursor cursor = suggestionsAdapter.getCursor();
+        Station station = suggestedStations.get(position);
 
-        if (cursor == null || !cursor.moveToPosition(position)) {
+        if (station == null) {
             return false;
         }
 
-        int column = cursor.getColumnIndex("station_name");
+        SearchView.SearchAutoComplete searchInput =
+                stationSearchView.findViewById(
+                        androidx.appcompat.R.id.search_src_text
+                );
 
-        if (column < 0) {
-            return false;
+        if (searchInput != null) {
+            searchInput.dismissDropDown();
         }
 
-        String stationName = cursor.getString(column);
-        stationSearchView.setQuery(stationName, false);
+        presenter.onStationSelected(station);
 
         return true;
     }
+
 
 
 
@@ -391,7 +374,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         startActivity(intent);
     }
 
-    /**
+   /**
      * @see IStationsContract.View#showSearchField()
      */
     @Override
@@ -399,13 +382,57 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         // TODO HU 532314: desplegar el campo de búsqueda (tarea de la vista)
     }
 
+
+
     /**
      * @see IStationsContract.View#showSearchSuggestions(List)
      * @param stations the stations to suggest
      */
     @Override
     public void showSearchSuggestions(List<Station> stations) {
-        // TODO HU 532314: mostrar las sugerencias bajo el buscador (tarea de la vista)
+        if (suggestionsAdapter == null || stationSearchView == null) {
+            return;
+        }
+
+        suggestedStations = new ArrayList<>();
+
+        MatrixCursor cursor = new MatrixCursor(
+                new String[]{BaseColumns._ID, "station_name"}
+        );
+
+        if (stations != null) {
+            for (Station station : stations) {
+                if (station != null) {
+                    suggestedStations.add(station);
+
+                    cursor.addRow(new Object[]{
+                            suggestedStations.size() - 1,
+                            station.getName()
+                    });
+                }
+            }
+        }
+
+        suggestionsAdapter.changeCursor(cursor);
+
+        SearchView.SearchAutoComplete searchInput =
+                stationSearchView.findViewById(
+                        androidx.appcompat.R.id.search_src_text
+                );
+
+        if (searchInput == null) {
+            return;
+        }
+
+        if (suggestedStations.isEmpty()) {
+            searchInput.dismissDropDown();
+        } else {
+            searchInput.post(() -> {
+                if (searchInput.hasFocus()) {
+                    searchInput.showDropDown();
+                }
+            });
+        }
     }
 
     /**
