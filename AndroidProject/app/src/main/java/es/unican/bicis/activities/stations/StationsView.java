@@ -12,6 +12,9 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.database.MatrixCursor;
+import android.provider.BaseColumns;
+
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
@@ -20,9 +23,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.IntentCompat;
 import androidx.appcompat.widget.SearchView;
+import androidx.cursoradapter.widget.SimpleCursorAdapter;
 
 import org.parceler.Parcels;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -63,6 +68,15 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     private AlertDialog filterDialog;
     private EditText filterInput;
 
+    /** Adapter used to display station name suggestions. */
+    private SimpleCursorAdapter suggestionsAdapter;
+
+    /** Search field displayed in the toolbar. */
+    private SearchView stationSearchView;
+
+    /** Stations currently displayed in the suggestions dropdown. */
+    private List<Station> suggestedStations = new ArrayList<>();
+
     /**
      * @see AppCompatActivity#onCreate(Bundle)
      * @param savedInstanceState
@@ -96,13 +110,10 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     }
 
     /**
-     * Creates the stations toolbar menu and configures the search field.
+     * Creates the stations toolbar menu and prepares the search suggestions.
      *
-     * The search field is initially collapsed and expands when the user
-     * clicks the search icon.
-     *
-     * @param menu the options menu in which the items are placed
-     * @return true because the menu has been created
+     * @param menu the options menu
+     * @return true if the menu has been created
      */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -111,16 +122,79 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         MenuItem searchItem = menu.findItem(R.id.menuItemSearch);
 
         if (searchItem != null) {
-            SearchView searchView = (SearchView) searchItem.getActionView();
+            stationSearchView = (SearchView) searchItem.getActionView();
 
-            if (searchView != null) {
-                searchView.setQueryHint(getString(R.string.menuSearch));
-                searchView.setIconifiedByDefault(true);
+            if (stationSearchView != null) {
+                stationSearchView.setQueryHint(getString(R.string.menuSearch));
+                stationSearchView.setIconifiedByDefault(true);
+
+                String[] from = {"station_name"};
+                int[] to = {android.R.id.text1};
+
+                suggestionsAdapter = new SimpleCursorAdapter(
+                        this,
+                        android.R.layout.simple_list_item_1,
+                        null,
+                        from,
+                        to,
+                        0
+                );
+
+                stationSearchView.setSuggestionsAdapter(suggestionsAdapter);
+
+                stationSearchView.setOnSuggestionListener(
+                        new SearchView.OnSuggestionListener() {
+                            @Override
+                            public boolean onSuggestionSelect(int position) {
+                                return selectSuggestion(position);
+                            }
+
+                            @Override
+                            public boolean onSuggestionClick(int position) {
+                                return selectSuggestion(position);
+                            }
+                        }
+                );
             }
         }
 
         return true;
     }
+
+    /**
+     * Notifies the presenter when the user selects a station suggestion.
+     *
+     * @param position position of the selected suggestion
+     * @return true if the selection was handled
+     */
+    private boolean selectSuggestion(int position) {
+        if (stationSearchView == null || presenter == null
+                || position < 0 || position >= suggestedStations.size()) {
+            return false;
+        }
+
+        Station station = suggestedStations.get(position);
+
+        if (station == null) {
+            return false;
+        }
+
+        SearchView.SearchAutoComplete searchInput =
+                stationSearchView.findViewById(
+                        androidx.appcompat.R.id.search_src_text
+                );
+
+        if (searchInput != null) {
+            searchInput.dismissDropDown();
+        }
+
+        presenter.onStationSelected(station);
+
+        return true;
+    }
+
+
+
 
     /**
      * This is called when an item in the action bar menu is selected.
@@ -300,7 +374,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         startActivity(intent);
     }
 
-    /**
+   /**
      * @see IStationsContract.View#showSearchField()
      */
     @Override
@@ -308,13 +382,57 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         // TODO HU 532314: desplegar el campo de búsqueda (tarea de la vista)
     }
 
+
+
     /**
      * @see IStationsContract.View#showSearchSuggestions(List)
      * @param stations the stations to suggest
      */
     @Override
     public void showSearchSuggestions(List<Station> stations) {
-        // TODO HU 532314: mostrar las sugerencias bajo el buscador (tarea de la vista)
+        if (suggestionsAdapter == null || stationSearchView == null) {
+            return;
+        }
+
+        suggestedStations = new ArrayList<>();
+
+        MatrixCursor cursor = new MatrixCursor(
+                new String[]{BaseColumns._ID, "station_name"}
+        );
+
+        if (stations != null) {
+            for (Station station : stations) {
+                if (station != null) {
+                    suggestedStations.add(station);
+
+                    cursor.addRow(new Object[]{
+                            suggestedStations.size() - 1,
+                            station.getName()
+                    });
+                }
+            }
+        }
+
+        suggestionsAdapter.changeCursor(cursor);
+
+        SearchView.SearchAutoComplete searchInput =
+                stationSearchView.findViewById(
+                        androidx.appcompat.R.id.search_src_text
+                );
+
+        if (searchInput == null) {
+            return;
+        }
+
+        if (suggestedStations.isEmpty()) {
+            searchInput.dismissDropDown();
+        } else {
+            searchInput.post(() -> {
+                if (searchInput.hasFocus()) {
+                    searchInput.showDropDown();
+                }
+            });
+        }
     }
 
     /**
