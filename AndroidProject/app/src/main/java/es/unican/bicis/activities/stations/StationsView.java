@@ -228,6 +228,31 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         showMessage(getString(R.string.filterNoResults, minFreeBikes));
     }
 
+    /**
+     * @see IStationsContract.View#showNoStationsWithMinEmptySlots(int)
+     * @param minEmptySlots the minimum number of empty slots requested
+     */
+    @Override
+    public void showNoStationsWithMinEmptySlots(int minEmptySlots) {
+        showMessage(getString(R.string.filterEmptySlotsNoResults));
+    }
+
+    /**
+     * @see IStationsContract.View#showInvalidMinEmptySlots()
+     */
+    @Override
+    public void showInvalidMinEmptySlots() {
+        // Se implementa en la tarea 978156 (campo de huecos en el dialogo de filtros)
+    }
+
+    /**
+     * @see IStationsContract.View#showActiveFiltersCount(int)
+     * @param numActiveFilters the number of active filters
+     */
+    @Override
+    public void showActiveFiltersCount(int numActiveFilters) {
+        // Se implementa en la tarea 978156 (indicador de filtros activos en el embudo)
+    }
 
     /**
      * @see IStationsContract.View#mostrarErrorQuitarFiltros()
