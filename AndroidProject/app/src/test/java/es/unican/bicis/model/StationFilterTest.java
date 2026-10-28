@@ -55,6 +55,13 @@ public class StationFilterTest {
         return station;
     }
 
+    /**
+     * Crea una estación con el nombre y el número de huecos libres indicados (HU 532335).
+     *
+     * @param name nombre de la estación
+     * @param emptySlots número de huecos libres (puede ser null o negativo para simular datos anómalos)
+     * @return la estación creada
+     */
     private Station createStationWithEmptySlots(String name, Integer emptySlots) {
         Station station = new Station();
         station.setName(name);
