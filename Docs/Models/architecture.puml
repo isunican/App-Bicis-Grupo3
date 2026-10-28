@@ -215,7 +215,7 @@ IStationsView ..> Station : <<use>>
 
 ' ==========================================
 ' HU 532335 - Filtrar las estaciones por huecos disponibles
-' (los nombres del contrato se confirman en la tarea 978253)
+' (metodos del contrato definido en la tarea 978253)
 ' ==========================================
 
 class StationFilter {
@@ -230,6 +230,7 @@ interface IStationsContract.Presenter {
 interface IStationsContract.View {
     + showNoStationsWithMinEmptySlots(minEmptySlots : int)
     + showInvalidMinEmptySlots()
+    + showActiveFiltersCount(numActiveFilters : int)
 }
 
 class StationsPresenter {
