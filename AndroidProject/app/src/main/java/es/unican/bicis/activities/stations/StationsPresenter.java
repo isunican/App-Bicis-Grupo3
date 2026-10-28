@@ -1,5 +1,6 @@
 package es.unican.bicis.activities.stations;
 
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,6 +11,7 @@ import es.unican.bicis.model.Station;
 import es.unican.bicis.model.StationFilter;
 import es.unican.bicis.repository.INetworksRepository;
 import es.unican.bicis.repository.StationsCallback;
+import es.unican.bicis.model.StationSearch;
 
 /**
  * The presenter of the stations activity of the application. It controls {@link StationsView}.
@@ -164,7 +166,9 @@ public class StationsPresenter implements IStationsContract.Presenter {
      */
     @Override
     public void onSearchClicked() {
-        // TODO HU 532314: pedir a la vista que muestre el campo de búsqueda (tarea del presenter)
+        if (view != null) {
+            view.showSearchField();
+        }
     }
 
     /**
@@ -173,7 +177,32 @@ public class StationsPresenter implements IStationsContract.Presenter {
      */
     @Override
     public void onSearchTextChanged(String text) {
-        // TODO HU 532314: implementar la búsqueda (tarea del presenter)
+        if (view == null) {
+            return;
+        }
+
+        if (loadFailed) {
+            view.showSearchSuggestions(new ArrayList<>());
+            view.showLoadError();
+            return;
+        }
+
+        if (text == null || text.trim().isEmpty()) {
+            view.showSearchSuggestions(new ArrayList<>());
+            showAllStations();
+            return;
+        }
+
+        List<Station> matches = StationSearch.searchByName(stations, text);
+
+        if (matches.isEmpty()) {
+            view.showSearchSuggestions(new ArrayList<>());
+            view.showStationNotFound();
+            return;
+        }
+
+        showStationList(matches);
+        view.showSearchSuggestions(matches);
     }
 
     /**
@@ -182,9 +211,10 @@ public class StationsPresenter implements IStationsContract.Presenter {
      */
     @Override
     public void onStationSelected(Station station) {
-        // TODO HU 532314: implementar la selección de la estación (tarea del presenter)
+        if (view != null && station != null) {
+            view.showStationLocation(station);
+        }
     }
-
     /**
      * Shows all the stations of the network, or the corresponding message
      * if they could not be loaded or there are none.
