@@ -160,6 +160,32 @@ public class StationsPresenter implements IStationsContract.Presenter {
     }
 
     /**
+     * @see IStationsContract.Presenter#onSearchClicked()
+     */
+    @Override
+    public void onSearchClicked() {
+        // TODO HU 532314: pedir a la vista que muestre el campo de búsqueda (tarea del presenter)
+    }
+
+    /**
+     * @see IStationsContract.Presenter#onSearchTextChanged(String)
+     * @param text the text introduced in the search field
+     */
+    @Override
+    public void onSearchTextChanged(String text) {
+        // TODO HU 532314: implementar la búsqueda (tarea del presenter)
+    }
+
+    /**
+     * @see IStationsContract.Presenter#onStationSelected(Station)
+     * @param station the selected station
+     */
+    @Override
+    public void onStationSelected(Station station) {
+        // TODO HU 532314: implementar la selección de la estación (tarea del presenter)
+    }
+
+    /**
      * Shows all the stations of the network, or the corresponding message
      * if they could not be loaded or there are none.
      */
