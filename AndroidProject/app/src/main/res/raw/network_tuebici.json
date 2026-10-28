@@ -146,7 +146,7 @@
                 "longitude": -3.851722,
                 "timestamp": "2026-09-24T11:11:30.549124+00:00Z",
                 "free_bikes": 3,
-                "empty_slots": 3,
+                "empty_slots": "sin dato",
                 "extra": {
                     "uid": "336945010",
                     "number": "37421",
@@ -531,7 +531,6 @@
                 "longitude": -3.862473,
                 "timestamp": "2026-09-24T11:11:30.549054+00:00Z",
                 "free_bikes": 2,
-                "empty_slots": 4,
                 "extra": {
                     "uid": "336944777",
                     "number": "37420",
@@ -550,7 +549,7 @@
                 "longitude": -3.865495,
                 "timestamp": "2026-09-24T11:11:30.549024+00:00Z",
                 "free_bikes": 3,
-                "empty_slots": 3,
+                "empty_slots": -1,
                 "extra": {
                     "uid": "336944437",
                     "number": "37419",
