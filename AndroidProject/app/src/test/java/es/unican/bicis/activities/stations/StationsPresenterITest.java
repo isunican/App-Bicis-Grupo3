@@ -1,7 +1,11 @@
 package es.unican.bicis.activities.stations;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -28,9 +32,13 @@ import es.unican.bicis.model.Station;
 import es.unican.bicis.repository.JsonNetworksRepository;
 
 /**
- * Pruebas de integracion ILE.6 del plan de pruebas de US532377:
- * StationsPresenter con StationUtils, el modelo y el repositorio JSON reales.
- * Solo la vista es simulada.
+ * Pruebas de integracion de StationsPresenter con el modelo y el repositorio JSON reales.
+ * Solo la vista es simulada (Mockito).
+ * <ul>
+ *     <li>ILE.6 del plan de pruebas de US532377 (Listar estaciones): carga de estaciones con StationUtils.</li>
+ *     <li>IFH.1 del plan de pruebas de US532335 (Filtrar estaciones por huecos): filtro por huecos con
+ *     StationFilter, sobre la red TUeBICI de res/raw/network_tuebici.json (Anexo 1 del plan).</li>
+ * </ul>
  */
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 35)
@@ -175,5 +183,106 @@ public class StationsPresenterITest {
         verify(mockView).showLoadError();
         verify(mockView, never()).getNetworksRepository();
         verify(mockView, never()).showStations(anyList());
+    }
+
+    // =====================================================================
+    // US532335 - Filtrar las estaciones por huecos disponibles
+    // Pruebas de integracion IFH.1 del plan de pruebas (Tabla 6).
+    // Datos: red TUeBICI (42 estaciones), con "Sector 3 (NE)" sin empty_slots,
+    // "San Román Corbán (NE)" con -1 y "Alisal (NE)" con "sin dato" (Anexo 1).
+    // =====================================================================
+
+    /**
+     * Carga la red TUeBICI en el presenter con el repositorio real y olvida las llamadas
+     * que init hace a la vista, para que cada prueba verifique solo lo que pide el
+     * presenter al aplicar el filtro por huecos.
+     */
+    private void initTuebici() {
+        sut.init(mockView, network("tuebici", "TUeBICI", "Santander"));
+        clearInvocations(mockView);
+    }
+
+    /** IFH.1a: mínimo 15 (caso de éxito): 8 estaciones, la primera "Intercambiador Sardinero". */
+    @Test
+    public void onMinEmptySlotsFilterApplied_15_showsEightStations() {
+        initTuebici();
+
+        sut.onMinEmptySlotsFilterApplied("15");
+
+        List<String> names = names(shownStations());
+        assertEquals(8, names.size());
+        assertEquals("Intercambiador Sardinero", names.get(0));
+        assertFalse(names.contains("PTCAN 1"));   // 12 huecos, no llega al mínimo
+        verify(mockView, never()).showNoStationsWithMinEmptySlots(anyInt());
+    }
+
+    /** IFH.1b: mínimo 20 (estación en el límite): solo "Renfe", que tiene exactamente 20 huecos. */
+    @Test
+    public void onMinEmptySlotsFilterApplied_20_showsOnlyStationOnTheLimit() {
+        initTuebici();
+
+        sut.onMinEmptySlotsFilterApplied("20");
+
+        assertEquals(Arrays.asList("Renfe"), names(shownStations()));
+    }
+
+    /** IFH.1c: mínimo 21 (ninguna estación cumple): mensaje sin resultados y no se muestra la lista. */
+    @Test
+    public void onMinEmptySlotsFilterApplied_21_showsNoStationsMessage() {
+        initTuebici();
+
+        sut.onMinEmptySlotsFilterApplied("21");
+
+        verify(mockView).showNoStationsWithMinEmptySlots(21);
+        verify(mockView, never()).showStations(anyList());
+    }
+
+    /** IFH.1d: mínimo 8 y después 3 (cambio del número de huecos): 24 estaciones y después 36. */
+    @Test
+    public void onMinEmptySlotsFilterApplied_8Then3_updatesTheList() {
+        initTuebici();
+
+        sut.onMinEmptySlotsFilterApplied("8");
+        assertEquals(24, shownStations().size());
+
+        clearInvocations(mockView);
+        sut.onMinEmptySlotsFilterApplied("3");
+
+        List<String> names = names(shownStations());
+        assertEquals(36, names.size());
+        assertTrue(names.contains("Nueva Montaña"));   // 5 huecos, antes quedaba fuera
+        assertTrue(names.contains("Magdalena"));       // 4 huecos, antes quedaba fuera
+    }
+
+    /**
+     * IFH.1e: mínimo 1 (datos ausentes o anómalos): 36 estaciones. No aparecen las estaciones
+     * sin dato de huecos ("Sector 3 (NE)"), con un valor negativo ("San Román Corbán (NE)")
+     * ni con un texto ("Alisal (NE)").
+     */
+    @Test
+    public void onMinEmptySlotsFilterApplied_1_excludesStationsWithoutValidData() {
+        initTuebici();
+
+        sut.onMinEmptySlotsFilterApplied("1");
+
+        List<String> names = names(shownStations());
+        assertEquals(36, names.size());
+        assertFalse(names.contains("Sector 3 (NE)"));
+        assertFalse(names.contains("San Román Corbán (NE)"));
+        assertFalse(names.contains("Alisal (NE)"));
+    }
+
+    /** IFH.1f: mínimo 0: se muestran las 42 estaciones, también las que no tienen dato de huecos. */
+    @Test
+    public void onMinEmptySlotsFilterApplied_0_showsAllStations() {
+        initTuebici();
+
+        sut.onMinEmptySlotsFilterApplied("0");
+
+        List<String> names = names(shownStations());
+        assertEquals(42, names.size());
+        assertTrue(names.contains("Sector 3 (NE)"));
+        assertTrue(names.contains("San Román Corbán (NE)"));
+        assertTrue(names.contains("Alisal (NE)"));
     }
 }
