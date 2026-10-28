@@ -301,6 +301,49 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     }
 
     /**
+     * @see IStationsContract.View#showSearchField()
+     */
+    @Override
+    public void showSearchField() {
+        // TODO HU 532314: desplegar el campo de búsqueda (tarea de la vista)
+    }
+
+    /**
+     * @see IStationsContract.View#showSearchSuggestions(List)
+     * @param stations the stations to suggest
+     */
+    @Override
+    public void showSearchSuggestions(List<Station> stations) {
+        // TODO HU 532314: mostrar las sugerencias bajo el buscador (tarea de la vista)
+    }
+
+    /**
+     * @see IStationsContract.View#showStationNotFound()
+     */
+    @Override
+    public void showStationNotFound() {
+        // TODO HU 532314: mostrar el mensaje de estación inexistente (tarea de la vista)
+    }
+
+    /**
+     * @see IStationsContract.View#showSuggestion(Station)
+     * @param station the most similar station
+     */
+    @Override
+    public void showSuggestion(Station station) {
+        // TODO HU 532314: mostrar la sugerencia "¿Querías decir...?" (tarea de la vista)
+    }
+
+    /**
+     * @see IStationsContract.View#showStationLocation(Station)
+     * @param station the station whose location must be shown
+     */
+    @Override
+    public void showStationLocation(Station station) {
+        // TODO HU 532314: mostrar la ubicación de la estación (tarea de la vista)
+    }
+
+    /**
      * Displays a message instead of the station list.
      * @param message the message to display
      */
