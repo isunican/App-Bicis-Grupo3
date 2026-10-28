@@ -128,6 +128,15 @@ public class StationsPresenter implements IStationsContract.Presenter {
     }
 
     /**
+     * @see IStationsContract.Presenter#onMinEmptySlotsFilterApplied(String)
+     * @param minEmptySlotsText the text introduced by the user
+     */
+    @Override
+    public void onMinEmptySlotsFilterApplied(String minEmptySlotsText) {
+        // Se implementa en la tarea 978157 (filtro por huecos en el presenter)
+    }
+
+    /**
      * Removes the applied station filters and restores the complete
      * list of stations.
      *
