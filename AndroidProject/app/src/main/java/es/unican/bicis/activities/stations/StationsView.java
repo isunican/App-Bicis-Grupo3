@@ -132,7 +132,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
      * The dialog is only closed by the presenter when the value is valid,
      * so that the error can be shown inside it.
      */
-    
+
     private void openFilterDialog() {
         filterInput = new EditText(this);
         filterInput.setId(R.id.etMinFreeBikes);
@@ -265,7 +265,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     /**
      * @see IStationsContract.View#showFilterActive(int)
      * @param minFreeBikes the minimum number of free bikes of the active filter
-     */    
+     */
     @Override
     public void showFilterActive(int minFreeBikes) {
         filterActive = true;
@@ -325,6 +325,33 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     public boolean onSupportNavigateUp() {
         finish();
         return true;
+    }
+
+    // ── Métodos temporales para que compile (Stubs) ──
+
+    @Override
+    public double[] getUserLocation() {
+        return null; // Temporal
+    }
+
+    @Override
+    public void showNoStationsWithinDistance(double maxDistKm) {
+        // Temporal
+    }
+
+    @Override
+    public void showLocationUnavailableForFilter() {
+        // Temporal
+    }
+
+    @Override
+    public void showInvalidMaxDistance() {
+        // Temporal
+    }
+
+    @Override
+    public void showDistanceFilterActive(double maxDistKm) {
+        // Temporal
     }
 
 }

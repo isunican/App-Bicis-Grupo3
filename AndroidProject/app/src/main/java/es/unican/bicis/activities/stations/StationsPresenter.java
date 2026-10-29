@@ -15,7 +15,7 @@ import es.unican.bicis.repository.StationsCallback;
  * The presenter of the stations activity of the application. It controls {@link StationsView}.
  * It loads the stations of a network and sorts them by free bikes (HU 532377 Listar estaciones),
  * filters them by a minimum number of free bikes introduced by the user (HU 532376 Filtrar
- * estaciones) and decides what the view must show.
+ * estaciones) and by distance (HU 532304), and decides what the view must show.
  */
 public class StationsPresenter implements IStationsContract.Presenter {
 
@@ -39,8 +39,6 @@ public class StationsPresenter implements IStationsContract.Presenter {
 
     /**
      * @see IStationsContract.Presenter#init(IStationsContract.View, Network)
-     * @param view the view to control
-     * @param network the network whose stations must be shown
      */
     @Override
     public void init(IStationsContract.View view, Network network) {
@@ -55,7 +53,6 @@ public class StationsPresenter implements IStationsContract.Presenter {
             return;
         }
 
-        // Header: always shown, even if the stations cannot be loaded
         location = formatLocation(network.getLocation());
         view.showNetworkName(StationUtils.formatText(network.getName()));
         view.showNetworkLocation(location);
@@ -70,19 +67,10 @@ public class StationsPresenter implements IStationsContract.Presenter {
         load(id);
     }
 
-    /**
-     * Requests the stations of the network to the repository and sends them to the view.
-     * @param networkId id of the network
-     */
     private void load(String networkId) {
         INetworksRepository repository = view.getNetworksRepository();
 
         StationsCallback callback = new StationsCallback() {
-
-            /**
-             * Sorts the received stations by free bikes and shows them.
-             * @param loadedStations the stations of the network (may be null or empty)
-             */
             @Override
             public void onSuccess(List<Station> loadedStations) {
                 stations = StationUtils.sortByFreeBikes(loadedStations);
@@ -90,10 +78,6 @@ public class StationsPresenter implements IStationsContract.Presenter {
                 showAllStations();
             }
 
-            /**
-             * Shows the load error when the stations cannot be retrieved.
-             * @param e the information about the failure
-             */
             @Override
             public void onFailure(Throwable e) {
                 stations = new ArrayList<>();
@@ -105,10 +89,6 @@ public class StationsPresenter implements IStationsContract.Presenter {
         repository.requestStations(callback, networkId);
     }
 
-    /**
-     * @see IStationsContract.Presenter#onFilterApplied(String)
-     * @param minFreeBikesText the text introduced by the user
-     */
     @Override
     public void onFilterApplied(String minFreeBikesText) {
         Integer minFreeBikes = parseMinFreeBikes(minFreeBikesText);
@@ -127,18 +107,32 @@ public class StationsPresenter implements IStationsContract.Presenter {
         }
     }
 
-    /**
-     * Removes the applied station filters and restores the complete
-     * list of stations.
-     *
-     * If no filters are currently applied, the complete list is
-     * displayed again without any additional changes.
-     *
-     * If the view fails to display the stations, the presenter
-     * requests the view to show an error message.
-     *
-     * @see IStationsContract.Presenter#onFilterCleared()
-     */
+    @Override
+    public void onDistanceFilterApplied(String maxDistKmText) {
+        Double maxDistKm = parseMaxDistance(maxDistKmText);
+        if (maxDistKm == null) {
+            view.showInvalidMaxDistance();
+            return;
+        }
+
+        double[] userLocation = view.getUserLocation();
+        if (userLocation == null) {
+            view.showLocationUnavailableForFilter();
+            return;
+        }
+
+        view.showDistanceFilterActive(maxDistKm);
+        List<Station> filtered = StationFilter.filterByMaxDistance(
+                stations, userLocation[0], userLocation[1], maxDistKm);
+
+        if (filtered.isEmpty()) {
+            view.showNoStationsWithinDistance(maxDistKm);
+            view.showNetworkLocation(location);
+        } else {
+            showStationList(filtered);
+        }
+    }
+
     @Override
     public void onFilterCleared() {
         view.showFilterInactive();
@@ -149,9 +143,6 @@ public class StationsPresenter implements IStationsContract.Presenter {
         }
     }
 
-    /**
-     * @see IStationsContract.Presenter#onInfoClicked()
-     */
     @Override
     public void onInfoClicked() {
         if (network != null) {
@@ -159,10 +150,6 @@ public class StationsPresenter implements IStationsContract.Presenter {
         }
     }
 
-    /**
-     * Shows all the stations of the network, or the corresponding message
-     * if they could not be loaded or there are none.
-     */
     private void showAllStations() {
         if (loadFailed) {
             view.showLoadError();
@@ -173,20 +160,11 @@ public class StationsPresenter implements IStationsContract.Presenter {
         }
     }
 
-    /**
-     * Shows the given stations and their number in the header.
-     * @param list the stations to show (not empty)
-     */
     private void showStationList(List<Station> list) {
         view.showStations(list);
         view.showNetworkLocation(location + " · " + list.size() + " estaciones");
     }
-//
-    /**
-     * Converts the text introduced by the user into the minimum number of free bikes.
-     * @param text the text introduced by the user
-     * @return the value if it is an integer greater than or equal to MIN_FILTER_VALUE, or null otherwise
-     */
+
     private Integer parseMinFreeBikes(String text) {
         if (text == null) {
             return null;
@@ -200,10 +178,22 @@ public class StationsPresenter implements IStationsContract.Presenter {
     }
 
     /**
-     * Builds the location text with the city and the country of the network.
-     * @param location the location of the network
-     * @return "city, country", only one of them if the other is missing, or "-" if both are missing
+     * Converts the text introduced by the user into the maximum distance in km.
+     * @param text the text introduced by the user
+     * @return the value if it is a decimal number strictly greater than 0, or null otherwise
      */
+    private Double parseMaxDistance(String text) {
+        if (text == null) {
+            return null;
+        }
+        try {
+            double value = Double.parseDouble(text.trim().replace(",", "."));
+            return value > 0 ? value : null;
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
     private String formatLocation(Location location) {
         if (location == null) {
             return StationUtils.NO_DATA;
