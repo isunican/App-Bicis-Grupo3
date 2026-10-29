@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Id of the input field created by code in the filter dialog of StationsView -->
+    <!-- Ids of the input fields of the filter dialog of StationsView (layout dialog_filters) -->
     <item name="etMinFreeBikes" type="id" />
+    <item name="etMinEmptySlots" type="id" />
 </resources>
