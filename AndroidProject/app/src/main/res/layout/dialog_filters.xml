@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Contenido del diálogo de filtros de la pantalla de estaciones (StationsView).
+     Cada filtro es un campo independiente; un campo vacío significa que ese filtro no se aplica. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingStart="24dp"
+    android:paddingTop="8dp"
+    android:paddingEnd="24dp">
+
+    <!-- Filtro por bicis libres (HU 532376) -->
+    <TextView
+        android:id="@+id/tvMinFreeBikesLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:labelFor="@id/etMinFreeBikes"
+        android:text="@string/filterHint"
+        android:textSize="12sp" />
+
+    <EditText
+        android:id="@id/etMinFreeBikes"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:autofillHints=""
+        android:hint="@string/filterHint"
+        android:inputType="number" />
+
+    <!-- Filtro por huecos libres (HU 532335) -->
+    <TextView
+        android:id="@+id/tvMinEmptySlotsLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:labelFor="@id/etMinEmptySlots"
+        android:text="@string/filterEmptySlotsHint"
+        android:textSize="12sp" />
+
+    <EditText
+        android:id="@id/etMinEmptySlots"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:autofillHints=""
+        android:hint="@string/filterEmptySlotsHint"
+        android:inputType="number" />
+
+</LinearLayout>

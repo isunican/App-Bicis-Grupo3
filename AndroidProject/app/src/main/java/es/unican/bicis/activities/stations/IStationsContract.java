@@ -159,6 +159,15 @@ public interface IStationsContract {
         public void showActiveFiltersCount(int numActiveFilters);
 
         /**
+         * The view is requested to indicate which minimum number of empty slots
+         * is active (HU 532335). With 0 no indication is shown, because with 0
+         * all the stations are shown.
+         * Only the Presenter should call this method
+         * @param minEmptySlots the minimum number of empty slots of the active filter
+         */
+        public void showMinEmptySlotsFilterActive(int minEmptySlots);
+
+        /**
          * Requests the view to display an error message when
          * the applied station filters cannot be removed.
          *
