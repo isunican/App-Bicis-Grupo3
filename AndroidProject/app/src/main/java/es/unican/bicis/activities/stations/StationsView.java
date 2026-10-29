@@ -61,6 +61,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     /** Filter dialog currently open (null if it is closed) and its input field */
     private AlertDialog filterDialog;
     private EditText filterInput;
+    private boolean filterActive = false;
 
     /**
      * @see AppCompatActivity#onCreate(Bundle)
@@ -131,6 +132,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
      * The dialog is only closed by the presenter when the value is valid,
      * so that the error can be shown inside it.
      */
+    
     private void openFilterDialog() {
         filterInput = new EditText(this);
         filterInput.setId(R.id.etMinFreeBikes);
@@ -139,8 +141,11 @@ public class StationsView extends AppCompatActivity implements IStationsContract
 
         FrameLayout container = new FrameLayout(this);
         int margin = (int) (24 * getResources().getDisplayMetrics().density);
+
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT);
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+        );
         params.setMargins(margin, margin / 2, margin, 0);
         container.addView(filterInput, params);
 
@@ -148,21 +153,31 @@ public class StationsView extends AppCompatActivity implements IStationsContract
                 .setTitle(R.string.filterTitle)
                 .setView(container)
                 .setPositiveButton(R.string.filterApply, null)
-                .setNeutralButton(R.string.filterClear, (dialog, which) -> presenter.onFilterCleared())
+                .setNeutralButton(
+                        R.string.filterClear,
+                        (dialog, which) -> presenter.onFilterCleared()
+                )
                 .setNegativeButton(R.string.filterCancel, null)
                 .create();
 
-        // The positive button is overridden so that the dialog does not close on invalid values
         filterDialog.setOnShowListener(d -> {
             Button apply = filterDialog.getButton(AlertDialog.BUTTON_POSITIVE);
-            apply.setOnClickListener(v -> presenter.onFilterApplied(filterInput.getText().toString()));
+            apply.setOnClickListener(
+                    v -> presenter.onFilterApplied(filterInput.getText().toString())
+            );
+
+            Button clear = filterDialog.getButton(AlertDialog.BUTTON_NEUTRAL);
+            clear.setEnabled(filterActive);
         });
+
         filterDialog.setOnDismissListener(d -> {
             filterDialog = null;
             filterInput = null;
         });
+
         filterDialog.show();
     }
+
 
     /**
      * @see IStationsContract.View#getNetworksRepository()
@@ -275,28 +290,35 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     /**
      * @see IStationsContract.View#showFilterActive(int)
      * @param minFreeBikes the minimum number of free bikes of the active filter
-     */
+     */    
     @Override
     public void showFilterActive(int minFreeBikes) {
+        filterActive = true;
+
         ActionBar bar = getSupportActionBar();
         if (bar != null) {
             bar.setSubtitle(getString(R.string.filterActive, minFreeBikes));
         }
+
         if (filterDialog != null) {
             filterDialog.dismiss();
         }
     }
+
 
     /**
      * @see IStationsContract.View#showFilterInactive()
      */
     @Override
     public void showFilterInactive() {
+        filterActive = false;
+
         ActionBar bar = getSupportActionBar();
         if (bar != null) {
             bar.setSubtitle(null);
         }
     }
+
 
     /**
      * @see IStationsContract.View#showNetworkDetails(Network)
