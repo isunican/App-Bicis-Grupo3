@@ -202,19 +202,30 @@ public class StationsPresenterITest {
         clearInvocations(mockView);
     }
 
-    /** IFH.1a: mínimo 15 (caso de éxito): 8 estaciones, la primera "Intercambiador Sardinero". */
+    /**
+     * IFH.1a: mínimo 15 (caso de éxito): 8 estaciones ordenadas de más a menos huecos y,
+     * a igualdad de huecos, primero la que tiene más bicis. La primera es "Renfe" (20 huecos).
+     */
     @Test
-    public void onMinEmptySlotsFilterApplied_15_showsEightStations() {
+    public void onMinEmptySlotsFilterApplied_15_showsEightStationsSortedByEmptySlots() {
         initTuebici();
 
         sut.onMinEmptySlotsFilterApplied("15");
 
         List<String> names = names(shownStations());
         assertEquals(8, names.size());
-        assertEquals("Intercambiador Sardinero", names.get(0));
+        assertEquals(Arrays.asList(
+                        "Renfe",                      // 20 huecos
+                        "Castilla Hermida",           // 19 huecos, 1 bici (empate: más bicis primero)
+                        "Correos",                    // 19 huecos, 0 bicis
+                        "Tabacalera/Varadero",        // 18 huecos
+                        "Ayuntamiento (NE)",          // 16 huecos
+                        "Intercambiador Sardinero"),  // 15 huecos, 5 bicis
+                names.subList(0, 6));
         assertFalse(names.contains("PTCAN 1"));   // 12 huecos, no llega al mínimo
         verify(mockView, never()).showNoStationsWithMinEmptySlots(anyInt());
     }
+
 
     /** IFH.1b: mínimo 20 (estación en el límite): solo "Renfe", que tiene exactamente 20 huecos. */
     @Test
