@@ -3,22 +3,25 @@ package es.unican.bicis.activities.stations;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Parcelable;
-import android.text.InputType;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.OptIn;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.IntentCompat;
+
+import com.google.android.material.badge.BadgeDrawable;
+import com.google.android.material.badge.BadgeUtils;
+import com.google.android.material.badge.ExperimentalBadgeUtils;
 
 import org.parceler.Parcels;
 
@@ -57,11 +60,27 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     private TextView tvStationsMessage;
     private ListView lvStations;
     private View stationsHeader;
+    private Toolbar toolbar;
 
-    /** Filter dialog currently open (null if it is closed) and its input field */
+    /** Filter dialog currently open (null if it is closed) and its input fields */
     private AlertDialog filterDialog;
     private EditText filterInput;
-    private boolean filterActive = false;
+    private EditText emptySlotsInput;
+
+    /** Whether the presenter has reported an invalid value while applying the filters */
+    private boolean invalidValueShown = false;
+
+    /** Texts of the last filters applied, to fill the dialog when it is opened again */
+    private String appliedFreeBikesText = "";
+    private String appliedEmptySlotsText = "";
+
+    /** Parts of the subtitle that describe the active filters (null if that filter is not active) */
+    private String freeBikesSubtitle;
+    private String emptySlotsSubtitle;
+
+    /** Number of active filters, shown over the filter icon */
+    private int activeFilters = 0;
+    private BadgeDrawable filterBadge;
 
     /**
      * @see AppCompatActivity#onCreate(Bundle)
@@ -73,7 +92,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         setContentView(R.layout.activity_stations);
 
         // The toolbar is explicitly declared in the layout: set it as the activity ActionBar
-        Toolbar toolbar = findViewById(R.id.toolbar);
+        toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         ActionBar bar = getSupportActionBar();
         if (bar != null) {
@@ -104,6 +123,8 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_stations, menu);
+        // The menu is created after the presenter has loaded the stations: show the badge now
+        toolbar.post(this::updateFilterBadge);
         return true;
     }
 
@@ -128,30 +149,22 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     }
 
     /**
-     * Opens the dialog where the user introduces the minimum number of free bikes.
-     * The dialog is only closed by the presenter when the value is valid,
-     * so that the error can be shown inside it.
+     * Opens the dialog with all the station filters (free bikes and empty slots).
+     * The fields show the values of the filters that are active.
+     * The dialog is only closed when all the values are valid, so that the
+     * errors can be shown inside it. "Quitar filtros" is only enabled if
+     * there is any filter active.
      */
-    
     private void openFilterDialog() {
-        filterInput = new EditText(this);
-        filterInput.setId(R.id.etMinFreeBikes);
-        filterInput.setInputType(InputType.TYPE_CLASS_NUMBER);
-        filterInput.setHint(R.string.filterHint);
-
-        FrameLayout container = new FrameLayout(this);
-        int margin = (int) (24 * getResources().getDisplayMetrics().density);
-
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.WRAP_CONTENT
-        );
-        params.setMargins(margin, margin / 2, margin, 0);
-        container.addView(filterInput, params);
+        View content = getLayoutInflater().inflate(R.layout.dialog_filters, null);
+        filterInput = content.findViewById(R.id.etMinFreeBikes);
+        emptySlotsInput = content.findViewById(R.id.etMinEmptySlots);
+        filterInput.setText(appliedFreeBikesText);
+        emptySlotsInput.setText(appliedEmptySlotsText);
 
         filterDialog = new AlertDialog.Builder(this)
                 .setTitle(R.string.filterTitle)
-                .setView(container)
+                .setView(content)
                 .setPositiveButton(R.string.filterApply, null)
                 .setNeutralButton(
                         R.string.filterClear,
@@ -160,24 +173,48 @@ public class StationsView extends AppCompatActivity implements IStationsContract
                 .setNegativeButton(R.string.filterCancel, null)
                 .create();
 
+        // The positive button is overridden so that the dialog does not close on invalid values
         filterDialog.setOnShowListener(d -> {
             Button apply = filterDialog.getButton(AlertDialog.BUTTON_POSITIVE);
-            apply.setOnClickListener(
-                    v -> presenter.onFilterApplied(filterInput.getText().toString())
-            );
+            apply.setOnClickListener(v -> onApplyFiltersClicked());
 
             Button clear = filterDialog.getButton(AlertDialog.BUTTON_NEUTRAL);
-            clear.setEnabled(filterActive);
+            clear.setEnabled(isAnyFilterActive());
         });
 
         filterDialog.setOnDismissListener(d -> {
             filterDialog = null;
             filterInput = null;
+            emptySlotsInput = null;
         });
 
         filterDialog.show();
     }
 
+    /**
+     * Sends to the presenter the filters introduced in the dialog.
+     * An empty field means that the corresponding filter is not applied.
+     * If every field is empty, the free bikes filter is sent so that the
+     * presenter reports the invalid value (behaviour of HU 532376).
+     * The dialog is closed only if the presenter has not reported any invalid value.
+     */
+    private void onApplyFiltersClicked() {
+        String freeBikesText = filterInput.getText().toString().trim();
+        String emptySlotsText = emptySlotsInput.getText().toString().trim();
+        invalidValueShown = false;
+
+        if (!freeBikesText.isEmpty() || emptySlotsText.isEmpty()) {
+            presenter.onFilterApplied(freeBikesText);
+        }
+        if (!invalidValueShown && !emptySlotsText.isEmpty()) {
+            presenter.onMinEmptySlotsFilterApplied(emptySlotsText);
+        }
+        if (!invalidValueShown && filterDialog != null) {
+            appliedFreeBikesText = freeBikesText;
+            appliedEmptySlotsText = emptySlotsText;
+            filterDialog.dismiss();
+        }
+    }
 
     /**
      * @see IStationsContract.View#getNetworksRepository()
@@ -257,7 +294,10 @@ public class StationsView extends AppCompatActivity implements IStationsContract
      */
     @Override
     public void showInvalidMinEmptySlots() {
-        // Se implementa en la tarea 978156 (campo de huecos en el dialogo de filtros)
+        invalidValueShown = true;
+        if (emptySlotsInput != null) {
+            emptySlotsInput.setError(getString(R.string.filterEmptySlotsInvalid));
+        }
     }
 
     /**
@@ -266,7 +306,20 @@ public class StationsView extends AppCompatActivity implements IStationsContract
      */
     @Override
     public void showActiveFiltersCount(int numActiveFilters) {
-        // Se implementa en la tarea 978156 (indicador de filtros activos en el embudo)
+        activeFilters = Math.max(numActiveFilters, 0);
+        updateFilterBadge();
+    }
+
+    /**
+     * @see IStationsContract.View#showMinEmptySlotsFilterActive(int)
+     * @param minEmptySlots the minimum number of empty slots of the active filter
+     */
+    @Override
+    public void showMinEmptySlotsFilterActive(int minEmptySlots) {
+        emptySlotsSubtitle = minEmptySlots > 0
+                ? getString(R.string.filterEmptySlotsActive, minEmptySlots)
+                : null;
+        updateSubtitle();
     }
 
     /**
@@ -282,6 +335,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
      */
     @Override
     public void showInvalidMinFreeBikes() {
+        invalidValueShown = true;
         if (filterInput != null) {
             filterInput.setError(getString(R.string.filterInvalid));
         }
@@ -290,35 +344,24 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     /**
      * @see IStationsContract.View#showFilterActive(int)
      * @param minFreeBikes the minimum number of free bikes of the active filter
-     */    
+     */
     @Override
     public void showFilterActive(int minFreeBikes) {
-        filterActive = true;
-
-        ActionBar bar = getSupportActionBar();
-        if (bar != null) {
-            bar.setSubtitle(getString(R.string.filterActive, minFreeBikes));
-        }
-
-        if (filterDialog != null) {
-            filterDialog.dismiss();
-        }
+        freeBikesSubtitle = getString(R.string.filterActive, minFreeBikes);
+        updateSubtitle();
     }
-
 
     /**
      * @see IStationsContract.View#showFilterInactive()
      */
     @Override
     public void showFilterInactive() {
-        filterActive = false;
-
-        ActionBar bar = getSupportActionBar();
-        if (bar != null) {
-            bar.setSubtitle(null);
-        }
+        freeBikesSubtitle = null;
+        emptySlotsSubtitle = null;
+        appliedFreeBikesText = "";
+        appliedEmptySlotsText = "";
+        updateSubtitle();
     }
-
 
     /**
      * @see IStationsContract.View#showNetworkDetails(Network)
@@ -329,6 +372,54 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         Intent intent = new Intent(this, DetailsView.class);
         intent.putExtra(DetailsView.INTENT_NETWORK, Parcels.wrap(network));
         startActivity(intent);
+    }
+
+    /**
+     * Indicates whether any filter is active, to enable the "Quitar filtros" button.
+     * @return true if there is at least one filter active
+     */
+    private boolean isAnyFilterActive() {
+        return activeFilters > 0;
+    }
+
+    /**
+     * Shows in the subtitle of the action bar the active filters, separated by " · ",
+     * or removes the subtitle if no filter is active.
+     */
+    private void updateSubtitle() {
+        StringBuilder subtitle = new StringBuilder();
+        for (String part : new String[] {freeBikesSubtitle, emptySlotsSubtitle}) {
+            if (part != null) {
+                if (subtitle.length() > 0) {
+                    subtitle.append(getString(R.string.filterSubtitleSeparator));
+                }
+                subtitle.append(part);
+            }
+        }
+        ActionBar bar = getSupportActionBar();
+        if (bar != null) {
+            bar.setSubtitle(subtitle.length() > 0 ? subtitle.toString() : null);
+        }
+    }
+
+    /**
+     * Shows over the filter icon the number of active filters, or hides it if there are none.
+     * The badge can only be attached once the menu of the toolbar has been created.
+     */
+    @OptIn(markerClass = ExperimentalBadgeUtils.class)
+    private void updateFilterBadge() {
+        if (toolbar == null || toolbar.findViewById(R.id.menuItemFilter) == null) {
+            return;     // the menu has not been created yet
+        }
+        if (filterBadge == null) {
+            if (activeFilters == 0) {
+                return;
+            }
+            filterBadge = BadgeDrawable.create(this);
+            BadgeUtils.attachBadgeDrawable(filterBadge, toolbar, R.id.menuItemFilter);
+        }
+        filterBadge.setNumber(activeFilters);
+        filterBadge.setVisible(activeFilters > 0);
     }
 
     /**
