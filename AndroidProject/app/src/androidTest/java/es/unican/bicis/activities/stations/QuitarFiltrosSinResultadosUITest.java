@@ -1,4 +1,3 @@
-
 package es.unican.bicis.activities.stations;
 
 import static androidx.test.espresso.Espresso.onView;
@@ -22,10 +21,14 @@ import androidx.test.rule.GrantPermissionRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import dagger.hilt.android.testing.BindValue;
 import dagger.hilt.android.testing.HiltAndroidRule;
 import dagger.hilt.android.testing.HiltAndroidTest;
+import dagger.hilt.android.testing.UninstallModules;
 import es.unican.bicis.R;
 import es.unican.bicis.activities.main.MainView;
+import es.unican.bicis.injection.LocationModule;
+import es.unican.bicis.location.ILocationProvider;
 
 /**
  * Pruebas de interfaz de la HU 532317 - Quitar los filtros aplicados.
@@ -33,6 +36,7 @@ import es.unican.bicis.activities.main.MainView;
  * UI.2: Quitar filtros cuando ninguna estación cumple el filtro.
  */
 @HiltAndroidTest
+@UninstallModules(LocationModule.class)
 public class QuitarFiltrosSinResultadosUITest {
 
     @Rule(order = 0)
@@ -44,6 +48,10 @@ public class QuitarFiltrosSinResultadosUITest {
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_COARSE_LOCATION
             );
+
+    /** La app no recibe ubicación: se queda en la lista de redes y no salta a una ciudad */
+    @BindValue
+    ILocationProvider ubicacionFalsa = cb -> { };
 
     @Rule(order = 2)
     public ActivityScenarioRule<MainView> activityRule =
