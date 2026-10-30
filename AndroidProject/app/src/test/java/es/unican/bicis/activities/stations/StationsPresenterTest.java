@@ -487,4 +487,155 @@ public class StationsPresenterTest {
 
         verify(mockView, never()).showNetworkDetails(any());
     }
+
+
+    // =====================================================================
+    // Filtro por huecos libres (HU 532335 Filtrar estaciones por huecos)
+    // Pruebas unitarias UPH.1 del plan de pruebas (Tabla 5).
+    // Estaciones con 0, 4, 7 y sin dato de huecos libres. Sus bicis (3, 2, 1, 0)
+    // hacen que el orden habitual de la lista (por bicis) sea h0, h4, h7, hNull,
+    // distinto del orden por huecos (h7, h4), para comprobar la ordenación.
+    // =====================================================================
+
+    private Station h0;
+    private Station h4;
+    private Station h7;
+    private Station hNull;
+
+    /** Crea una estación con el número de bicis y de huecos libres indicados. */
+    private Station createStation(String name, Integer freeBikes, Integer emptySlots) {
+        Station station = createStation(name, freeBikes);
+        station.setEmptySlots(emptySlots);
+        return station;
+    }
+
+    /** Carga en el presenter las estaciones con 0, 4, 7 y sin dato de huecos libres. */
+    private void initPresenterWithEmptySlots() {
+        h0 = createStation("Huecos 0", 3, 0);
+        h4 = createStation("Huecos 4", 2, 4);
+        h7 = createStation("Huecos 7", 1, 7);
+        hNull = createStation("Huecos sin dato", 0, null);
+        initPresenterWith(Arrays.asList(h0, h4, h7, hNull));
+    }
+
+    /** UPH.1a: mínimo "4": se muestran [7, 4], de más a menos huecos, y el embudo indica 1 filtro. */
+    @Test
+    public void testEmptySlotsFilterShowsStationsSortedByEmptySlots() {
+        initPresenterWithEmptySlots();
+
+        sut.onMinEmptySlotsFilterApplied("4");
+
+        verify(mockView).showMinEmptySlotsFilterActive(4);
+        verify(mockView).showActiveFiltersCount(1);
+        verify(mockView).showStations(Arrays.asList(h7, h4));
+        verify(mockView).showNetworkLocation("Santander, ES · 2 estaciones");
+        verify(mockView, never()).showInvalidMinEmptySlots();
+    }
+
+    /** UPH.1b: mínimo "7" (valor límite): se incluye la estación con exactamente 7 huecos. */
+    @Test
+    public void testEmptySlotsFilterIncludesStationsEqualToMinimum() {
+        initPresenterWithEmptySlots();
+
+        sut.onMinEmptySlotsFilterApplied("7");
+
+        verify(mockView).showStations(Arrays.asList(h7));
+    }
+
+    /** UPH.1c: mínimo "1" (menor valor que filtra): se muestran [7, 4]. */
+    @Test
+    public void testEmptySlotsFilterMinimumValueOne() {
+        initPresenterWithEmptySlots();
+
+        sut.onMinEmptySlotsFilterApplied("1");
+
+        verify(mockView).showStations(Arrays.asList(h7, h4));
+    }
+
+    /** UPH.1d: " 7 " (con espacios): se acepta como 7. */
+    @Test
+    public void testEmptySlotsFilterAcceptsValueWithSpaces() {
+        initPresenterWithEmptySlots();
+
+        sut.onMinEmptySlotsFilterApplied(" 7 ");
+
+        verify(mockView).showStations(Arrays.asList(h7));
+    }
+
+    /** UPH.1e: mínimo "8" (justo por encima del máximo): mensaje de sin resultados. */
+    @Test
+    public void testEmptySlotsFilterWithoutResultsShowsMessage() {
+        initPresenterWithEmptySlots();
+
+        sut.onMinEmptySlotsFilterApplied("8");
+
+        verify(mockView).showNoStationsWithMinEmptySlots(8);
+        verify(mockView).showNetworkLocation("Santander, ES");
+        verify(mockView, never()).showStations(anyList());
+    }
+
+    /**
+     * UPH.1f: mínimo "0": se muestran las 4 estaciones, también la que no tiene dato,
+     * en el orden habitual de la lista, y el embudo no indica ningún filtro.
+     */
+    @Test
+    public void testEmptySlotsFilterZeroShowsAllStations() {
+        initPresenterWithEmptySlots();
+
+        sut.onMinEmptySlotsFilterApplied("0");
+
+        verify(mockView).showStations(Arrays.asList(h0, h4, h7, hNull));
+        verify(mockView).showActiveFiltersCount(0);
+        verify(mockView, never()).showInvalidMinEmptySlots();
+        verify(mockView, never()).showNoStationsWithMinEmptySlots(anyInt());
+    }
+
+    /**
+     * UPH.1g: valores no válidos ("-1", "abc", "2.5", "", null y un número demasiado grande):
+     * se muestra el error y no se filtra ni cambia la lista.
+     */
+    @Test
+    public void testEmptySlotsFilterInvalidValues() {
+        String[] invalidValues = {"-1", "abc", "2.5", "", null, "99999999999"};
+        for (String value : invalidValues) {
+            initPresenterWithEmptySlots();
+
+            sut.onMinEmptySlotsFilterApplied(value);
+
+            verify(mockView).showInvalidMinEmptySlots();
+            verify(mockView, never()).showMinEmptySlotsFilterActive(anyInt());
+            verify(mockView, never()).showActiveFiltersCount(anyInt());
+            verify(mockView, never()).showStations(anyList());
+            verify(mockView, never()).showNoStationsWithMinEmptySlots(anyInt());
+        }
+    }
+
+    /** UPH.1h: mínimo "1" y solo estaciones sin dato de huecos: mensaje de sin resultados. */
+    @Test
+    public void testEmptySlotsFilterOnlyStationsWithoutData() {
+        initPresenterWith(Arrays.asList(createStation("Huecos sin dato", 0, null)));
+
+        sut.onMinEmptySlotsFilterApplied("1");
+
+        verify(mockView).showNoStationsWithMinEmptySlots(1);
+        verify(mockView, never()).showStations(anyList());
+    }
+
+    /**
+     * UPH.1i: mínimo "4" con el filtro de bicis activo (mínimo 1): solo se muestra la estación
+     * que cumple los dos filtros y el embudo indica 2 filtros activos.
+     */
+    @Test
+    public void testEmptySlotsFilterCombinedWithFreeBikesFilter() {
+        Station noBikes = createStation("0 bicis y 7 huecos", 0, 7);
+        Station both = createStation("2 bicis y 4 huecos", 2, 4);
+        initPresenterWith(Arrays.asList(noBikes, both));
+        sut.onFilterApplied("1");
+        clearInvocations(mockView);
+
+        sut.onMinEmptySlotsFilterApplied("4");
+
+        verify(mockView).showActiveFiltersCount(2);
+        verify(mockView).showStations(Arrays.asList(both));
+    }
 }
