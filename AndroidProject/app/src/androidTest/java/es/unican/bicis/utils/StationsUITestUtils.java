@@ -51,6 +51,17 @@ public final class StationsUITestUtils {
         onView(withText(R.string.filterApply)).perform(click());
     }
 
+    /**
+     * Abre el diálogo, escribe el valor en el campo "Mínimo de huecos libres" (HU 532335),
+     * deja vacío el de bicis y pulsa Aplicar.
+     */
+    public static void applyEmptySlotsFilter(String value) {
+        openFilterDialog();
+        onView(withId(R.id.etMinFreeBikes)).perform(replaceText(""), closeSoftKeyboard());
+        onView(withId(R.id.etMinEmptySlots)).perform(replaceText(value), closeSoftKeyboard());
+        onView(withText(R.string.filterApply)).perform(click());
+    }
+
     /** Comprueba el texto de la cabecera (ciudad, país y número de estaciones). */
     public static void checkHeader(String expected) {
         onView(withId(R.id.tvNetworkLocation)).check(matches(withText(expected)));
