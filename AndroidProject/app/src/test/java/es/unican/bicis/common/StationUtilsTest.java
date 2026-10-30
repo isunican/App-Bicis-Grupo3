@@ -112,4 +112,52 @@ public class StationUtilsTest {
         assertFalse(StationUtils.hasEbikes(new Station()));     // ULE.3e
         assertFalse(StationUtils.hasEbikes(null));
     }
+
+    // Ordenación por huecos libres (HU 532335)
+
+    private Station estacion(String nombre, Integer bicis, Integer huecos) {
+        Station s = estacion(nombre, bicis);
+        s.setEmptySlots(huecos);
+        return s;
+    }
+
+    @Test
+    public void ordenaDeMasAMenosHuecos() {
+        List<Station> lista = Arrays.asList(
+                estacion("A", 5, 4), estacion("B", 0, 20), estacion("C", 2, 9));
+
+        List<Station> ordenada = StationUtils.sortByEmptySlots(lista);
+
+        assertEquals("B", ordenada.get(0).getName());
+        assertEquals("C", ordenada.get(1).getName());
+        assertEquals("A", ordenada.get(2).getName());
+        assertEquals("A", lista.get(0).getName());   // la lista original no cambia
+    }
+
+    @Test
+    public void aIgualdadDeHuecosVaPrimeroLaQueTieneMasBicis() {
+        List<Station> lista = Arrays.asList(
+                estacion("Correos", 0, 19), estacion("Castilla Hermida", 1, 19));
+
+        List<Station> ordenada = StationUtils.sortByEmptySlots(lista);
+
+        assertEquals("Castilla Hermida", ordenada.get(0).getName());
+        assertEquals("Correos", ordenada.get(1).getName());
+    }
+
+    @Test
+    public void estacionesSinDatoDeHuecosVanAlFinal() {
+        List<Station> lista = Arrays.asList(
+                estacion("A", 1, null), estacion("B", 1, 3));
+
+        List<Station> ordenada = StationUtils.sortByEmptySlots(lista);
+
+        assertEquals("B", ordenada.get(0).getName());
+        assertEquals("A", ordenada.get(1).getName());
+    }
+
+    @Test
+    public void ordenarPorHuecosUnaListaNullDevuelveListaVacia() {
+        assertTrue(StationUtils.sortByEmptySlots(null).isEmpty());
+    }
 }
