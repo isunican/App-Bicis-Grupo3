@@ -4,43 +4,44 @@ import static androidx.test.espresso.Espresso.onData;
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
-import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static org.hamcrest.CoreMatchers.not;
+import static es.unican.bicis.utils.Matchers.networkNamed;
 
 import android.Manifest;
 import android.app.Activity;
 import android.app.Instrumentation;
+import android.content.Context;
 import android.os.SystemClock;
-import androidx.test.runner.lifecycle.ActivityLifecycleMonitor;
-import java.util.ArrayList;
-import java.util.List;
-import es.unican.bicis.activities.details.DetailsView;
 
+import androidx.test.core.app.ApplicationProvider;
+import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.rule.GrantPermissionRule;
+import androidx.test.runner.lifecycle.ActivityLifecycleMonitor;
 import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry;
 import androidx.test.runner.lifecycle.Stage;
 
 import org.junit.After;
 import org.junit.Before;
-
-import androidx.test.ext.junit.rules.ActivityScenarioRule;
-import androidx.test.rule.GrantPermissionRule;
-
-
-import static org.hamcrest.CoreMatchers.not;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExternalResource;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import dagger.hilt.android.testing.BindValue;
 import dagger.hilt.android.testing.HiltAndroidRule;
 import dagger.hilt.android.testing.HiltAndroidTest;
 import dagger.hilt.android.testing.UninstallModules;
-
+import es.unican.bicis.activities.details.DetailsView;
 import es.unican.bicis.activities.main.MainView;
 import es.unican.bicis.injection.LocationModule;
 import es.unican.bicis.location.ILocationProvider;
-import static es.unican.bicis.utils.Matchers.networkNamed;
 
 @HiltAndroidTest
 @UninstallModules(LocationModule.class)
@@ -50,28 +51,53 @@ public class DetailsViewUITest {
     public HiltAndroidRule hiltRule =
             new HiltAndroidRule(this);
 
-    // para que no salga el dialogo del permiso de ubicacion al abrir la app
+    // borra la cache de la app antes de lanzar la MainView de cada test
     @Rule(order = 1)
+    public ExternalResource clearCache = new ExternalResource() {
+        @Override
+        protected void before() {
+            Context context = ApplicationProvider.getApplicationContext();
+            File[] files = context.getCacheDir().listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    deleteRecursively(file);
+                }
+            }
+        }
+    };
+
+    // para que no salga el dialogo del permiso de ubicacion al abrir la app
+    @Rule(order = 2)
     public GrantPermissionRule permisos = GrantPermissionRule.grant(
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION);
 
     // ubicacion que no responde, asi la app se queda en la lista de redes
     @BindValue
-    ILocationProvider ubicacionFalsa = cb -> { };
+    ILocationProvider ubicacionFalsa = cb -> {
+    };
 
-    @Rule(order = 2)
+    @Rule(order = 3)
     public ActivityScenarioRule<MainView> activityRule =
             new ActivityScenarioRule<>(MainView.class);
 
-<<<<<<< Updated upstream
-    /** Pulsa la red con ese nombre en la lista principal, sin depender de su posición. */
-    private void openDetails(String networkName) {
-        onData(networkNamed(networkName))
-                .inAdapterView(withId(R.id.lvNetworks))
-                .perform(click());
+    /**
+     * Espera (maximo 30 s) a que la MainView tenga el foco antes de empezar,
+     * porque al principio de la ejecucion el emulador puede tardar mas de
+     * los 10 s que espera Espresso.
+     */
+    @Before
+    public void waitForWindowFocus() {
+        for (int i = 0; i < 300; i++) {
+            boolean[] focused = {false};
+            activityRule.getScenario().onActivity(activity -> focused[0] = activity.hasWindowFocus());
+            if (focused[0]) {
+                return;
+            }
+            SystemClock.sleep(100);
+        }
     }
-=======
+
     /**
      * Cierra el DetailsView que abrió el test y espera a que se destruya,
      * para que el siguiente test empiece solo con su MainView.
@@ -96,23 +122,6 @@ public class DetailsViewUITest {
         }
     }
 
-    /**
-     * Espera (maximo 30 s) a que la MainView tenga el foco antes de empezar,
-     * porque al principio de la ejecucion el emulador puede tardar mas de
-     * los 10 s que espera Espresso.
-     */
-    @Before
-    public void waitForWindowFocus() {
-        for (int i = 0; i < 300; i++) {
-            boolean[] focused = {false};
-            activityRule.getScenario().onActivity(activity -> focused[0] = activity.hasWindowFocus());
-            if (focused[0]) {
-                return;
-            }
-            SystemClock.sleep(100);
-        }
-    }
-
     /** DetailsView que no estan destruidos. Hay que llamarlo en el hilo principal. */
     private static List<Activity> openDetailsViews() {
         List<Activity> result = new ArrayList<>();
@@ -130,17 +139,27 @@ public class DetailsViewUITest {
         return result;
     }
 
-        /** Pulsa la red con ese nombre en la lista principal, sin depender de su posición. */
-        private void openDetails(String networkName) {
-            onData(networkNamed(networkName))
-                    .inAdapterView(withId(R.id.lvNetworks))
-                    .perform(click());
+    /** Borra un fichero o una carpeta con todo su contenido. */
+    private static void deleteRecursively(File file) {
+        File[] children = file.listFiles();
+        if (children != null) {
+            for (File child : children) {
+                deleteRecursively(child);
+            }
         }
->>>>>>> Stashed changes
+        file.delete();
+    }
+
+    /** Pulsa la red con ese nombre en la lista principal, sin depender de su posición. */
+    private void openDetails(String networkName) {
+        onData(networkNamed(networkName))
+                .inAdapterView(withId(R.id.lvNetworks))
+                .perform(click());
+    }
 
     /** Comprueba los cinco datos detallados de la vista. */
     private void checkDetails(String latitude, String longitude, String ebikes,
-            String operatorsCount, String operators) {
+                              String operatorsCount, String operators) {
         onView(withId(R.id.tvLatitude)).check(matches(withText(latitude)));
         onView(withId(R.id.tvLongitude)).check(matches(withText(longitude)));
         onView(withId(R.id.tvEbikes)).check(matches(withText(ebikes)));
@@ -148,19 +167,10 @@ public class DetailsViewUITest {
         onView(withId(R.id.tvOperators)).check(matches(withText(operators)));
     }
 
-<<<<<<< Updated upstream
     /** A1.a.1: Bicing, red con todos los datos (Prueba 1). */
     @Test
     public void testA1a1_Bicing() {
         openDetails("Bicing");
-=======
-
-
-        /** A1.a.1: Bicing, red con todos los datos (Prueba 1). */
-        @Test
-        public void testA1a1_Bicing() {
-            openDetails("Bicing");
->>>>>>> Stashed changes
 
         onView(withId(R.id.tvName)).check(matches(withText("Bicing")));
         onView(withId(R.id.tvCity)).check(matches(withText("Barcelona, ES")));
