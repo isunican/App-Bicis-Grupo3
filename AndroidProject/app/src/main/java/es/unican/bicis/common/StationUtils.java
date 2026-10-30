@@ -42,6 +42,28 @@ public class StationUtils {
     }
 
     /**
+     * Devuelve una copia de la lista ordenada de más a menos huecos libres (HU 532335).
+     * Si dos estaciones tienen los mismos huecos, va primero la que tiene más bicis
+     * disponibles y, si también coinciden, se ordenan por nombre sin distinguir mayúsculas
+     * ni tildes. Las estaciones sin dato de huecos o de bicis (null) van al final de su grupo.
+     * La lista recibida no se modifica.
+     * @param stations estaciones a ordenar (puede ser null)
+     * @return nueva lista ordenada, o una lista vacía si stations es null
+     */
+    public static List<Station> sortByEmptySlots(List<Station> stations) {
+        List<Station> sorted = new ArrayList<>();
+        if (stations == null) {
+            return sorted;
+        }
+        sorted.addAll(stations);
+        Comparator<Integer> masAMenos = Comparator.nullsLast(Comparator.<Integer>reverseOrder());
+        sorted.sort(Comparator.comparing(Station::getEmptySlots, masAMenos)
+                .thenComparing(Station::getFreeBikes, masAMenos)
+                .thenComparing(StationUtils::nameOrNull, byName()));
+        return sorted;
+    }
+
+    /**
      * Comparador de nombres en español que no distingue mayúsculas ni tildes
      * ("Árboles" va antes que "Ayuntamiento"). Los null van al final.
      * @return el comparador

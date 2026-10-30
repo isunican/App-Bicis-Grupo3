@@ -214,7 +214,9 @@ public class StationsPresenter implements IStationsContract.Presenter {
     /**
      * Applies all the active filters to the stations of the network and tells the view
      * how many filters are active.
-     * @return the stations that satisfy all the active filters, in the same order
+     * If the empty slots filter is active, the result is sorted from more to fewer empty
+     * slots (HU 532335); otherwise it keeps the order of the complete list.
+     * @return the stations that satisfy all the active filters
      */
     private List<Station> applyFilters() {
         List<Station> filtered = stations;
@@ -223,6 +225,7 @@ public class StationsPresenter implements IStationsContract.Presenter {
         }
         if (minEmptySlots != null) {
             filtered = StationFilter.filterByMinEmptySlots(filtered, minEmptySlots);
+            filtered = StationUtils.sortByEmptySlots(filtered);
         }
         view.showActiveFiltersCount(activeFiltersCount());
         return filtered;
