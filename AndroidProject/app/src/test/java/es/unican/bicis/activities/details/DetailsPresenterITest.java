@@ -147,4 +147,65 @@ public class DetailsPresenterITest {
         verify(mockView).showNoDetailsAvailable();
         verifyNoMoreInteractions(mockView);
     }
+
+    /** Complementa IDP.6a: Bici Oeste, ebikes false. Debe salir "No", no "-". */
+    @Test
+    public void init_biciOeste_ebikesFalseShownAsNo() {
+        sut.init(mockView, loadNetwork("bicioeste"));
+
+        verify(mockView).showName("Bici Oeste");
+        verify(mockView).showLocation("Oviedo, ES");
+        verify(mockView).showLatitude("43.3614");
+        verify(mockView).showLongitude("-5.8494");
+        verify(mockView).showEbikes(DetailsPresenter.NO);
+        verify(mockView).showOperatorsCount("2");
+        verify(mockView).showOperators("• Empresa A\n• Empresa B");
+        verifyNoMoreInteractions(mockView);
+    }
+
+    /** Coordenadas fuera de rango (95.5, -181.2) leidas del JSON. */
+    @Test
+    public void init_biciCoord_outOfRangeCoordinatesShownAsNotAvailable() {
+        sut.init(mockView, loadNetwork("bicicoord"));
+
+        verify(mockView).showLatitude(NA);
+        verify(mockView).showLongitude(NA);
+        verify(mockView).showEbikes(DetailsPresenter.YES);
+        verify(mockView).showOperatorsCount("1");
+    }
+
+    /** Coordenadas en los limites (-90, 180) leidas del JSON. */
+    @Test
+    public void init_biciLimites_limitCoordinatesAreShown() {
+        sut.init(mockView, loadNetwork("bicilimites"));
+
+        verify(mockView).showLocation("Ushuaia, AR");
+        verify(mockView).showLatitude("-90.0000");
+        verify(mockView).showLongitude("180.0000");
+    }
+
+    /** ebikes "si" (texto) y company con un elemento vacio: los dos se muestran como "-". */
+    @Test
+    public void init_biciAnomala_anomalousEbikesAndCompanyShownAsNotAvailable() {
+        sut.init(mockView, loadNetwork("bicianomala"));
+
+        verify(mockView).showLatitude("42.5987");
+        verify(mockView).showLongitude("-5.5671");
+        verify(mockView).showEbikes(NA);
+        verify(mockView).showOperatorsCount(NA);
+        verify(mockView).showOperators(NA);
+        verify(mockView, never()).showNoDetailsAvailable();
+    }
+
+    /** company como texto y ebikes 1: se leen sin excepcion y se muestran como "-". */
+    @Test
+    public void init_biciTexto_wrongTypesShownAsNotAvailable() {
+        sut.init(mockView, loadNetwork("bicitexto"));
+
+        verify(mockView).showName("Bici Texto");
+        verify(mockView).showEbikes(NA);
+        verify(mockView).showOperatorsCount(NA);
+        verify(mockView).showOperators(NA);
+        verify(mockView, never()).showNoDetailsAvailable();
+    }
 }

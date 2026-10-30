@@ -1,0 +1,68 @@
+{
+  "network": {
+    "id": "bicioeste",
+    "name": "Bici Oeste",
+    "location": {
+      "latitude": 43.3614,
+      "longitude": -5.8494,
+      "city": "Oviedo",
+      "country": "ES"
+    },
+    "href": "/v2/networks/bicioeste",
+    "company": [
+      "Empresa A",
+      "Empresa B"
+    ],
+    "ebikes": false,
+    "stations": [
+      {
+        "id": "st01",
+        "name": "Plaza de la Escandalera",
+        "latitude": 43.0,
+        "longitude": -4.0,
+        "timestamp": "2026-10-22T10:00:00.000000+00:00Z",
+        "free_bikes": 4,
+        "empty_slots": 8,
+        "extra": {
+          "ebikes": 1
+        }
+      },
+      {
+        "id": "st02",
+        "name": "Campo de San Francisco",
+        "latitude": 43.0,
+        "longitude": -4.0,
+        "timestamp": "2026-10-22T10:00:00.000000+00:00Z",
+        "free_bikes": 9,
+        "empty_slots": 3,
+        "extra": {
+          "ebikes": 2
+        }
+      },
+      {
+        "id": "st03",
+        "name": "Estación del Norte",
+        "latitude": 43.0,
+        "longitude": -4.0,
+        "timestamp": "2026-10-22T10:00:00.000000+00:00Z",
+        "free_bikes": 0,
+        "empty_slots": 12,
+        "extra": {
+          "ebikes": 0
+        }
+      },
+      {
+        "id": "st04",
+        "name": "Calatrava",
+        "latitude": 43.0,
+        "longitude": -4.0,
+        "timestamp": "2026-10-22T10:00:00.000000+00:00Z",
+        "free_bikes": 6,
+        "empty_slots": 6,
+        "extra": {
+          "ebikes": 0
+        }
+      }
+    ]
+  }
+}
