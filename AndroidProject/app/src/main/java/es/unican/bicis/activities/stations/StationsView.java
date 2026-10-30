@@ -1,5 +1,6 @@
 package es.unican.bicis.activities.stations;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -175,10 +176,10 @@ public class StationsView extends AppCompatActivity implements IStationsContract
 
         // The positive button is overridden so that the dialog does not close on invalid values
         filterDialog.setOnShowListener(d -> {
-            Button apply = filterDialog.getButton(AlertDialog.BUTTON_POSITIVE);
+            Button apply = filterDialog.getButton(DialogInterface.BUTTON_POSITIVE);
             apply.setOnClickListener(v -> onApplyFiltersClicked());
 
-            Button clear = filterDialog.getButton(AlertDialog.BUTTON_NEUTRAL);
+            Button clear = filterDialog.getButton(DialogInterface.BUTTON_NEUTRAL);
             clear.setEnabled(isAnyFilterActive());
         });
 
@@ -378,8 +379,14 @@ public class StationsView extends AppCompatActivity implements IStationsContract
      * Indicates whether any filter is active, to enable the "Quitar filtros" button.
      * @return true if there is at least one filter active
      */
+    /**
+     * Indicates whether any filter is active, to enable the "Quitar filtros" button.
+     * A filter is active if the presenter has reported it (number over the filter icon)
+     * or if its text is shown in the subtitle of the action bar.
+     * @return true if there is at least one filter active
+     */
     private boolean isAnyFilterActive() {
-        return activeFilters > 0;
+        return activeFilters > 0 || freeBikesSubtitle != null || emptySlotsSubtitle != null;
     }
 
     /**
