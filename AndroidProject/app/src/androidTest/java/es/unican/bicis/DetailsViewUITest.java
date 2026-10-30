@@ -9,6 +9,20 @@ import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 
 import android.Manifest;
+import android.app.Activity;
+import android.app.Instrumentation;
+import android.os.SystemClock;
+import androidx.test.runner.lifecycle.ActivityLifecycleMonitor;
+import java.util.ArrayList;
+import java.util.List;
+import es.unican.bicis.activities.details.DetailsView;
+
+import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry;
+import androidx.test.runner.lifecycle.Stage;
+
+import org.junit.After;
+import org.junit.Before;
 
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.rule.GrantPermissionRule;
@@ -50,12 +64,79 @@ public class DetailsViewUITest {
     public ActivityScenarioRule<MainView> activityRule =
             new ActivityScenarioRule<>(MainView.class);
 
+<<<<<<< Updated upstream
     /** Pulsa la red con ese nombre en la lista principal, sin depender de su posición. */
     private void openDetails(String networkName) {
         onData(networkNamed(networkName))
                 .inAdapterView(withId(R.id.lvNetworks))
                 .perform(click());
     }
+=======
+    /**
+     * Cierra el DetailsView que abrió el test y espera a que se destruya,
+     * para que el siguiente test empiece solo con su MainView.
+     */
+    @After
+    public void closeDetails() {
+        Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
+        instrumentation.runOnMainSync(() -> {
+            for (Activity activity : openDetailsViews()) {
+                activity.finish();
+            }
+        });
+        // finish() es asincrono: esperar (maximo 5 s) a que no quede ningun DetailsView
+        for (int i = 0; i < 50; i++) {
+            instrumentation.waitForIdleSync();
+            boolean[] stillOpen = {false};
+            instrumentation.runOnMainSync(() -> stillOpen[0] = !openDetailsViews().isEmpty());
+            if (!stillOpen[0]) {
+                return;
+            }
+            SystemClock.sleep(100);
+        }
+    }
+
+    /**
+     * Espera (maximo 30 s) a que la MainView tenga el foco antes de empezar,
+     * porque al principio de la ejecucion el emulador puede tardar mas de
+     * los 10 s que espera Espresso.
+     */
+    @Before
+    public void waitForWindowFocus() {
+        for (int i = 0; i < 300; i++) {
+            boolean[] focused = {false};
+            activityRule.getScenario().onActivity(activity -> focused[0] = activity.hasWindowFocus());
+            if (focused[0]) {
+                return;
+            }
+            SystemClock.sleep(100);
+        }
+    }
+
+    /** DetailsView que no estan destruidos. Hay que llamarlo en el hilo principal. */
+    private static List<Activity> openDetailsViews() {
+        List<Activity> result = new ArrayList<>();
+        ActivityLifecycleMonitor monitor = ActivityLifecycleMonitorRegistry.getInstance();
+        for (Stage stage : Stage.values()) {
+            if (stage == Stage.DESTROYED) {
+                continue;
+            }
+            for (Activity activity : monitor.getActivitiesInStage(stage)) {
+                if (activity instanceof DetailsView) {
+                    result.add(activity);
+                }
+            }
+        }
+        return result;
+    }
+
+        /** Pulsa la red con ese nombre en la lista principal, sin depender de su posición. */
+        private void openDetails(String networkName) {
+            onData(networkNamed(networkName))
+                    .inAdapterView(withId(R.id.lvNetworks))
+                    .perform(click());
+        }
+>>>>>>> Stashed changes
 
     /** Comprueba los cinco datos detallados de la vista. */
     private void checkDetails(String latitude, String longitude, String ebikes,
@@ -67,10 +148,19 @@ public class DetailsViewUITest {
         onView(withId(R.id.tvOperators)).check(matches(withText(operators)));
     }
 
+<<<<<<< Updated upstream
     /** A1.a.1: Bicing, red con todos los datos (Prueba 1). */
     @Test
     public void testA1a1_Bicing() {
         openDetails("Bicing");
+=======
+
+
+        /** A1.a.1: Bicing, red con todos los datos (Prueba 1). */
+        @Test
+        public void testA1a1_Bicing() {
+            openDetails("Bicing");
+>>>>>>> Stashed changes
 
         onView(withId(R.id.tvName)).check(matches(withText("Bicing")));
         onView(withId(R.id.tvCity)).check(matches(withText("Barcelona, ES")));
