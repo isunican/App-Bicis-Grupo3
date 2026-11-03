@@ -38,7 +38,13 @@ public class Network {
 
     @SerializedName("stations")             protected List<Station> stations;
 
-    //@return [el numero de compañias] o [null] si la compañia es un array de textos vacios
+    /**
+     * Counts the operating companies of the network, from the list {@code company}.
+     * The count is only done if the list is available and all its elements are
+     * non-blank texts; otherwise the data is considered not available or anomalous.
+     * @return the number of companies, or null if company is missing, empty
+     * or contains blank elements
+     */
     public Integer countOperators() {
         if (company == null || company.length == 0) {
             return null;
@@ -51,14 +57,23 @@ public class Network {
         return company.length;
     }
 
-    // @return [true] si (id, href, gbfsHref, operators, country, coordinates) no son null
+    /**
+     * Checks if the network has no detailed data, only the basic data shown in the
+     * main list (name and city). Detailed data are the coordinates, ebikes and company.
+     * A false value of ebikes counts as a data (it is not the same as missing).
+     * @return true if latitude, longitude, ebikes and company are all missing
+     */
     public boolean hasOnlyBasicInfo() {
         boolean hasLocationData = location != null
                 && (location.getLatitude() != null || location.getLongitude() != null);
         return !hasLocationData && ebikes == null && company == null;
     }
 
-    //
+    /**
+     * Checks if a text is missing or only contains blank characters.
+     * @param s the text to check
+     * @return true if s is null, empty or blank
+     */
     private static boolean isBlank(String s) {
         return s == null || s.trim().isEmpty();
     }
