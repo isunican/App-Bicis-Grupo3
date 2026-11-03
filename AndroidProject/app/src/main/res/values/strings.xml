@@ -31,4 +31,13 @@
     <string name="filterInvalid">Introduce un número entero mayor que 0</string>
     <string name="filterActive">Con al menos %d bicis libres</string>
     <string name="filterNoResults">No hay estaciones con al menos %d bicis libres</string>
+
+    <!-- Filtro de estaciones por distancia -->
+    <string name="menuDistanceFilter">Filtrar por distancia</string>
+    <string name="distanceFilterTitle">Filtrar por distancia</string>
+    <string name="distanceFilterHint">Distancia máxima (km)</string>
+    <string name="distanceFilterInvalid">Introduce un número mayor que 0</string>
+    <string name="distanceFilterActive">A menos de %.1f km</string>
+    <string name="distanceFilterNoResults">No hay estaciones a menos de %.1f km</string>
+    <string name="distanceLocationUnavailable">No se puede obtener tu ubicación para filtrar por distancia</string>
 </resources>

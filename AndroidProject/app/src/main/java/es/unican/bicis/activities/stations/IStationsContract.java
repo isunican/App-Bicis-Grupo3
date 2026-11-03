@@ -39,6 +39,17 @@ public interface IStationsContract {
         public void onFilterApplied(String minFreeBikesText);
 
         /**
+         * Devuelve la distancia máxima posible en la ciudad actual (en km),
+         * calculada como la mayor distancia entre cualquier par de estaciones
+         * con coordenadas válidas. Se usa como límite superior de la barra de distancia.
+         * Devuelve 0 si no hay suficientes estaciones con coordenadas.
+         * Solo la View debe llamar a este método.
+         *
+         * @return distancia máxima de la ciudad, en km
+         */
+        public double getMaxCityDistanceKm();
+
+        /**
          * Notifies the presenter that the user wants to remove
          * all applied station filters.
          *
@@ -214,5 +225,13 @@ public interface IStationsContract {
          */
         public void showDistanceFilterActive(double maxDistKm);
 
+        /**
+         * La vista debe actualizar el número que muestra el icono del embudo
+         * con el total de filtros activos en este momento (0, 1 o 2).
+         * Solo el Presenter debe llamar a este método.
+         *
+         * @param count número de filtros activos
+         */
+        public void showActiveFiltersCount(int count);
     }
 }

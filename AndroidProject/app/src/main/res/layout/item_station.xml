@@ -35,5 +35,14 @@
         android:src="@drawable/ic_ebike"
         android:contentDescription="@string/hasEbikes"
         android:visibility="invisible" />
+    <TextView
+        android:id="@+id/tvStationDistance"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="2"
+        android:gravity="end"
+        android:textSize="12sp"
+        android:textColor="?android:attr/textColorSecondary"
+        android:visibility="gone" />
 
 </LinearLayout>

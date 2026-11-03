@@ -37,6 +37,11 @@ public class StationsPresenter implements IStationsContract.Presenter {
     /** Whether the stations could not be loaded */
     private boolean loadFailed = false;
 
+    // FIX: estado de cada filtro activo (null = sin filtro)
+    private Integer activeMinFreeBikes = null;
+    private Double  activeMaxDistKm    = null;
+    private double[] lastUserLocation  = null;
+
     /**
      * @see IStationsContract.Presenter#init(IStationsContract.View, Network)
      */
@@ -96,15 +101,11 @@ public class StationsPresenter implements IStationsContract.Presenter {
             view.showInvalidMinFreeBikes();
             return;
         }
-
+        // FIX: guardar estado y combinar filtros
+        activeMinFreeBikes = minFreeBikes;
         view.showFilterActive(minFreeBikes);
-        List<Station> filtered = StationFilter.filterByMinFreeBikes(stations, minFreeBikes);
-        if (filtered.isEmpty()) {
-            view.showNoStationsWithMinFreeBikes(minFreeBikes);
-            view.showNetworkLocation(location);
-        } else {
-            showStationList(filtered);
-        }
+        view.showActiveFiltersCount(contarFiltrosActivos());
+        applyFilters();
     }
 
     @Override
@@ -114,28 +115,27 @@ public class StationsPresenter implements IStationsContract.Presenter {
             view.showInvalidMaxDistance();
             return;
         }
-
         double[] userLocation = view.getUserLocation();
         if (userLocation == null) {
             view.showLocationUnavailableForFilter();
             return;
         }
-
+        // FIX: guardar estado y combinar filtros
+        activeMaxDistKm   = maxDistKm;
+        lastUserLocation  = userLocation;
         view.showDistanceFilterActive(maxDistKm);
-        List<Station> filtered = StationFilter.filterByMaxDistance(
-                stations, userLocation[0], userLocation[1], maxDistKm);
-
-        if (filtered.isEmpty()) {
-            view.showNoStationsWithinDistance(maxDistKm);
-            view.showNetworkLocation(location);
-        } else {
-            showStationList(filtered);
-        }
+        view.showActiveFiltersCount(contarFiltrosActivos());
+        applyFilters();
     }
 
     @Override
     public void onFilterCleared() {
+        // FIX: limpiar ambos filtros
+        activeMinFreeBikes = null;
+        activeMaxDistKm    = null;
+        lastUserLocation   = null;
         view.showFilterInactive();
+        view.showActiveFiltersCount(0);
         try {
             showAllStations();
         } catch (RuntimeException error) {
@@ -208,5 +208,86 @@ public class StationsPresenter implements IStationsContract.Presenter {
             return city;
         }
         return city + ", " + country;
+    }
+
+    /**
+     * Aplica los filtros activos sobre la lista completa de estaciones y
+     * pide a la vista que muestre el resultado.
+     * Orden: primero filtra por bicis, luego por distancia (y ordena por ella),
+     * y deja las estaciones sin coordenadas al final.
+     */
+    private void applyFilters() {
+        List<Station> resultado = new ArrayList<>(stations);
+
+        // FIX: filtro de bicis sobre la lista completa
+        if (activeMinFreeBikes != null) {
+            resultado = StationFilter.filterByMinFreeBikes(resultado, activeMinFreeBikes);
+        }
+
+        // FIX: filtro de distancia + ordenar por distancia + rellenar distanciaKm
+        if (activeMaxDistKm != null && lastUserLocation != null) {
+            resultado = StationFilter.filterByMaxDistance(
+                    resultado, lastUserLocation[0], lastUserLocation[1], activeMaxDistKm);
+            // Rellenar distanciaKm en cada estación y ordenar por ella
+            for (Station s : resultado) {
+                if (StationFilter.hasValidCoordinates(s)) {
+                    s.setDistanciaKm(StationFilter.distanceKm(
+                            lastUserLocation[0], lastUserLocation[1],
+                            s.getLatitude(), s.getLongitude()));
+                }
+            }
+            resultado = sortByDistancia(resultado);
+        }
+
+        if (resultado.isEmpty()) {
+            // Mostrar el mensaje apropiado según qué filtro dio vacío
+            if (activeMaxDistKm != null) {
+                view.showNoStationsWithinDistance(activeMaxDistKm);
+            } else {
+                view.showNoStationsWithMinFreeBikes(activeMinFreeBikes);
+            }
+            view.showNetworkLocation(location);
+        } else {
+            showStationList(resultado);
+        }
+    }
+    /**
+     * Ordena la lista por distanciaKm ascendente.
+     * Las estaciones sin distancia (sin coordenadas) van al final.
+     */
+    private List<Station> sortByDistancia(List<Station> lista) {
+        List<Station> sorted = new ArrayList<>(lista);
+        sorted.sort(Comparator.comparing(
+                Station::getDistanciaKm,
+                Comparator.nullsLast(Comparator.naturalOrder())
+        ));
+        return sorted;
+    }
+
+    @Override
+    public double getMaxCityDistanceKm() {
+        List<Station> conCoords = new ArrayList<>();
+        for (Station s : stations) {
+            if (StationFilter.hasValidCoordinates(s)) {
+                conCoords.add(s);
+            }
+        }
+        double max = 0;
+        for (int i = 0; i < conCoords.size(); i++) {
+            for (int j = i + 1; j < conCoords.size(); j++) {
+                double d = StationFilter.distanceKm(
+                        conCoords.get(i).getLatitude(), conCoords.get(i).getLongitude(),
+                        conCoords.get(j).getLatitude(), conCoords.get(j).getLongitude());
+                if (d > max) max = d;
+            }
+        }
+        return max;
+    }
+
+    private int contarFiltrosActivos() {
+        int count = 0;
+        if (activeMinFreeBikes != null) count++;
+        if (activeMaxDistKm    != null) count++;
+        return count;
     }
 }

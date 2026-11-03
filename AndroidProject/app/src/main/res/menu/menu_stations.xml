@@ -13,4 +13,10 @@
         android:icon="@drawable/ic_info"
         android:title="@string/menuNetworkInfo"
         app:showAsAction="always" />
+
+    <item
+        android:id="@+id/menuItemDistanceFilter"
+        android:icon="@drawable/ic_filter"
+        android:title="@string/menuDistanceFilter"
+        app:showAsAction="ifRoom" />
 </menu>

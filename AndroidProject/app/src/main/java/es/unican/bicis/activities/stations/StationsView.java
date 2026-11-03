@@ -63,6 +63,10 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     private EditText filterInput;
     private boolean filterActive = false;
 
+    private AlertDialog distanceFilterDialog;
+    private EditText    distanceFilterInput;
+    private boolean     distanceFilterActive = false;
+
     /**
      * @see AppCompatActivity#onCreate(Bundle)
      * @param savedInstanceState
@@ -118,6 +122,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         int itemId = item.getItemId();
         if (itemId == R.id.menuItemFilter) {
             openFilterDialog();
+            openDistanceFilterDialog();
             return true;
         }
         if (itemId == R.id.menuItemNetworkInfo) {
@@ -125,6 +130,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
             return true;
         }
         return super.onOptionsItemSelected(item);
+
     }
 
     /**
@@ -327,31 +333,86 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         return true;
     }
 
-    // ── Métodos temporales para que compile (Stubs) ──
-
     @Override
     public double[] getUserLocation() {
-        return null; // Temporal
+        // TODO Sprint 2: obtener ubicación real con FusedLocationProvider
+        // Por ahora devuelve null → el presenter mostrará el error de ubicación no disponible
+        return null;
     }
 
     @Override
     public void showNoStationsWithinDistance(double maxDistKm) {
-        // Temporal
+        showMessage(getString(R.string.distanceFilterNoResults, maxDistKm));
     }
 
     @Override
     public void showLocationUnavailableForFilter() {
-        // Temporal
+        showMessage(getString(R.string.distanceLocationUnavailable));
     }
 
     @Override
     public void showInvalidMaxDistance() {
-        // Temporal
+        if (distanceFilterInput != null) {
+            distanceFilterInput.setError(getString(R.string.distanceFilterInvalid));
+        }
     }
 
     @Override
     public void showDistanceFilterActive(double maxDistKm) {
-        // Temporal
+        distanceFilterActive = true;
+        ActionBar bar = getSupportActionBar();
+        if (bar != null) {
+            bar.setSubtitle(getString(R.string.distanceFilterActive, maxDistKm));
+        }
+        if (distanceFilterDialog != null) {
+            distanceFilterDialog.dismiss();
+        }
+    }
+
+    @Override
+    public void showActiveFiltersCount(int count) {
+        // TODO: actualizar badge del icono del embudo cuando se tenga el recurso visual
+        // Por ahora basta con que el método exista y compile
+    }
+    private void openDistanceFilterDialog() {
+        distanceFilterInput = new EditText(this);
+        distanceFilterInput.setId(R.id.etMaxDistance);
+        distanceFilterInput.setInputType(
+                InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+        distanceFilterInput.setHint(R.string.distanceFilterHint);
+
+        FrameLayout container = new FrameLayout(this);
+        int margin = (int) (24 * getResources().getDisplayMetrics().density);
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT);
+        params.setMargins(margin, margin / 2, margin, 0);
+        container.addView(distanceFilterInput, params);
+
+        distanceFilterDialog = new AlertDialog.Builder(this)
+                .setTitle(R.string.distanceFilterTitle)
+                .setView(container)
+                .setPositiveButton(R.string.filterApply, null)
+                .setNeutralButton(R.string.filterClear,
+                        (dialog, which) -> presenter.onFilterCleared())
+                .setNegativeButton(R.string.filterCancel, null)
+                .create();
+
+        distanceFilterDialog.setOnShowListener(d -> {
+            Button apply = distanceFilterDialog.getButton(AlertDialog.BUTTON_POSITIVE);
+            apply.setOnClickListener(v ->
+                    presenter.onDistanceFilterApplied(
+                            distanceFilterInput.getText().toString()));
+            Button clear = distanceFilterDialog.getButton(AlertDialog.BUTTON_NEUTRAL);
+            clear.setEnabled(distanceFilterActive);
+        });
+
+        distanceFilterDialog.setOnDismissListener(d -> {
+            distanceFilterDialog = null;
+            distanceFilterInput  = null;
+        });
+
+        distanceFilterDialog.show();
     }
 
 }

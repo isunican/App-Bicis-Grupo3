@@ -85,20 +85,26 @@ public class StationFilter {
     public static List<Station> filterByMaxDistance(
             List<Station> stations, double userLat, double userLon, double maxDistKm) {
 
-        List<Station> result = new ArrayList<>();
+        List<Station> dentro  = new ArrayList<>();
+        List<Station> sinCoords = new ArrayList<>();
+
         if (stations == null || maxDistKm <= 0) {
-            return result;
+            return dentro; // lista vacía
         }
         for (Station station : stations) {
-            if (hasValidCoordinates(station)) {
+            if (!hasValidCoordinates(station)) {
+                sinCoords.add(station);   // sin coords → al final
+            } else {
                 double dist = distanceKm(userLat, userLon,
                         station.getLatitude(), station.getLongitude());
                 if (dist <= maxDistKm) {
-                    result.add(station);
+                    dentro.add(station);  // dentro del radio → incluida
                 }
+                // fuera del radio y con coords → descartada (no aparece)
             }
         }
-        return result;
+        dentro.addAll(sinCoords);
+        return dentro;
     }
 
     /**
