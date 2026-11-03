@@ -69,7 +69,6 @@ public class StationFilterTest {
         return station;
     }
 
-    // ---------- Éxito ----------
 
     /** UFE.1a: mínimo 3, se devuelven las estaciones con 3 o más bicis libres. */
     @Test
@@ -105,7 +104,6 @@ public class StationFilterTest {
         assertEquals(original, stations);
     }
 
-    // ---------- Sin resultados ----------
 
     /** UFE.1d: mínimo 6, mayor que todas las estaciones: lista vacía. */
     @Test
@@ -141,7 +139,6 @@ public class StationFilterTest {
         assertTrue(result.isEmpty());
     }
 
-    // ---------- Estaciones sin dato de bicis ----------
 
     /** UFE.1h: estaciones sin dato, con dato negativo o null: nunca pasan el filtro. */
     @Test
@@ -163,11 +160,9 @@ public class StationFilterTest {
         assertFalse(StationFilter.hasValidFreeBikes(null));
     }
 
-    // =====================================================================
     // HU 532335 - Filtrar las estaciones por huecos disponibles
     // filterByMinEmptySlots: la lista no es null y el mínimo es >= 0 (precondiciones,
-    // las garantiza StationsPresenter), por eso no se prueban esos casos.
-    // =====================================================================
+    // las garantiza StationsPresenter)
 
     /** UFH.1a: mínimo 4 (valor intermedio, igual al de una estación): [4, 7]. */
     @Test
