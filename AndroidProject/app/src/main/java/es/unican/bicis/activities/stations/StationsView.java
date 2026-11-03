@@ -12,6 +12,9 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.database.MatrixCursor;
+import android.provider.BaseColumns;
+
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
@@ -19,9 +22,12 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.IntentCompat;
+import androidx.appcompat.widget.SearchView;
+import androidx.cursoradapter.widget.SimpleCursorAdapter;
 
 import org.parceler.Parcels;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -63,6 +69,15 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     private EditText filterInput;
     private boolean filterActive = false;
 
+    /** Adapter used to display station name suggestions. */
+    private SimpleCursorAdapter suggestionsAdapter;
+
+    /** Search field displayed in the toolbar. */
+    private SearchView stationSearchView;
+
+    /** Stations currently displayed in the suggestions dropdown. */
+    private List<Station> suggestedStations = new ArrayList<>();
+
     /**
      * @see AppCompatActivity#onCreate(Bundle)
      * @param savedInstanceState
@@ -96,16 +111,91 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     }
 
     /**
-     * This creates the menu that is shown in the action bar (the upper toolbar)
-     * @param menu The options menu in which you place your items.
+     * Creates the stations toolbar menu and prepares the search suggestions.
      *
-     * @return true because we are defining a new menu
+     * @param menu the options menu
+     * @return true if the menu has been created
      */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_stations, menu);
+
+        MenuItem searchItem = menu.findItem(R.id.menuItemSearch);
+
+        if (searchItem != null) {
+            stationSearchView = (SearchView) searchItem.getActionView();
+
+            if (stationSearchView != null) {
+                stationSearchView.setQueryHint(getString(R.string.menuSearch));
+                stationSearchView.setIconifiedByDefault(true);
+
+                String[] from = {"station_name"};
+                int[] to = {android.R.id.text1};
+
+                suggestionsAdapter = new SimpleCursorAdapter(
+                        this,
+                        android.R.layout.simple_list_item_1,
+                        null,
+                        from,
+                        to,
+                        0
+                );
+
+                stationSearchView.setSuggestionsAdapter(suggestionsAdapter);
+
+                stationSearchView.setOnSuggestionListener(
+                        new SearchView.OnSuggestionListener() {
+                            @Override
+                            public boolean onSuggestionSelect(int position) {
+                                return selectSuggestion(position);
+                            }
+
+                            @Override
+                            public boolean onSuggestionClick(int position) {
+                                return selectSuggestion(position);
+                            }
+                        }
+                );
+            }
+        }
+
         return true;
     }
+
+    /**
+     * Notifies the presenter when the user selects a station suggestion.
+     *
+     * @param position position of the selected suggestion
+     * @return true if the selection was handled
+     */
+    private boolean selectSuggestion(int position) {
+        if (stationSearchView == null || presenter == null
+                || position < 0 || position >= suggestedStations.size()) {
+            return false;
+        }
+
+        Station station = suggestedStations.get(position);
+
+        if (station == null) {
+            return false;
+        }
+
+        SearchView.SearchAutoComplete searchInput =
+                stationSearchView.findViewById(
+                        androidx.appcompat.R.id.search_src_text
+                );
+
+        if (searchInput != null) {
+            searchInput.dismissDropDown();
+        }
+
+        presenter.onStationSelected(station);
+
+        return true;
+    }
+
+
+
 
     /**
      * This is called when an item in the action bar menu is selected.
@@ -132,7 +222,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
      * The dialog is only closed by the presenter when the value is valid,
      * so that the error can be shown inside it.
      */
-    
+
     private void openFilterDialog() {
         filterInput = new EditText(this);
         filterInput.setId(R.id.etMinFreeBikes);
@@ -265,7 +355,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     /**
      * @see IStationsContract.View#showFilterActive(int)
      * @param minFreeBikes the minimum number of free bikes of the active filter
-     */    
+     */
     @Override
     public void showFilterActive(int minFreeBikes) {
         filterActive = true;
@@ -304,6 +394,93 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         Intent intent = new Intent(this, DetailsView.class);
         intent.putExtra(DetailsView.INTENT_NETWORK, Parcels.wrap(network));
         startActivity(intent);
+    }
+
+   /**
+     * @see IStationsContract.View#showSearchField()
+     */
+    @Override
+    public void showSearchField() {
+        // TODO HU 532314: desplegar el campo de búsqueda (tarea de la vista)
+    }
+
+
+
+    /**
+     * @see IStationsContract.View#showSearchSuggestions(List)
+     * @param stations the stations to suggest
+     */
+    @Override
+    public void showSearchSuggestions(List<Station> stations) {
+        if (suggestionsAdapter == null || stationSearchView == null) {
+            return;
+        }
+
+        suggestedStations = new ArrayList<>();
+
+        MatrixCursor cursor = new MatrixCursor(
+                new String[]{BaseColumns._ID, "station_name"}
+        );
+
+        if (stations != null) {
+            for (Station station : stations) {
+                if (station != null) {
+                    suggestedStations.add(station);
+
+                    cursor.addRow(new Object[]{
+                            suggestedStations.size() - 1,
+                            station.getName()
+                    });
+                }
+            }
+        }
+
+        suggestionsAdapter.changeCursor(cursor);
+
+        SearchView.SearchAutoComplete searchInput =
+                stationSearchView.findViewById(
+                        androidx.appcompat.R.id.search_src_text
+                );
+
+        if (searchInput == null) {
+            return;
+        }
+
+        if (suggestedStations.isEmpty()) {
+            searchInput.dismissDropDown();
+        } else {
+            searchInput.post(() -> {
+                if (searchInput.hasFocus()) {
+                    searchInput.showDropDown();
+                }
+            });
+        }
+    }
+
+    /**
+     * @see IStationsContract.View#showStationNotFound()
+     */
+    @Override
+    public void showStationNotFound() {
+        // TODO HU 532314: mostrar el mensaje de estación inexistente (tarea de la vista)
+    }
+
+    /**
+     * @see IStationsContract.View#showSuggestion(Station)
+     * @param station the most similar station
+     */
+    @Override
+    public void showSuggestion(Station station) {
+        // TODO HU 532314: mostrar la sugerencia "¿Querías decir...?" (tarea de la vista)
+    }
+
+    /**
+     * @see IStationsContract.View#showStationLocation(Station)
+     * @param station the station whose location must be shown
+     */
+    @Override
+    public void showStationLocation(Station station) {
+        // TODO HU 532314: mostrar la ubicación de la estación (tarea de la vista)
     }
 
     /**

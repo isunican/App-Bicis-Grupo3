@@ -1,5 +1,6 @@
 package es.unican.bicis.activities.stations;
 
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,6 +11,7 @@ import es.unican.bicis.model.Station;
 import es.unican.bicis.model.StationFilter;
 import es.unican.bicis.repository.INetworksRepository;
 import es.unican.bicis.repository.StationsCallback;
+import es.unican.bicis.model.StationSearch;
 
 /**
  * The presenter of the stations activity of the application. It controls {@link StationsView}.
@@ -159,6 +161,60 @@ public class StationsPresenter implements IStationsContract.Presenter {
         }
     }
 
+    /**
+     * @see IStationsContract.Presenter#onSearchClicked()
+     */
+    @Override
+    public void onSearchClicked() {
+        if (view != null) {
+            view.showSearchField();
+        }
+    }
+
+    /**
+     * @see IStationsContract.Presenter#onSearchTextChanged(String)
+     * @param text the text introduced in the search field
+     */
+    @Override
+    public void onSearchTextChanged(String text) {
+        if (view == null) {
+            return;
+        }
+
+        if (loadFailed) {
+            view.showSearchSuggestions(new ArrayList<>());
+            view.showLoadError();
+            return;
+        }
+
+        if (text == null || text.trim().isEmpty()) {
+            view.showSearchSuggestions(new ArrayList<>());
+            showAllStations();
+            return;
+        }
+
+        List<Station> matches = StationSearch.searchByName(stations, text);
+
+        if (matches.isEmpty()) {
+            view.showSearchSuggestions(new ArrayList<>());
+            view.showStationNotFound();
+            return;
+        }
+
+        showStationList(matches);
+        view.showSearchSuggestions(matches);
+    }
+
+    /**
+     * @see IStationsContract.Presenter#onStationSelected(Station)
+     * @param station the selected station
+     */
+    @Override
+    public void onStationSelected(Station station) {
+        if (view != null && station != null) {
+            view.showStationLocation(station);
+        }
+    }
     /**
      * Shows all the stations of the network, or the corresponding message
      * if they could not be loaded or there are none.
