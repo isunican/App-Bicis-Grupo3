@@ -198,6 +198,11 @@ public class StationsPresenter implements IStationsContract.Presenter {
         if (matches.isEmpty()) {
             view.showSearchSuggestions(new ArrayList<>());
             view.showStationNotFound();
+            view.showNetworkLocation(location + " · 0 estaciones");
+            Station mostSimilar = StationSearch.findMostSimilar(stations, text);
+            if (mostSimilar != null) {
+                view.showSuggestion(mostSimilar);
+            }
             return;
         }
 
