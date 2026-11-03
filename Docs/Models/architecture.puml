@@ -231,13 +231,21 @@ interface IStationsContract.View {
     + showNoStationsWithMinEmptySlots(minEmptySlots : int)
     + showInvalidMinEmptySlots()
     + showActiveFiltersCount(numActiveFilters : int)
+    + showMinEmptySlotsFilterActive(minEmptySlots : int)
 }
 
 class StationsPresenter {
+    ~ {static} MIN_EMPTY_SLOTS_FILTER_VALUE : int = 0
     - minFreeBikes : Integer
     - minEmptySlots : Integer
     - parseMinEmptySlots(text : String) : Integer
-    - applyFilters()
+    - parseMinimum(text : String, lowerLimit : int) : Integer
+    - applyFilters() : List<Station>
+    - activeFiltersCount() : int
+}
+
+class StationUtils {
+    + {static} sortByEmptySlots(stations : List<Station>) : List<Station>
 }
 
 @enduml
