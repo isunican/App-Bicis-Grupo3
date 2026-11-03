@@ -10,6 +10,8 @@ import es.unican.bicis.model.Station;
 import es.unican.bicis.model.StationFilter;
 import es.unican.bicis.repository.INetworksRepository;
 import es.unican.bicis.repository.StationsCallback;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The presenter of the stations activity of the application. It controls {@link StationsView}.
@@ -104,7 +106,6 @@ public class StationsPresenter implements IStationsContract.Presenter {
         // FIX: guardar estado y combinar filtros
         activeMinFreeBikes = minFreeBikes;
         view.showFilterActive(minFreeBikes);
-        view.showActiveFiltersCount(contarFiltrosActivos());
         applyFilters();
     }
 
@@ -124,7 +125,6 @@ public class StationsPresenter implements IStationsContract.Presenter {
         activeMaxDistKm   = maxDistKm;
         lastUserLocation  = userLocation;
         view.showDistanceFilterActive(maxDistKm);
-        view.showActiveFiltersCount(contarFiltrosActivos());
         applyFilters();
     }
 
@@ -135,7 +135,6 @@ public class StationsPresenter implements IStationsContract.Presenter {
         activeMaxDistKm    = null;
         lastUserLocation   = null;
         view.showFilterInactive();
-        view.showActiveFiltersCount(0);
         try {
             showAllStations();
         } catch (RuntimeException error) {
@@ -210,6 +209,11 @@ public class StationsPresenter implements IStationsContract.Presenter {
         return city + ", " + country;
     }
 
+    private void showStationListWithDistance(List<Station> list, Map<Station, Double> distancias) {
+        view.showStationsWithDistance(list, distancias);
+        view.showNetworkLocation(location + " · " + list.size() + " estaciones");
+    }
+
     /**
      * Aplica los filtros activos sobre la lista completa de estaciones y
      * pide a la vista que muestre el resultado.
@@ -224,19 +228,20 @@ public class StationsPresenter implements IStationsContract.Presenter {
             resultado = StationFilter.filterByMinFreeBikes(resultado, activeMinFreeBikes);
         }
 
-        // FIX: filtro de distancia + ordenar por distancia + rellenar distanciaKm
+        // DESPUÉS (poner):
+        Map<Station, Double> distancias = null;
         if (activeMaxDistKm != null && lastUserLocation != null) {
             resultado = StationFilter.filterByMaxDistance(
                     resultado, lastUserLocation[0], lastUserLocation[1], activeMaxDistKm);
-            // Rellenar distanciaKm en cada estación y ordenar por ella
+            distancias = new HashMap<>();
             for (Station s : resultado) {
                 if (StationFilter.hasValidCoordinates(s)) {
-                    s.setDistanciaKm(StationFilter.distanceKm(
+                    distancias.put(s, StationFilter.distanceKm(
                             lastUserLocation[0], lastUserLocation[1],
                             s.getLatitude(), s.getLongitude()));
                 }
             }
-            resultado = sortByDistancia(resultado);
+            resultado = sortByDistancia(resultado, distancias);
         }
 
         if (resultado.isEmpty()) {
@@ -248,17 +253,21 @@ public class StationsPresenter implements IStationsContract.Presenter {
             }
             view.showNetworkLocation(location);
         } else {
-            showStationList(resultado);
+            if (distancias != null) {
+                showStationListWithDistance(resultado, distancias);
+            } else {
+                showStationList(resultado);
+            }
         }
     }
     /**
      * Ordena la lista por distanciaKm ascendente.
      * Las estaciones sin distancia (sin coordenadas) van al final.
      */
-    private List<Station> sortByDistancia(List<Station> lista) {
+    private List<Station> sortByDistancia(List<Station> lista, Map<Station, Double> distancias) {
         List<Station> sorted = new ArrayList<>(lista);
         sorted.sort(Comparator.comparing(
-                Station::getDistanciaKm,
+                s -> distancias.getOrDefault(s, null),
                 Comparator.nullsLast(Comparator.naturalOrder())
         ));
         return sorted;
@@ -266,28 +275,24 @@ public class StationsPresenter implements IStationsContract.Presenter {
 
     @Override
     public double getMaxCityDistanceKm() {
-        List<Station> conCoords = new ArrayList<>();
+        double[] userLocation = view.getUserLocation();
+        if (userLocation == null) return 0;
+        double max = 0;
         for (Station s : stations) {
             if (StationFilter.hasValidCoordinates(s)) {
-                conCoords.add(s);
-            }
-        }
-        double max = 0;
-        for (int i = 0; i < conCoords.size(); i++) {
-            for (int j = i + 1; j < conCoords.size(); j++) {
                 double d = StationFilter.distanceKm(
-                        conCoords.get(i).getLatitude(), conCoords.get(i).getLongitude(),
-                        conCoords.get(j).getLatitude(), conCoords.get(j).getLongitude());
+                        userLocation[0], userLocation[1],
+                        s.getLatitude(), s.getLongitude());
                 if (d > max) max = d;
             }
         }
         return max;
     }
 
-    private int contarFiltrosActivos() {
+    /*private int contarFiltrosActivos() {
         int count = 0;
         if (activeMinFreeBikes != null) count++;
         if (activeMaxDistKm    != null) count++;
         return count;
-    }
+    }*/
 }

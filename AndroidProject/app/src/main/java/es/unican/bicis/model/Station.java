@@ -44,13 +44,6 @@ public class Station {
     @SerializedName("extra")                protected StationExtra extra;
 
 
-    /**
-     * Distancia en km desde la posición del usuario a esta estación.
-     * No viene de la API: la calcula el presenter cuando aplica el filtro de distancia.
-     * null si no se ha calculado.
-     */
-    @lombok.Getter @lombok.Setter
-    private Double distanciaKm;
 
     /**
      * Devuelve el número de bicis eléctricas disponibles en la estación.

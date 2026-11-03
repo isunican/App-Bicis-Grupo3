@@ -6,6 +6,8 @@ import es.unican.bicis.model.Network;
 import es.unican.bicis.model.Station;
 import es.unican.bicis.repository.INetworksRepository;
 
+import java.util.Map;
+
 /**
  * The Presenter-View contract for the Stations activity.
  * The Stations activity shows the stations of a bike sharing network,
@@ -225,13 +227,13 @@ public interface IStationsContract {
          */
         public void showDistanceFilterActive(double maxDistKm);
 
-        /**
-         * La vista debe actualizar el número que muestra el icono del embudo
-         * con el total de filtros activos en este momento (0, 1 o 2).
-         * Solo el Presenter debe llamar a este método.
-         *
-         * @param count número de filtros activos
-         */
-        public void showActiveFiltersCount(int count);
     }
+
+    /**
+     * The view is requested to display the list of stations with their distances.
+     * Only the Presenter should call this method.
+     * @param stations the stations already sorted by distance
+     * @param distances map from station to its distance in km; null if no distance available
+     */
+    public void showStationsWithDistance(List<Station> stations, Map<Station, Double> distances);
 }

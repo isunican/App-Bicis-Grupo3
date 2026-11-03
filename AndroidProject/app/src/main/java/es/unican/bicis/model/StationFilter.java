@@ -137,7 +137,7 @@ public class StationFilter {
      * @param lon2 longitud del punto 2, en grados decimales
      * @return distancia en kilómetros entre los dos puntos
      */
-    static double distanceKm(double lat1, double lon1, double lat2, double lon2) {
+    public static double distanceKm(double lat1, double lon1, double lat2, double lon2) {
         final double radioTierraKm = 6371.0;
         double dLat = Math.toRadians(lat2 - lat1);
         double dLon = Math.toRadians(lon2 - lon1);

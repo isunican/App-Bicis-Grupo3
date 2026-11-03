@@ -169,13 +169,15 @@ public class StationFilterTest {
         assertEquals(Arrays.asList(sA), result);
     }
 
-    /** UFD.1c: maxDistKm=2.0 -> [A, B, C, D] (E excluida por no tener coordenadas) */
+    /** UFD.1c: maxDistKm=2.0 -> [A, B, C, D, E] (E sin coordenadas va al final) */
     @Test
-    public void testFilterByMaxDistanceLargeRadiusExcludesNoCoords() {
+    public void testFilterByMaxDistanceLargeRadiusIncludesNoCoordsAtEnd() {
         setUpDistanceStations();
         List<Station> input = Arrays.asList(sA, sB, sC, sD, sE);
         List<Station> result = StationFilter.filterByMaxDistance(input, USER_LAT, USER_LON, 2.0);
-        assertEquals(Arrays.asList(sA, sB, sC, sD), result);
+        assertEquals(5, result.size());
+        assertTrue(result.containsAll(Arrays.asList(sA, sB, sC, sD, sE)));
+        assertEquals(sE, result.get(result.size() - 1));  // sE al final
     }
 
     /** UFD.1d: maxDistKm=0.05 -> [] (ninguna estación a <= 0,05 km) */
