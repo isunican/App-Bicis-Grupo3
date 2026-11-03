@@ -60,15 +60,6 @@ public class StationsArrayAdapter extends ArrayAdapter<Station> {
         // INVISIBLE (not GONE) so that the columns stay aligned in every row
         ivElectric.setVisibility(StationUtils.hasEbikes(station) ? View.VISIBLE : View.INVISIBLE);
 
-        TextView tvDistance = row.findViewById(R.id.tvStationDistance);
-        if (station != null && station.getDistanciaKm() != null) {
-            tvDistance.setText(String.format(Locale.getDefault(),
-                    "%.1f km", station.getDistanciaKm()));
-            tvDistance.setVisibility(View.VISIBLE);
-        } else {
-            tvDistance.setVisibility(View.GONE);
-        }
         return row;
     }
 }
-
