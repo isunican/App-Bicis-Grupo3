@@ -6,6 +6,8 @@ import android.database.MatrixCursor;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.provider.BaseColumns;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -13,7 +15,9 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.OptIn;
@@ -28,6 +32,7 @@ import androidx.cursoradapter.widget.SimpleCursorAdapter;
 import com.google.android.material.badge.BadgeDrawable;
 import com.google.android.material.badge.BadgeUtils;
 import com.google.android.material.badge.ExperimentalBadgeUtils;
+import com.google.android.material.materialswitch.MaterialSwitch;
 
 import org.parceler.Parcels;
 
@@ -42,6 +47,8 @@ import dagger.hilt.android.AndroidEntryPoint;
 import es.unican.bicis.R;
 import es.unican.bicis.activities.details.DetailsView;
 import es.unican.bicis.common.StationUtils;
+import es.unican.bicis.location.ILocationProvider;
+import es.unican.bicis.location.LocationResultCallback;
 import es.unican.bicis.model.Network;
 import es.unican.bicis.model.Station;
 import es.unican.bicis.repository.INetworksRepository;
@@ -60,6 +67,13 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     /** The repository to access the data. This is automatically injected by Hilt in this class */
     @Inject
     INetworksRepository repository;
+
+    /** Gives the location of the user, for the distance filter. Injected by Hilt */
+    @Inject
+    ILocationProvider locationProvider;
+
+    /** Last known location of the user {latitude, longitude}, or null if it is not known */
+    private double[] userLocation;
 
     /** The presenter of this view */
     private IStationsContract.Presenter presenter;
@@ -82,6 +96,12 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     private AlertDialog filterDialog;
     private EditText filterInput;
     private EditText emptySlotsInput;
+    private MaterialSwitch distanceSwitch;
+    private SeekBar distanceBar;
+    private EditText distanceInput;
+
+    /** Whether the distance bar and the distance field are being synchronized (avoids loops) */
+    private boolean syncingDistance = false;
 
     /** Whether the presenter has reported an invalid value while applying the filters */
     private boolean invalidValueShown = false;
@@ -89,10 +109,13 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     /** Texts of the last filters applied, to fill the dialog when it is opened again */
     private String appliedFreeBikesText = "";
     private String appliedEmptySlotsText = "";
+    private boolean appliedDistanceOn = false;
+    private String appliedDistanceText = "";
 
     /** Parts of the subtitle that describe the active filters (null if that filter is not active) */
     private String freeBikesSubtitle;
     private String emptySlotsSubtitle;
+    private String distanceSubtitle;
 
     /** Number of active filters, shown over the filter icon */
     private int activeFilters = 0;
@@ -141,6 +164,30 @@ public class StationsView extends AppCompatActivity implements IStationsContract
 
         presenter = new StationsPresenter();
         presenter.init(this, network);
+
+        // The location is requested in advance, so that it is known when the filter is applied
+        requestUserLocation();
+    }
+
+    /**
+     * Requests the location of the user and keeps it for the distance filter (HU 532304).
+     * If it cannot be obtained (no permission, GPS off...) the location remains unknown.
+     */
+    private void requestUserLocation() {
+        if (locationProvider == null) {
+            return;
+        }
+        locationProvider.requestCurrentLocation(new LocationResultCallback() {
+            @Override
+            public void onSuccess(double latitude, double longitude) {
+                userLocation = new double[] {latitude, longitude};
+            }
+
+            @Override
+            public void onFailure(Throwable e) {
+                userLocation = null;
+            }
+        });
     }
 
     /**
@@ -277,6 +324,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         emptySlotsInput = content.findViewById(R.id.etMinEmptySlots);
         filterInput.setText(appliedFreeBikesText);
         emptySlotsInput.setText(appliedEmptySlotsText);
+        setUpDistanceControls(content);
 
         filterDialog = new AlertDialog.Builder(this)
                 .setTitle(R.string.filterTitle)
@@ -302,33 +350,178 @@ public class StationsView extends AppCompatActivity implements IStationsContract
             filterDialog = null;
             filterInput = null;
             emptySlotsInput = null;
+            distanceSwitch = null;
+            distanceBar = null;
+            distanceInput = null;
         });
 
         filterDialog.show();
     }
 
     /**
+     * Prepares the distance controls of the filter dialog (HU 532304): a switch that
+     * activates the filter, and a bar and a field in km that are kept synchronized.
+     * The bar goes from 0.1 km to the maximum distance of the city (the farthest station),
+     * in steps of 0.1 km. If the location of the user is not known, the controls are disabled.
+     * @param content the content of the dialog
+     */
+    private void setUpDistanceControls(View content) {
+        distanceSwitch = content.findViewById(R.id.swDistanceFilter);
+        distanceBar = content.findViewById(R.id.sbMaxDistance);
+        distanceInput = content.findViewById(R.id.etMaxDistance);
+        TextView unavailable = content.findViewById(R.id.tvDistanceUnavailable);
+
+        int maxTenths = (int) Math.ceil(presenter.getMaxCityDistanceKm() * 10);
+        boolean available = maxTenths > 0;
+        if (!available) {
+            requestUserLocation();      // maybe it is known the next time the dialog is opened
+        }
+        unavailable.setVisibility(available ? View.GONE : View.VISIBLE);
+        distanceSwitch.setEnabled(available);
+        distanceSwitch.setChecked(available && appliedDistanceOn);
+
+        distanceBar.setMin(1);
+        distanceBar.setMax(Math.max(maxTenths, 1));
+        distanceInput.setText(appliedDistanceText);
+        updateBarFromInput();
+        updateDistanceControlsEnabled();
+
+        distanceSwitch.setOnCheckedChangeListener((button, checked) -> updateDistanceControlsEnabled());
+
+        distanceBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar bar, int progress, boolean fromUser) {
+                if (fromUser && !syncingDistance) {
+                    syncingDistance = true;
+                    distanceInput.setText(formatKm(progress / 10.0));
+                    syncingDistance = false;
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar bar) {
+                // Nothing to do: the value is updated while the bar moves
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar bar) {
+                // Nothing to do: the value is updated while the bar moves
+            }
+        });
+
+        distanceInput.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence text, int start, int count, int after) {
+                // Nothing to do before the change
+            }
+
+            @Override
+            public void onTextChanged(CharSequence text, int start, int before, int count) {
+                // Nothing to do during the change
+            }
+
+            @Override
+            public void afterTextChanged(Editable text) {
+                if (!syncingDistance) {
+                    updateBarFromInput();
+                }
+            }
+        });
+    }
+
+    /**
+     * Moves the distance bar to the value written in the distance field, if it is a number.
+     */
+    private void updateBarFromInput() {
+        try {
+            double km = Double.parseDouble(distanceInput.getText().toString().trim().replace(",", "."));
+            syncingDistance = true;
+            distanceBar.setProgress((int) Math.round(km * 10));
+        } catch (NumberFormatException e) {
+            // Not a number (or empty): the bar is not moved
+        } finally {
+            syncingDistance = false;
+        }
+    }
+
+    /**
+     * Enables the distance bar and field only if the distance switch is on.
+     */
+    private void updateDistanceControlsEnabled() {
+        boolean on = distanceSwitch.isChecked();
+        distanceBar.setEnabled(on);
+        distanceInput.setEnabled(on);
+    }
+
+    /**
+     * Formats a distance in km with one decimal and a comma (e.g. "1,0").
+     * @param km the distance
+     * @return the formatted distance
+     */
+    private static String formatKm(double km) {
+        return String.format(Locale.forLanguageTag("es-ES"), "%.1f", km);
+    }
+
+    /**
      * Sends to the presenter the filters introduced in the dialog.
-     * An empty field means that the corresponding filter is not applied.
-     * If every field is empty, the free bikes filter is sent so that the
-     * presenter reports the invalid value (behaviour of HU 532376).
+     * An empty field (or the distance switch off) means that the corresponding filter
+     * is not applied. If no filter is given at all, the free bikes filter is sent so that
+     * the presenter reports the invalid value (behaviour of HU 532376).
+     * If a filter that was applied has been removed in the dialog, all the filters are
+     * removed and the remaining ones are applied again.
      * The dialog is closed only if the presenter has not reported any invalid value.
      */
     private void onApplyFiltersClicked() {
         String freeBikesText = filterInput.getText().toString().trim();
         String emptySlotsText = emptySlotsInput.getText().toString().trim();
+        boolean distanceOn = distanceSwitch.isChecked();
+        String distanceText = distanceInput.getText().toString().trim();
+        boolean filterRemoved = (!appliedFreeBikesText.isEmpty() && freeBikesText.isEmpty())
+                || (!appliedEmptySlotsText.isEmpty() && emptySlotsText.isEmpty())
+                || (appliedDistanceOn && !distanceOn);
         invalidValueShown = false;
 
-        if (!freeBikesText.isEmpty() || emptySlotsText.isEmpty()) {
+        if (!freeBikesText.isEmpty() || (emptySlotsText.isEmpty() && !distanceOn)) {
             presenter.onFilterApplied(freeBikesText);
         }
         if (!invalidValueShown && !emptySlotsText.isEmpty()) {
             presenter.onMinEmptySlotsFilterApplied(emptySlotsText);
         }
+        if (!invalidValueShown && distanceOn) {
+            presenter.onDistanceFilterApplied(distanceText);
+        }
+        if (!invalidValueShown && filterRemoved) {
+            reapplyFilters(freeBikesText, emptySlotsText, distanceOn ? distanceText : "");
+        }
         if (!invalidValueShown && filterDialog != null) {
             appliedFreeBikesText = freeBikesText;
             appliedEmptySlotsText = emptySlotsText;
+            // if the location was not known the distance filter has not been applied
+            appliedDistanceOn = distanceOn && distanceSubtitle != null;
+            appliedDistanceText = appliedDistanceOn ? distanceText : "";
             filterDialog.dismiss();
+        }
+    }
+
+    /**
+     * Removes all the filters and applies again the ones that are still in the dialog.
+     * It is used when a filter has been removed in the dialog (field emptied or distance
+     * switch turned off), because the presenter only removes all the filters at once.
+     * The values have already been validated.
+     * @param freeBikesText the free bikes value, or empty if it is not applied
+     * @param emptySlotsText the empty slots value, or empty if it is not applied
+     * @param distanceText the distance value, or empty if it is not applied
+     */
+    private void reapplyFilters(String freeBikesText, String emptySlotsText, String distanceText) {
+        presenter.onFilterCleared();
+        if (!freeBikesText.isEmpty()) {
+            presenter.onFilterApplied(freeBikesText);
+        }
+        if (!emptySlotsText.isEmpty()) {
+            presenter.onMinEmptySlotsFilterApplied(emptySlotsText);
+        }
+        if (!distanceText.isEmpty()) {
+            presenter.onDistanceFilterApplied(distanceText);
         }
     }
 
@@ -365,7 +558,15 @@ public class StationsView extends AppCompatActivity implements IStationsContract
      */
     @Override
     public void showStations(List<Station> stations) {
-        lvStations.setAdapter(new StationsArrayAdapter(this, stations));
+        showStationList(new StationsArrayAdapter(this, stations));
+    }
+
+    /**
+     * Shows the given adapter in the list, hiding any message.
+     * @param adapter the adapter with the stations to show
+     */
+    private void showStationList(StationsArrayAdapter adapter) {
+        lvStations.setAdapter(adapter);
         lvStations.setVisibility(View.VISIBLE);
         stationsHeader.setVisibility(View.VISIBLE);
         tvStationsMessage.setVisibility(View.GONE);
@@ -475,8 +676,11 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     public void showFilterInactive() {
         freeBikesSubtitle = null;
         emptySlotsSubtitle = null;
+        distanceSubtitle = null;
         appliedFreeBikesText = "";
         appliedEmptySlotsText = "";
+        appliedDistanceOn = false;
+        appliedDistanceText = "";
         updateSubtitle();
     }
 
@@ -614,7 +818,6 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     }
 
     // ── HU 532304 Filtrar por distancia ──────────────────────────────
-    // El selector de distancia del diálogo y la ubicación real se implementan en la tarea 978139.
 
     /**
      * @see IStationsContract.View#getUserLocation()
@@ -622,8 +825,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
      */
     @Override
     public double[] getUserLocation() {
-        // Se implementa en la tarea 978139 (ubicación real del usuario)
-        return null;
+        return userLocation;
     }
 
     /**
@@ -632,7 +834,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
      */
     @Override
     public void showNoStationsWithinDistance(double maxDistKm) {
-        showMessage(getString(R.string.distanceFilterNoResults, maxDistKm));
+        showMessage(getString(R.string.distanceFilterNoResults));
     }
 
     /**
@@ -640,7 +842,8 @@ public class StationsView extends AppCompatActivity implements IStationsContract
      */
     @Override
     public void showLocationUnavailableForFilter() {
-        showMessage(getString(R.string.distanceLocationUnavailable));
+        // Temporary message: the list and the active filters do not change
+        Toast.makeText(this, R.string.distanceLocationUnavailable, Toast.LENGTH_LONG).show();
     }
 
     /**
@@ -648,7 +851,10 @@ public class StationsView extends AppCompatActivity implements IStationsContract
      */
     @Override
     public void showInvalidMaxDistance() {
-        // Se implementa en la tarea 978139 (campo de distancia del diálogo de filtros)
+        invalidValueShown = true;
+        if (distanceInput != null) {
+            distanceInput.setError(getString(R.string.distanceFilterInvalid));
+        }
     }
 
     /**
@@ -657,7 +863,8 @@ public class StationsView extends AppCompatActivity implements IStationsContract
      */
     @Override
     public void showDistanceFilterActive(double maxDistKm) {
-        // Se implementa en la tarea 978139 (subtítulo con la distancia elegida)
+        distanceSubtitle = getString(R.string.distanceFilterActive, StationUtils.formatDistance(maxDistKm));
+        updateSubtitle();
     }
 
     /**
@@ -667,8 +874,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
      */
     @Override
     public void showStationsWithDistance(List<Station> stations, Map<Station, Double> distances) {
-        // La distancia junto al nombre se implementa en la tarea 978139
-        showStations(stations);
+        showStationList(new StationsArrayAdapter(this, stations, distances));
     }
 
     /**
@@ -678,7 +884,8 @@ public class StationsView extends AppCompatActivity implements IStationsContract
      * @return true if there is at least one filter active
      */
     private boolean isAnyFilterActive() {
-        return activeFilters > 0 || freeBikesSubtitle != null || emptySlotsSubtitle != null;
+        return activeFilters > 0 || freeBikesSubtitle != null || emptySlotsSubtitle != null
+                || distanceSubtitle != null;
     }
 
     /**
@@ -687,7 +894,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
      */
     private void updateSubtitle() {
         StringBuilder subtitle = new StringBuilder();
-        for (String part : new String[] {freeBikesSubtitle, emptySlotsSubtitle}) {
+        for (String part : new String[] {freeBikesSubtitle, emptySlotsSubtitle, distanceSubtitle}) {
             if (part != null) {
                 if (subtitle.length() > 0) {
                     subtitle.append(getString(R.string.filterSubtitleSeparator));

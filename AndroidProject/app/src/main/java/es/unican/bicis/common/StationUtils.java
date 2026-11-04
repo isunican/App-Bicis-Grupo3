@@ -129,6 +129,24 @@ public class StationUtils {
     }
 
     /**
+     * Devuelve el texto de la distancia de una estación al usuario (HU 532304):
+     * en metros si es menor de 1 km (por ejemplo "229 m") y en kilómetros con un
+     * decimal si no (por ejemplo "1,2 km").
+     * @param distanceKm la distancia en km, o null si no se puede calcular
+     * @return el texto de la distancia, o "-" si es null
+     */
+    public static String formatDistance(Double distanceKm) {
+        if (distanceKm == null) {
+            return NO_DATA;
+        }
+        long meters = Math.round(distanceKm * 1000);
+        if (meters < 1000) {
+            return meters + " m";
+        }
+        return String.format(Locale.forLanguageTag("es-ES"), "%.1f km", distanceKm);
+    }
+
+    /**
      * Indica si se muestra el icono de bicis eléctricas de una estación.
      * @param station la estación
      * @return true si la estación tiene alguna bici eléctrica; false si no tiene,
