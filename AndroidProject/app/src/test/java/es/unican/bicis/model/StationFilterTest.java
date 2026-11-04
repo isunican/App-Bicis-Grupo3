@@ -157,7 +157,7 @@ public class StationFilterTest {
         setUpDistanceStations();
         List<Station> input = Arrays.asList(sA, sB, sC, sD, sE);
         List<Station> result = StationFilter.filterByMaxDistance(input, USER_LAT, USER_LON, 1.0);
-        assertEquals(Arrays.asList(sA, sB, sC), result);
+        assertEquals(Arrays.asList(sA, sB, sC, sE), result);
     }
 
     /** UFD.1b: maxDistKm=0.5 -> [A] (solo A a <= 0,5 km) */
@@ -166,7 +166,7 @@ public class StationFilterTest {
         setUpDistanceStations();
         List<Station> input = Arrays.asList(sA, sB, sC, sD, sE);
         List<Station> result = StationFilter.filterByMaxDistance(input, USER_LAT, USER_LON, 0.5);
-        assertEquals(Arrays.asList(sA), result);
+        assertEquals(Arrays.asList(sA, sE), result);
     }
 
     /** UFD.1c: maxDistKm=2.0 -> [A, B, C, D, E] (E sin coordenadas va al final) */

@@ -1,6 +1,7 @@
 package es.unican.bicis.activities.stations;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import es.unican.bicis.common.StationUtils;
@@ -39,7 +40,6 @@ public class StationsPresenter implements IStationsContract.Presenter {
     /** Whether the stations could not be loaded */
     private boolean loadFailed = false;
 
-    // FIX: estado de cada filtro activo (null = sin filtro)
     private Integer activeMinFreeBikes = null;
     private Double  activeMaxDistKm    = null;
     private double[] lastUserLocation  = null;
@@ -103,7 +103,7 @@ public class StationsPresenter implements IStationsContract.Presenter {
             view.showInvalidMinFreeBikes();
             return;
         }
-        // FIX: guardar estado y combinar filtros
+
         activeMinFreeBikes = minFreeBikes;
         view.showFilterActive(minFreeBikes);
         applyFilters();
@@ -121,7 +121,7 @@ public class StationsPresenter implements IStationsContract.Presenter {
             view.showLocationUnavailableForFilter();
             return;
         }
-        // FIX: guardar estado y combinar filtros
+
         activeMaxDistKm   = maxDistKm;
         lastUserLocation  = userLocation;
         view.showDistanceFilterActive(maxDistKm);
@@ -130,7 +130,7 @@ public class StationsPresenter implements IStationsContract.Presenter {
 
     @Override
     public void onFilterCleared() {
-        // FIX: limpiar ambos filtros
+
         activeMinFreeBikes = null;
         activeMaxDistKm    = null;
         lastUserLocation   = null;
@@ -223,12 +223,11 @@ public class StationsPresenter implements IStationsContract.Presenter {
     private void applyFilters() {
         List<Station> resultado = new ArrayList<>(stations);
 
-        // FIX: filtro de bicis sobre la lista completa
         if (activeMinFreeBikes != null) {
             resultado = StationFilter.filterByMinFreeBikes(resultado, activeMinFreeBikes);
         }
 
-        // DESPUÉS (poner):
+
         Map<Station, Double> distancias = null;
         if (activeMaxDistKm != null && lastUserLocation != null) {
             resultado = StationFilter.filterByMaxDistance(
@@ -289,10 +288,4 @@ public class StationsPresenter implements IStationsContract.Presenter {
         return max;
     }
 
-    /*private int contarFiltrosActivos() {
-        int count = 0;
-        if (activeMinFreeBikes != null) count++;
-        if (activeMaxDistKm    != null) count++;
-        return count;
-    }*/
 }

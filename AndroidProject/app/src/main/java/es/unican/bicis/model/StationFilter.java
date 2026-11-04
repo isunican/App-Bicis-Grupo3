@@ -103,7 +103,9 @@ public class StationFilter {
                 // fuera del radio y con coords → descartada (no aparece)
             }
         }
-        dentro.addAll(sinCoords);
+        if (!dentro.isEmpty()) {
+            dentro.addAll(sinCoords);
+        }
         return dentro;
     }
 
