@@ -9,8 +9,9 @@ import es.unican.bicis.repository.INetworksRepository;
 /**
  * The Presenter-View contract for the Stations activity.
  * The Stations activity shows the stations of a bike sharing network,
- * allows to filter them by a minimum number of free bikes, allows to search
- * a station by its name and gives access to the detailed information of the network.
+ * allows to filter them by a minimum number of free bikes and by a minimum
+ * number of empty slots, allows to search a station by its name and gives access
+ * to the detailed information of the network.
  */
 public interface IStationsContract {
 
@@ -36,6 +37,17 @@ public interface IStationsContract {
          * @param minFreeBikesText the text introduced by the user
          */
         public void onFilterApplied(String minFreeBikesText);
+
+        /**
+         * The presenter is informed that the user wants to filter the stations
+         * by a minimum number of empty slots (HU 532335).
+         * A value of 0 shows all the stations of the network. Negative or non
+         * integer values are not valid. This filter is combined with the other
+         * active filters (a station is shown only if it satisfies all of them).
+         * Only the View should call this method
+         * @param minEmptySlotsText the text introduced by the user
+         */
+        public void onMinEmptySlotsFilterApplied(String minEmptySlotsText);
 
         /**
          * Notifies the presenter that the user wants to remove
@@ -148,6 +160,40 @@ public interface IStationsContract {
         public void showInvalidMinFreeBikes();
 
         /**
+         * The view is requested to hide the list and display a message indicating
+         * that no station has at least the given number of empty slots (HU 532335).
+         * Only the Presenter should call this method
+         * @param minEmptySlots the minimum number of empty slots requested
+         */
+        public void showNoStationsWithMinEmptySlots(int minEmptySlots);
+
+        /**
+         * The view is requested to display an error indicating that the introduced
+         * minimum number of empty slots is not valid (it must be an integer
+         * greater than or equal to 0) (HU 532335).
+         * The filters that were active before, if any, remain unchanged.
+         * Only the Presenter should call this method
+         */
+        public void showInvalidMinEmptySlots();
+
+        /**
+         * The view is requested to indicate in the filter icon how many filters
+         * are active (HU 532335). With 0 the icon shows no indicator.
+         * Only the Presenter should call this method
+         * @param numActiveFilters the number of active filters (0 or more)
+         */
+        public void showActiveFiltersCount(int numActiveFilters);
+
+        /**
+         * The view is requested to indicate which minimum number of empty slots
+         * is active (HU 532335). With 0 no indication is shown, because with 0
+         * all the stations are shown.
+         * Only the Presenter should call this method
+         * @param minEmptySlots the minimum number of empty slots of the active filter
+         */
+        public void showMinEmptySlotsFilterActive(int minEmptySlots);
+
+        /**
          * Requests the view to display an error message when
          * the applied station filters cannot be removed.
          *
@@ -157,6 +203,7 @@ public interface IStationsContract {
          * Only the presenter should call this method.
          */
         public void mostrarErrorQuitarFiltros();
+
         /**
          * The view is requested to indicate that a filter is active.
          * Only the Presenter should call this method

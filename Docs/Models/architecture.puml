@@ -213,4 +213,39 @@ StationsPresenter --> StationFilter : <<use>>
 StationsPresenter --> Station : stations
 IStationsView ..> Station : <<use>>
 
+' ==========================================
+' HU 532335 - Filtrar las estaciones por huecos disponibles
+' (metodos del contrato definido en la tarea 978253)
+' ==========================================
+
+class StationFilter {
+    + {static} filterByMinEmptySlots(stations : List<Station>, minEmptySlots : int) : List<Station>
+    + {static} hasValidEmptySlots(station : Station) : boolean
+}
+
+interface IStationsContract.Presenter {
+    + onMinEmptySlotsFilterApplied(minEmptySlotsText : String)
+}
+
+interface IStationsContract.View {
+    + showNoStationsWithMinEmptySlots(minEmptySlots : int)
+    + showInvalidMinEmptySlots()
+    + showActiveFiltersCount(numActiveFilters : int)
+    + showMinEmptySlotsFilterActive(minEmptySlots : int)
+}
+
+class StationsPresenter {
+    ~ {static} MIN_EMPTY_SLOTS_FILTER_VALUE : int = 0
+    - minFreeBikes : Integer
+    - minEmptySlots : Integer
+    - parseMinEmptySlots(text : String) : Integer
+    - parseMinimum(text : String, lowerLimit : int) : Integer
+    - applyFilters() : List<Station>
+    - activeFiltersCount() : int
+}
+
+class StationUtils {
+    + {static} sortByEmptySlots(stations : List<Station>) : List<Station>
+}
+
 @enduml
