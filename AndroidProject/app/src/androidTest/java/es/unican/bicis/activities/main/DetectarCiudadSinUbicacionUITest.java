@@ -1,16 +1,18 @@
+
 package es.unican.bicis.activities.main;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.RootMatchers.withDecorView;
-import static androidx.test.espresso.matcher.ViewMatchers.hasChildCount;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.CoreMatchers.not;
+import static org.junit.Assert.assertEquals;
 
 import android.Manifest;
 import android.view.View;
+import android.widget.ListView;
 
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.rule.GrantPermissionRule;
@@ -85,7 +87,15 @@ public class DetectarCiudadSinUbicacionUITest {
             }
         }
 
-        // en networks.json hay 4 redes de prueba (Bicing, BiciMAD, TUeBICI y Bici Norte)
-        onView(withId(R.id.lvNetworks)).check(matches(hasChildCount(4)));
+        // Comprueba las 10 redes cargadas desde networks.json.
+        // Se consulta el adaptador porque ListView solo crea las filas visibles.
+        onView(withId(R.id.lvNetworks)).check((view, exception) -> {
+            if (exception != null) {
+                throw exception;
+            }
+
+            ListView listView = (ListView) view;
+            assertEquals(10, listView.getAdapter().getCount());
+        });
     }
 }

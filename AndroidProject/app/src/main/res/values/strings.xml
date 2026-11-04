@@ -21,12 +21,12 @@
     <string name="stationsLoadError">No se han podido cargar las estaciones. Comprueba tu conexión</string>
     <string name="menuNetworkInfo">Información de la red</string>
 
-    <!-- Filtro de estaciones por bicis libres -->
-    <string name="menuFilter">Filtrar por bicis libres</string>
-    <string name="filterTitle">Filtrar por bicis libres</string>
+    <!-- Diálogo de filtros de estaciones (bicis libres y huecos libres) -->
+    <string name="menuFilter">Filtrar estaciones</string>
+    <string name="filterTitle">Filtrar estaciones</string>
     <string name="filterHint">Mínimo de bicis libres</string>
     <string name="filterApply">Aplicar</string>
-    <string name="filterClear">Quitar filtro</string>
+    <string name="filterClear">Quitar filtros</string>
     <string name="filterCancel">Cancelar</string>
     <string name="filterInvalid">Introduce un número entero mayor que 0</string>
     <string name="filterActive">Con al menos %d bicis libres</string>
@@ -40,4 +40,31 @@
     <string name="distanceFilterActive">A menos de %.1f km</string>
     <string name="distanceFilterNoResults">No hay estaciones a menos de %.1f km</string>
     <string name="distanceLocationUnavailable">No se puede obtener tu ubicación para filtrar por distancia</string>
+
+    <!-- Buscar estación por nombre (HU 532314) -->
+    <string name="menuSearch">Buscar estación por nombre</string>
+    <string name="searchNotFound">No existe ninguna estación con ese nombre</string>
+    <string name="searchSuggestionTitle">¿Quizás quisiste decir...?</string>
+    <string name="searchSuggestionHint">Pulsa la sugerencia para ver su ubicación.</string>
+    <string name="searchNoSuggestion">No hay sugerencias similares.\n\nBorra el texto para intentar otra búsqueda.</string>
+    <string name="stationBikes">Bicis disponibles: %s</string>
+    <string name="stationLocationLatitude">Latitud: %s</string>
+    <string name="stationLocationLongitude">Longitud: %s</string>
+    <string name="stationLocationClose">Cerrar</string>
+
+    <!-- Ver información detallada de la red (US532200) -->
+    <string name="detailsTitle">Detalles de la red</string>
+    <string name="detailsLatitude">Latitud</string>
+    <string name="detailsLongitude">Longitud</string>
+    <string name="detailsEbikes">Bicis eléctricas</string>
+    <string name="detailsOperatorsCount">Nº de empresas</string>
+    <string name="detailsOperators">Empresas operadoras</string>
+    <string name="detailsNoInfo">No hay información detallada disponible para esta red</string>
+
+    <!-- Filtro de estaciones por huecos libres (HU 532335) -->
+    <string name="filterEmptySlotsHint">Mínimo de huecos libres</string>
+    <string name="filterEmptySlotsInvalid">Introduce un número entero mayor o igual que 0</string>
+    <string name="filterEmptySlotsActive">Con al menos %d huecos libres</string>
+    <string name="filterEmptySlotsNoResults">No hay estaciones con los huecos libres seleccionados</string>
+    <string name="filterSubtitleSeparator">" · "</string>
 </resources>

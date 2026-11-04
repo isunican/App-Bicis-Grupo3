@@ -14,6 +14,9 @@ import java.util.Map;
  * allows to filter them by a minimum number of free bikes or by maximum
  * distance to the user, and gives access to the detailed information
  * of the network.
+ * allows to filter them by a minimum number of free bikes and by a minimum
+ * number of empty slots, allows to search a station by its name and gives access
+ * to the detailed information of the network.
  */
 public interface IStationsContract {
 
@@ -52,6 +55,17 @@ public interface IStationsContract {
         public double getMaxCityDistanceKm();
 
         /**
+         * The presenter is informed that the user wants to filter the stations
+         * by a minimum number of empty slots (HU 532335).
+         * A value of 0 shows all the stations of the network. Negative or non
+         * integer values are not valid. This filter is combined with the other
+         * active filters (a station is shown only if it satisfies all of them).
+         * Only the View should call this method
+         * @param minEmptySlotsText the text introduced by the user
+         */
+        public void onMinEmptySlotsFilterApplied(String minEmptySlotsText);
+
+        /**
          * Notifies the presenter that the user wants to remove
          * all applied station filters.
          *
@@ -84,6 +98,35 @@ public interface IStationsContract {
          * @param maxDistKmText the text introduced by the user (distance in km)
          */
         public void onDistanceFilterApplied(String maxDistKmText);
+
+        /**
+         * The presenter is informed that the user has pressed the search icon (magnifying glass)
+         * of the toolbar. The presenter requests the view to show the search field.
+         * Only the View should call this method
+         */
+        public void onSearchClicked();
+
+        /**
+         * The presenter is informed that the text of the station search field has changed.
+         * It is called every time the user adds or removes a letter, without pressing any button.
+         * The presenter requests the view to show the stations whose name contains the text
+         * (ignoring case and accents, in the same order as the list of stations), all the
+         * stations if the text is empty or blank, or the "station not found" message, together
+         * with the most similar station as a suggestion if there is one. It also requests the
+         * view to show, below the search field, the names of the matching stations as suggestions.
+         * Only the View should call this method
+         * @param text the text introduced in the search field (may be null or empty)
+         */
+        public void onSearchTextChanged(String text);
+
+        /**
+         * The presenter is informed that the user has selected a station, either from the
+         * search results or from the suggestion of the most similar station.
+         * The presenter requests the view to show the location of that station.
+         * Only the View should call this method
+         * @param station the selected station
+         */
+        public void onStationSelected(Station station);
 
     }
 
@@ -151,6 +194,40 @@ public interface IStationsContract {
          * Only the Presenter should call this method
          */
         public void showInvalidMinFreeBikes();
+
+        /**
+         * The view is requested to hide the list and display a message indicating
+         * that no station has at least the given number of empty slots (HU 532335).
+         * Only the Presenter should call this method
+         * @param minEmptySlots the minimum number of empty slots requested
+         */
+        public void showNoStationsWithMinEmptySlots(int minEmptySlots);
+
+        /**
+         * The view is requested to display an error indicating that the introduced
+         * minimum number of empty slots is not valid (it must be an integer
+         * greater than or equal to 0) (HU 532335).
+         * The filters that were active before, if any, remain unchanged.
+         * Only the Presenter should call this method
+         */
+        public void showInvalidMinEmptySlots();
+
+        /**
+         * The view is requested to indicate in the filter icon how many filters
+         * are active (HU 532335). With 0 the icon shows no indicator.
+         * Only the Presenter should call this method
+         * @param numActiveFilters the number of active filters (0 or more)
+         */
+        public void showActiveFiltersCount(int numActiveFilters);
+
+        /**
+         * The view is requested to indicate which minimum number of empty slots
+         * is active (HU 532335). With 0 no indication is shown, because with 0
+         * all the stations are shown.
+         * Only the Presenter should call this method
+         * @param minEmptySlots the minimum number of empty slots of the active filter
+         */
+        public void showMinEmptySlotsFilterActive(int minEmptySlots);
 
         /**
          * Requests the view to display an error message when
@@ -235,5 +312,47 @@ public interface IStationsContract {
          * @param distances map from station to its distance in km; null if no distance available
          */
         public void showStationsWithDistance(List<Station> stations, Map<Station, Double> distances);
+        /**
+         * The view is requested to expand and display the station search field,
+         * ready for the user to type.
+         * Only the Presenter should call this method
+         */
+        public void showSearchField();
+
+        /**
+         * The view is requested to display, below the search field, the names of the
+         * given stations as suggestions, in the given order. The user can select one of them.
+         * An empty list hides the suggestions.
+         * Only the Presenter should call this method
+         * @param stations the stations to suggest (never null, may be empty)
+         */
+        public void showSearchSuggestions(List<Station> stations);
+
+        /**
+         * The view is requested to hide the list and display the message
+         * "No existe ninguna estación con ese nombre", because no station of the
+         * network contains the searched text.
+         * The message disappears the next time the view is requested to show stations.
+         * Only the Presenter should call this method
+         */
+        public void showStationNotFound();
+
+        /**
+         * The view is requested to display, together with the "station not found" message,
+         * the suggestion "¿Querías decir [name]?" with the station whose name is the most
+         * similar to the searched text. The user can select the suggestion.
+         * Only the Presenter should call this method
+         * @param station the most similar station (never null)
+         */
+        public void showSuggestion(Station station);
+
+        /**
+         * The view is requested to display the location (latitude and longitude)
+         * of the given station.
+         * Only the Presenter should call this method
+         * @param station the station whose location must be shown
+         */
+        public void showStationLocation(Station station);
+
     }
 }

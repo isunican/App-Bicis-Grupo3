@@ -26,10 +26,14 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+import dagger.hilt.android.testing.BindValue;
 import dagger.hilt.android.testing.HiltAndroidRule;
 import dagger.hilt.android.testing.HiltAndroidTest;
+import dagger.hilt.android.testing.UninstallModules;
 import es.unican.bicis.R;
 import es.unican.bicis.activities.main.MainView;
+import es.unican.bicis.injection.LocationModule;
+import es.unican.bicis.location.ILocationProvider;
 import es.unican.bicis.model.Station;
 
 /**
@@ -38,6 +42,7 @@ import es.unican.bicis.model.Station;
  * UI.3: No hay filtros aplicados.
  */
 @HiltAndroidTest
+@UninstallModules(LocationModule.class)
 public class QuitarFiltrosSinFiltrosUITest {
 
     @Rule(order = 0)
@@ -49,6 +54,10 @@ public class QuitarFiltrosSinFiltrosUITest {
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_COARSE_LOCATION
             );
+
+    /** La app no recibe ubicación: se queda en la lista de redes y no salta a una ciudad */
+    @BindValue
+    ILocationProvider ubicacionFalsa = cb -> { };
 
     @Rule(order = 2)
     public ActivityScenarioRule<MainView> activityRule =

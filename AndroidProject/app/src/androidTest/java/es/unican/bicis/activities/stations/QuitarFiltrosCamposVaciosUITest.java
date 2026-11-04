@@ -19,10 +19,14 @@ import androidx.test.rule.GrantPermissionRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import dagger.hilt.android.testing.BindValue;
 import dagger.hilt.android.testing.HiltAndroidRule;
 import dagger.hilt.android.testing.HiltAndroidTest;
+import dagger.hilt.android.testing.UninstallModules;
 import es.unican.bicis.R;
 import es.unican.bicis.activities.main.MainView;
+import es.unican.bicis.injection.LocationModule;
+import es.unican.bicis.location.ILocationProvider;
 
 /**
  * HU 532317 - Quitar los filtros aplicados.
@@ -30,6 +34,7 @@ import es.unican.bicis.activities.main.MainView;
  * UI.4: Volver a abrir los filtros después de quitarlos.
  */
 @HiltAndroidTest
+@UninstallModules(LocationModule.class)
 public class QuitarFiltrosCamposVaciosUITest {
 
     @Rule(order = 0)
@@ -41,6 +46,10 @@ public class QuitarFiltrosCamposVaciosUITest {
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_COARSE_LOCATION
             );
+
+    /** La app no recibe ubicación: se queda en la lista de redes y no salta a una ciudad */
+    @BindValue
+    ILocationProvider ubicacionFalsa = cb -> { };
 
     @Rule(order = 2)
     public ActivityScenarioRule<MainView> activityRule =

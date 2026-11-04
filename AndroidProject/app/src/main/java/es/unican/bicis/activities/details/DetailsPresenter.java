@@ -4,6 +4,13 @@ import es.unican.bicis.model.Location;
 import es.unican.bicis.model.Network;
 import java.util.Locale;
 
+/**
+ * Presenter of the view that shows the details of a bike sharing network.
+ * It receives the network selected in the main list and decides what the view
+ * must show for each data: the value formatted for the user, "Sí"/"No" for the
+ * booleans, or "-" when the data is missing or invalid. If the network has no data
+ * beyond its name and city, it asks the view to show the "no details" message.
+ */
 public class DetailsPresenter implements IDetailsContract.Presenter{
     /** Text shown when a value is not available or is invalid */
     static final String NOT_AVAILABLE = "-";
@@ -65,10 +72,10 @@ public class DetailsPresenter implements IDetailsContract.Presenter{
      */
      @Override
      public void onStationsClicked() {
-                if (network == null) {
-                        return;
-                }
-                view.showStations(network);
+         if (network == null) {
+             return;
+         }
+         view.showStations(network);
      }
 
     /**

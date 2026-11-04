@@ -9,12 +9,12 @@ import static es.unican.bicis.utils.StationsUITestUtils.TUEBICI;
 import static es.unican.bicis.utils.StationsUITestUtils.applyFilter;
 import static es.unican.bicis.utils.StationsUITestUtils.openFilterDialog;
 import static es.unican.bicis.utils.StationsUITestUtils.openStations;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
-
+import android.Manifest;
 import android.widget.ListAdapter;
 import android.widget.ListView;
-import android.Manifest;
-
 
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.rule.GrantPermissionRule;
@@ -25,16 +25,18 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+import dagger.hilt.android.testing.BindValue;
 import dagger.hilt.android.testing.HiltAndroidRule;
 import dagger.hilt.android.testing.HiltAndroidTest;
+import dagger.hilt.android.testing.UninstallModules;
 import es.unican.bicis.R;
 import es.unican.bicis.activities.main.MainView;
+import es.unican.bicis.injection.LocationModule;
+import es.unican.bicis.location.ILocationProvider;
 import es.unican.bicis.model.Station;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
 @HiltAndroidTest
+@UninstallModules(LocationModule.class)
 public class QuitarFiltrosExitoUITest {
 
     @Rule(order = 0)
@@ -46,6 +48,10 @@ public class QuitarFiltrosExitoUITest {
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_COARSE_LOCATION
             );
+
+    /** La app no recibe ubicación: se queda en la lista de redes y no salta a una ciudad */
+    @BindValue
+    ILocationProvider ubicacionFalsa = cb -> { };
 
     @Rule(order = 2)
     public ActivityScenarioRule<MainView> activityRule =

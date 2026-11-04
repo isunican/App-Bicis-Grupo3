@@ -1,35 +1,47 @@
 package es.unican.bicis.activities.stations;
 
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.MatrixCursor;
 import android.os.Bundle;
 import android.os.Parcelable;
-import android.text.InputType;
+import android.provider.BaseColumns;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.OptIn;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.IntentCompat;
+import androidx.cursoradapter.widget.SimpleCursorAdapter;
+
+import com.google.android.material.badge.BadgeDrawable;
+import com.google.android.material.badge.BadgeUtils;
+import com.google.android.material.badge.ExperimentalBadgeUtils;
 
 import org.parceler.Parcels;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale;
 
 import javax.inject.Inject;
 
 import dagger.hilt.android.AndroidEntryPoint;
 import es.unican.bicis.R;
 import es.unican.bicis.activities.details.DetailsView;
+import es.unican.bicis.common.StationUtils;
 import es.unican.bicis.model.Network;
 import es.unican.bicis.model.Station;
 import es.unican.bicis.repository.INetworksRepository;
@@ -58,11 +70,42 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     private TextView tvStationsMessage;
     private ListView lvStations;
     private View stationsHeader;
+    private Toolbar toolbar;
 
-    /** Filter dialog currently open (null if it is closed) and its input field */
+    /** Panel shown when no station has the searched name, with the "¿Quizás quisiste decir...?" suggestion */
+    private View searchNotFoundPanel;
+    private View suggestionGroup;
+    private TextView tvSuggestion;
+    private TextView tvNoSuggestion;
+
+    /** Filter dialog currently open (null if it is closed) and its input fields */
     private AlertDialog filterDialog;
     private EditText filterInput;
-    private boolean filterActive = false;
+    private EditText emptySlotsInput;
+
+    /** Whether the presenter has reported an invalid value while applying the filters */
+    private boolean invalidValueShown = false;
+
+    /** Texts of the last filters applied, to fill the dialog when it is opened again */
+    private String appliedFreeBikesText = "";
+    private String appliedEmptySlotsText = "";
+
+    /** Parts of the subtitle that describe the active filters (null if that filter is not active) */
+    private String freeBikesSubtitle;
+    private String emptySlotsSubtitle;
+
+    /** Number of active filters, shown over the filter icon */
+    private int activeFilters = 0;
+    private BadgeDrawable filterBadge;
+
+    /** Adapter used to display station name suggestions. */
+    private SimpleCursorAdapter suggestionsAdapter;
+
+    /** Search field displayed in the toolbar. */
+    private SearchView stationSearchView;
+
+    /** Stations currently displayed in the suggestions dropdown. */
+    private List<Station> suggestedStations = new ArrayList<>();
 
     /**
      * @see AppCompatActivity#onCreate(Bundle)
@@ -74,7 +117,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         setContentView(R.layout.activity_stations);
 
         // The toolbar is explicitly declared in the layout: set it as the activity ActionBar
-        Toolbar toolbar = findViewById(R.id.toolbar);
+        toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         ActionBar bar = getSupportActionBar();
         if (bar != null) {
@@ -87,6 +130,10 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         tvStationsMessage = findViewById(R.id.tvStationsMessage);
         lvStations = findViewById(R.id.lvStations);
         stationsHeader = findViewById(R.id.stationsHeader);
+        searchNotFoundPanel = findViewById(R.id.searchNotFoundPanel);
+        suggestionGroup = findViewById(R.id.suggestionGroup);
+        tvSuggestion = findViewById(R.id.tvSuggestion);
+        tvNoSuggestion = findViewById(R.id.tvNoSuggestion);
 
         // Get Network from the intent that triggered this activity
         Parcelable wrapped = IntentCompat.getParcelableExtra(getIntent(), INTENT_NETWORK, Parcelable.class);
@@ -97,14 +144,103 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     }
 
     /**
-     * This creates the menu that is shown in the action bar (the upper toolbar)
-     * @param menu The options menu in which you place your items.
+     * Creates the stations toolbar menu and prepares the search suggestions.
      *
-     * @return true because we are defining a new menu
+     * @param menu the options menu
+     * @return true if the menu has been created
      */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_stations, menu);
+
+        MenuItem searchItem = menu.findItem(R.id.menuItemSearch);
+
+        if (searchItem != null) {
+            stationSearchView = (SearchView) searchItem.getActionView();
+
+            if (stationSearchView != null) {
+                stationSearchView.setQueryHint(getString(R.string.menuSearch));
+                stationSearchView.setIconifiedByDefault(true);
+
+                String[] from = {"station_name"};
+                int[] to = {android.R.id.text1};
+
+                suggestionsAdapter = new SimpleCursorAdapter(
+                        this,
+                        android.R.layout.simple_list_item_1,
+                        null,
+                        from,
+                        to,
+                        0
+                );
+
+                stationSearchView.setSuggestionsAdapter(suggestionsAdapter);
+                // Every time the text changes the presenter updates the results (HU 532314)
+                stationSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                    @Override
+                    public boolean onQueryTextSubmit(String query) {
+                        presenter.onSearchTextChanged(query);
+                        stationSearchView.clearFocus();
+                        return true;
+                    }
+
+                    @Override
+                    public boolean onQueryTextChange(String newText) {
+                        presenter.onSearchTextChanged(newText);
+                        return true;
+                    }
+                });
+
+                stationSearchView.setOnSuggestionListener(
+                        new SearchView.OnSuggestionListener() {
+                            @Override
+                            public boolean onSuggestionSelect(int position) {
+                                return selectSuggestion(position);
+                            }
+
+                            @Override
+                            public boolean onSuggestionClick(int position) {
+                                return selectSuggestion(position);
+                            }
+                        }
+                );
+            }
+        }
+
+        // The menu is created after the presenter has loaded the stations: show the badge now
+        toolbar.post(this::updateFilterBadge);
+        return true;
+    }
+
+    /**
+     * Notifies the presenter when the user selects a station suggestion.
+     *
+     * @param position position of the selected suggestion
+     * @return true if the selection was handled
+     */
+    private boolean selectSuggestion(int position) {
+        if (stationSearchView == null || presenter == null
+                || position < 0 || position >= suggestedStations.size()) {
+            return false;
+        }
+
+        Station station = suggestedStations.get(position);
+
+        if (station == null) {
+            return false;
+        }
+
+        AutoCompleteTextView searchInput =
+                stationSearchView.findViewById(
+                        androidx.appcompat.R.id.search_src_text
+                );
+
+        if (searchInput != null) {
+            searchInput.dismissDropDown();
+        }
+
+        presenter.onStationSelected(station);
+
         return true;
     }
 
@@ -130,30 +266,23 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     }
 
     /**
-     * Opens the dialog where the user introduces the minimum number of free bikes.
-     * The dialog is only closed by the presenter when the value is valid,
-     * so that the error can be shown inside it.
+     * Opens the dialog with all the station filters (free bikes and empty slots).
+     * The fields show the values of the filters that are active.
+     * The dialog is only closed when all the values are valid, so that the
+     * errors can be shown inside it. "Quitar filtros" is only enabled if
+     * there is any filter active.
      */
 
     private void openFilterDialog() {
-        filterInput = new EditText(this);
-        filterInput.setId(R.id.etMinFreeBikes);
-        filterInput.setInputType(InputType.TYPE_CLASS_NUMBER);
-        filterInput.setHint(R.string.filterHint);
-
-        FrameLayout container = new FrameLayout(this);
-        int margin = (int) (24 * getResources().getDisplayMetrics().density);
-
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.WRAP_CONTENT
-        );
-        params.setMargins(margin, margin / 2, margin, 0);
-        container.addView(filterInput, params);
+        View content = getLayoutInflater().inflate(R.layout.dialog_filters, null);
+        filterInput = content.findViewById(R.id.etMinFreeBikes);
+        emptySlotsInput = content.findViewById(R.id.etMinEmptySlots);
+        filterInput.setText(appliedFreeBikesText);
+        emptySlotsInput.setText(appliedEmptySlotsText);
 
         filterDialog = new AlertDialog.Builder(this)
                 .setTitle(R.string.filterTitle)
-                .setView(container)
+                .setView(content)
                 .setPositiveButton(R.string.filterApply, null)
                 .setNeutralButton(
                         R.string.filterClear,
@@ -162,24 +291,48 @@ public class StationsView extends AppCompatActivity implements IStationsContract
                 .setNegativeButton(R.string.filterCancel, null)
                 .create();
 
+        // The positive button is overridden so that the dialog does not close on invalid values
         filterDialog.setOnShowListener(d -> {
-            Button apply = filterDialog.getButton(AlertDialog.BUTTON_POSITIVE);
-            apply.setOnClickListener(
-                    v -> presenter.onFilterApplied(filterInput.getText().toString())
-            );
+            Button apply = filterDialog.getButton(DialogInterface.BUTTON_POSITIVE);
+            apply.setOnClickListener(v -> onApplyFiltersClicked());
 
-            Button clear = filterDialog.getButton(AlertDialog.BUTTON_NEUTRAL);
-            clear.setEnabled(filterActive);
+            Button clear = filterDialog.getButton(DialogInterface.BUTTON_NEUTRAL);
+            clear.setEnabled(isAnyFilterActive());
         });
 
         filterDialog.setOnDismissListener(d -> {
             filterDialog = null;
             filterInput = null;
+            emptySlotsInput = null;
         });
 
         filterDialog.show();
     }
 
+    /**
+     * Sends to the presenter the filters introduced in the dialog.
+     * An empty field means that the corresponding filter is not applied.
+     * If every field is empty, the free bikes filter is sent so that the
+     * presenter reports the invalid value (behaviour of HU 532376).
+     * The dialog is closed only if the presenter has not reported any invalid value.
+     */
+    private void onApplyFiltersClicked() {
+        String freeBikesText = filterInput.getText().toString().trim();
+        String emptySlotsText = emptySlotsInput.getText().toString().trim();
+        invalidValueShown = false;
+
+        if (!freeBikesText.isEmpty() || emptySlotsText.isEmpty()) {
+            presenter.onFilterApplied(freeBikesText);
+        }
+        if (!invalidValueShown && !emptySlotsText.isEmpty()) {
+            presenter.onMinEmptySlotsFilterApplied(emptySlotsText);
+        }
+        if (!invalidValueShown && filterDialog != null) {
+            appliedFreeBikesText = freeBikesText;
+            appliedEmptySlotsText = emptySlotsText;
+            filterDialog.dismiss();
+        }
+    }
 
     /**
      * @see IStationsContract.View#getNetworksRepository()
@@ -218,6 +371,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         lvStations.setVisibility(View.VISIBLE);
         stationsHeader.setVisibility(View.VISIBLE);
         tvStationsMessage.setVisibility(View.GONE);
+        searchNotFoundPanel.setVisibility(View.GONE);
     }
 
     /**
@@ -245,6 +399,47 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         showMessage(getString(R.string.filterNoResults, minFreeBikes));
     }
 
+    /**
+     * @see IStationsContract.View#showNoStationsWithMinEmptySlots(int)
+     * @param minEmptySlots the minimum number of empty slots requested
+     */
+    @Override
+    public void showNoStationsWithMinEmptySlots(int minEmptySlots) {
+        showMessage(getString(R.string.filterEmptySlotsNoResults));
+    }
+
+    /**
+     * @see IStationsContract.View#showInvalidMinEmptySlots()
+     */
+    @Override
+    public void showInvalidMinEmptySlots() {
+        invalidValueShown = true;
+        if (emptySlotsInput != null) {
+            emptySlotsInput.setError(getString(R.string.filterEmptySlotsInvalid));
+        }
+    }
+
+    /**
+     * @see IStationsContract.View#showActiveFiltersCount(int)
+     * @param numActiveFilters the number of active filters
+     */
+    @Override
+    public void showActiveFiltersCount(int numActiveFilters) {
+        activeFilters = Math.max(numActiveFilters, 0);
+        updateFilterBadge();
+    }
+
+    /**
+     * @see IStationsContract.View#showMinEmptySlotsFilterActive(int)
+     * @param minEmptySlots the minimum number of empty slots of the active filter
+     */
+    @Override
+    public void showMinEmptySlotsFilterActive(int minEmptySlots) {
+        emptySlotsSubtitle = minEmptySlots > 0
+                ? getString(R.string.filterEmptySlotsActive, minEmptySlots)
+                : null;
+        updateSubtitle();
+    }
 
     /**
      * @see IStationsContract.View#mostrarErrorQuitarFiltros()
@@ -259,6 +454,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
      */
     @Override
     public void showInvalidMinFreeBikes() {
+        invalidValueShown = true;
         if (filterInput != null) {
             filterInput.setError(getString(R.string.filterInvalid));
         }
@@ -270,32 +466,21 @@ public class StationsView extends AppCompatActivity implements IStationsContract
      */
     @Override
     public void showFilterActive(int minFreeBikes) {
-        filterActive = true;
-
-        ActionBar bar = getSupportActionBar();
-        if (bar != null) {
-            bar.setSubtitle(getString(R.string.filterActive, minFreeBikes));
-        }
-
-        if (filterDialog != null) {
-            filterDialog.dismiss();
-        }
+        freeBikesSubtitle = getString(R.string.filterActive, minFreeBikes);
+        updateSubtitle();
     }
-
 
     /**
      * @see IStationsContract.View#showFilterInactive()
      */
     @Override
     public void showFilterInactive() {
-        filterActive = false;
-
-        ActionBar bar = getSupportActionBar();
-        if (bar != null) {
-            bar.setSubtitle(null);
-        }
+        freeBikesSubtitle = null;
+        emptySlotsSubtitle = null;
+        appliedFreeBikesText = "";
+        appliedEmptySlotsText = "";
+        updateSubtitle();
     }
-
 
     /**
      * @see IStationsContract.View#showNetworkDetails(Network)
@@ -309,6 +494,178 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     }
 
     /**
+     * @see IStationsContract.View#showSearchField()
+     */
+    @Override
+    public void showSearchField() {
+        // TODO HU 532314: desplegar el campo de búsqueda (tarea de la vista)
+    }
+
+    /**
+     * @see IStationsContract.View#showSearchSuggestions(List)
+     * @param stations the stations to suggest
+     */
+    @Override
+    public void showSearchSuggestions(List<Station> stations) {
+        if (suggestionsAdapter == null || stationSearchView == null) {
+            return;
+        }
+
+        suggestedStations = new ArrayList<>();
+
+        MatrixCursor cursor = new MatrixCursor(
+                new String[]{BaseColumns._ID, "station_name"}
+        );
+
+        if (stations != null) {
+            for (Station station : stations) {
+                if (station != null) {
+                    suggestedStations.add(station);
+
+                    cursor.addRow(new Object[]{
+                            suggestedStations.size() - 1,
+                            station.getName()
+                    });
+                }
+            }
+        }
+
+        suggestionsAdapter.changeCursor(cursor);
+
+        AutoCompleteTextView searchInput =
+                stationSearchView.findViewById(
+                        androidx.appcompat.R.id.search_src_text
+                );
+
+        if (searchInput == null) {
+            return;
+        }
+
+        // Allow suggestions to appear from the first character.
+        searchInput.setThreshold(1);
+
+        if (suggestedStations.isEmpty()) {
+            searchInput.dismissDropDown();
+        } else {
+            searchInput.post(() -> {
+                if (searchInput.hasFocus()
+                        && searchInput.getText().length() >= 1) {
+                    searchInput.showDropDown();
+                }
+            });
+        }
+    }
+
+    /**
+     * @see IStationsContract.View#showStationNotFound()
+     */
+    @Override
+    public void showStationNotFound() {
+        lvStations.setVisibility(View.GONE);
+        stationsHeader.setVisibility(View.GONE);
+        tvStationsMessage.setVisibility(View.GONE);
+
+        // Until the presenter sends a suggestion, "No hay sugerencias similares" is shown
+        suggestionGroup.setVisibility(View.GONE);
+        tvSuggestion.setOnClickListener(null);
+        tvNoSuggestion.setVisibility(View.VISIBLE);
+        searchNotFoundPanel.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * @see IStationsContract.View#showSuggestion(Station)
+     * @param station the most similar station
+     */
+    @Override
+    public void showSuggestion(Station station) {
+        tvSuggestion.setText(station.getName());
+        tvSuggestion.setOnClickListener(v -> presenter.onStationSelected(station));
+        tvNoSuggestion.setVisibility(View.GONE);
+        suggestionGroup.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * @see IStationsContract.View#showStationLocation(Station)
+     * @param station the station whose location must be shown
+     */
+    @Override
+    public void showStationLocation(Station station) {
+        String bikes = StationUtils.formatBikes(
+                station.getFreeBikes(), station.getEmptySlots(), station.getSlots());
+        String message = getString(R.string.stationBikes, bikes)
+                + "\n" + getString(R.string.stationLocationLatitude, formatCoordinate(station.getLatitude()))
+                + "\n" + getString(R.string.stationLocationLongitude, formatCoordinate(station.getLongitude()));
+
+        new AlertDialog.Builder(this)
+                .setTitle(station.getName())
+                .setMessage(message)
+                .setPositiveButton(R.string.stationLocationClose, null)
+                .show();
+    }
+
+    /**
+     * Formats a coordinate with four decimals and a dot (e.g. "43.4686").
+     * @param value the coordinate (may be null)
+     * @return the formatted coordinate, or "-" if it is not available
+     */
+    private String formatCoordinate(Double value) {
+        if (value == null) {
+            return StationUtils.NO_DATA;
+        }
+        return String.format(Locale.ROOT, "%.4f", value);
+    }
+
+    /**
+     * Indicates whether any filter is active, to enable the "Quitar filtros" button.
+     * A filter is active if the presenter has reported it (number over the filter icon)
+     * or if its text is shown in the subtitle of the action bar.
+     * @return true if there is at least one filter active
+     */
+    private boolean isAnyFilterActive() {
+        return activeFilters > 0 || freeBikesSubtitle != null || emptySlotsSubtitle != null;
+    }
+
+    /**
+     * Shows in the subtitle of the action bar the active filters, separated by " · ",
+     * or removes the subtitle if no filter is active.
+     */
+    private void updateSubtitle() {
+        StringBuilder subtitle = new StringBuilder();
+        for (String part : new String[] {freeBikesSubtitle, emptySlotsSubtitle}) {
+            if (part != null) {
+                if (subtitle.length() > 0) {
+                    subtitle.append(getString(R.string.filterSubtitleSeparator));
+                }
+                subtitle.append(part);
+            }
+        }
+        ActionBar bar = getSupportActionBar();
+        if (bar != null) {
+            bar.setSubtitle(subtitle.length() > 0 ? subtitle.toString() : null);
+        }
+    }
+
+    /**
+     * Shows over the filter icon the number of active filters, or hides it if there are none.
+     * The badge can only be attached once the menu of the toolbar has been created.
+     */
+    @OptIn(markerClass = ExperimentalBadgeUtils.class)
+    private void updateFilterBadge() {
+        if (toolbar == null || toolbar.findViewById(R.id.menuItemFilter) == null) {
+            return;     // the menu has not been created yet
+        }
+        if (filterBadge == null) {
+            if (activeFilters == 0) {
+                return;
+            }
+            filterBadge = BadgeDrawable.create(this);
+            BadgeUtils.attachBadgeDrawable(filterBadge, toolbar, R.id.menuItemFilter);
+        }
+        filterBadge.setNumber(activeFilters);
+        filterBadge.setVisible(activeFilters > 0);
+    }
+
+    /**
      * Displays a message instead of the station list.
      * @param message the message to display
      */
@@ -317,6 +674,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         stationsHeader.setVisibility(View.GONE);
         tvStationsMessage.setText(message);
         tvStationsMessage.setVisibility(View.VISIBLE);
+        searchNotFoundPanel.setVisibility(View.GONE);
     }
 
     /**
