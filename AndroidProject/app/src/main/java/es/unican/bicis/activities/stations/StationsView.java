@@ -440,16 +440,6 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         startActivity(intent);
     }
 
-   /**
-    * Shows the names of the stations in the dropdown of the search field, from the
-    * first letter typed. An empty or null list closes the dropdown.
-    * @see IStationsContract.View#showSearchField()
-    */
-    @Override
-    public void showSearchField() {
-        // TODO HU 532314: desplegar el campo de búsqueda (tarea de la vista)
-    }
-
     /**
      * Hides the list and shows the not found panel with the message
      * "No hay sugerencias similares", until a suggestion is shown.

@@ -56,15 +56,7 @@ public interface IStationsContract {
         public void onInfoClicked();
 
         /**
-         * The presenter is informed that the user has pressed the search icon (magnifying glass)
-         * of the toolbar. The presenter requests the view to show the search field.
-         * It does nothing if {@link #init(View, Network)} has not been called before.
-         */
-        public void onSearchClicked();
-
-        /**
          * The presenter is informed that the text of the station search field has changed.
-         * It is called every time the user adds or removes a letter, without pressing any button.
          * It is called every time the user adds or removes a letter, without pressing any button,
          * and also when the user submits the search.
          * The search ignores case and accents and keeps the order of the list of stations.
@@ -184,13 +176,6 @@ public interface IStationsContract {
          * @param network the network
          */
         public void showNetworkDetails(Network network);
-
-        /**
-         * The view is requested to expand and display the station search field,
-         * ready for the user to type.
-         * Only the Presenter should call this method
-         */
-        public void showSearchField();
 
         /**
          * The view is requested to display, below the search field, the names of the

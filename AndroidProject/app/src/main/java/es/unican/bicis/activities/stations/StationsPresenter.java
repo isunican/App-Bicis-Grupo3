@@ -18,7 +18,7 @@ import es.unican.bicis.model.StationSearch;
  * It loads the stations of a network and sorts them by free bikes (HU 532377 Listar estaciones),
  * filters them by a minimum number of free bikes introduced by the user (HU 532376 Filtrar
  * estaciones), searches them by name while the user types, suggesting the most similar
- * station when none matches (HU 532314 Buscar estación por nombre), and decides what the
+ * station when none matches (HU 532314 Buscar estaciÃ³n por nombre), and decides what the
  * view must show.
  */
 public class StationsPresenter implements IStationsContract.Presenter {
@@ -164,22 +164,13 @@ public class StationsPresenter implements IStationsContract.Presenter {
     }
 
     /**
-     * Requests the view to show the search field.
-     * Does nothing if the presenter has not been initialized (view is null).
-     */
-    @Override
-    public void onSearchClicked() {
-        if (view != null) {
-            view.showSearchField();
-        }
-    }
-
-    /**
-     * Searches the stations whose name contains the text with
-     * {@link StationSearch#searchByName(List, String)} and, if there are none, looks for the
-     * most similar one with {@link StationSearch#findMostSimilar(List, String)}.
-     * The search is always done over all the loaded stations, sorted by free bikes.
-     * Does nothing if the presenter has not been initialized (view is null).
+     * Searches stations by name and, when there are no matches, finds the most
+     * similar station using {@link StationSearch#findMostSimilar(List, String)}.
+     * The search uses the complete list of loaded stations, sorted by free bikes.
+     * Does nothing if the presenter has not been initialized.
+     *
+     * @see IStationsContract.Presenter#onSearchTextChanged(String)
+     * @param text the text introduced in the search field
      */
     @Override
     public void onSearchTextChanged(String text) {
@@ -204,7 +195,7 @@ public class StationsPresenter implements IStationsContract.Presenter {
         if (matches.isEmpty()) {
             view.showSearchSuggestions(new ArrayList<>());
             view.showStationNotFound();
-            view.showNetworkLocation(location + " · 0 estaciones");
+            view.showNetworkLocation(location + " \u00B7 0 estaciones");
             Station mostSimilar = StationSearch.findMostSimilar(stations, text);
             if (mostSimilar != null) {
                 view.showSuggestion(mostSimilar);
@@ -243,12 +234,12 @@ public class StationsPresenter implements IStationsContract.Presenter {
 
     /**
      * Shows the given stations and their number in the header
-     * (e.g. "Santander, ES · 3 estaciones").
+     * (e.g. "Santander, ES Â· 3 estaciones").
      * @param list the stations to show (not empty)
      */
     private void showStationList(List<Station> list) {
         view.showStations(list);
-        view.showNetworkLocation(location + " · " + list.size() + " estaciones");
+        view.showNetworkLocation(location + " \u00B7 " + list.size() + " estaciones");
     }
 
     /**
