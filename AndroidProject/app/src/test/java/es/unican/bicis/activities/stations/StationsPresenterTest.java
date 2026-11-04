@@ -14,8 +14,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import static org.mockito.Mockito.doThrow;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -487,4 +485,127 @@ public class StationsPresenterTest {
 
         verify(mockView, never()).showNetworkDetails(any());
     }
+
+    // =====================================================================
+    // Busqueda de estaciones por nombre (HU 532314)
+    // Tabla 5 del plan de pruebas
+    // =====================================================================
+
+    /**
+     * UPB.1a: buscar "Plaza" muestra las dos estaciones coincidentes.
+     * No debe mostrarse el mensaje de estacion inexistente.
+     */
+    @Test
+    public void testSearchByNameShowsMatchingStations() {
+        Station plazaItalia = createStation("Plaza de Italia", 5);
+        Station magdalena = createStation("Magdalena", 3);
+        Station plazaPombo = createStation("Plaza Pombo (NE)", 1);
+
+        initPresenterWith(Arrays.asList(
+                plazaItalia, magdalena, plazaPombo));
+
+        sut.onSearchTextChanged("Plaza");
+
+        verify(mockView).showStations(Arrays.asList(
+                plazaItalia, plazaPombo));
+        verify(mockView, never()).showStationNotFound();
+    }
+
+    /**
+     * UPB.1b: una busqueda vacia recupera todas las estaciones
+     * en el mismo orden original.
+     */
+    @Test
+    public void testSearchEmptyTextShowsAllStations() {
+        Station plazaItalia = createStation("Plaza de Italia", 5);
+        Station magdalena = createStation("Magdalena", 3);
+        Station plazaPombo = createStation("Plaza Pombo (NE)", 1);
+
+        List<Station> estaciones = Arrays.asList(
+                plazaItalia, magdalena, plazaPombo);
+
+        initPresenterWith(estaciones);
+
+        sut.onSearchTextChanged("");
+
+        verify(mockView).showStations(estaciones);
+        verify(mockView, never()).showStationNotFound();
+    }
+
+    /**
+     * UPB.1c: buscar "Magdalna" muestra el mensaje de estacion
+     * inexistente y sugiere Magdalena.
+     */
+    @Test
+    public void testSearchMisspelledNameShowsSuggestion() {
+        Station plazaItalia = createStation("Plaza de Italia", 5);
+        Station magdalena = createStation("Magdalena", 3);
+        Station plazaPombo = createStation("Plaza Pombo (NE)", 1);
+
+        initPresenterWith(Arrays.asList(
+                plazaItalia, magdalena, plazaPombo));
+
+        sut.onSearchTextChanged("Magdalna");
+
+        verify(mockView).showStationNotFound();
+        verify(mockView).showSuggestion(magdalena);
+        verify(mockView, never()).showStations(anyList());
+    }
+
+    /**
+     * UPB.1d: buscar "Zzzz" muestra el mensaje de estacion
+     * inexistente sin sugerir ninguna estacion.
+     */
+    @Test
+    public void testSearchUnknownNameWithoutSuggestion() {
+        Station plazaItalia = createStation("Plaza de Italia", 5);
+        Station magdalena = createStation("Magdalena", 3);
+        Station plazaPombo = createStation("Plaza Pombo (NE)", 1);
+
+        initPresenterWith(Arrays.asList(
+                plazaItalia, magdalena, plazaPombo));
+
+        sut.onSearchTextChanged("Zzzz");
+
+        verify(mockView).showStationNotFound();
+        verify(mockView, never()).showSuggestion(any(Station.class));
+        verify(mockView, never()).showStations(anyList());
+    }
+
+    /**
+     * UPB.2a: seleccionar Magdalena solicita mostrar
+     * la ubicacion de esa estacion.
+     */
+    @Test
+    public void testSelectingStationShowsItsLocation() {
+        Station plazaItalia = createStation("Plaza de Italia", 5);
+        Station magdalena = createStation("Magdalena", 3);
+        Station plazaPombo = createStation("Plaza Pombo (NE)", 1);
+
+        initPresenterWith(Arrays.asList(
+                plazaItalia, magdalena, plazaPombo));
+
+        sut.onStationSelected(magdalena);
+
+        verify(mockView).showStationLocation(magdalena);
+    }
+
+    /**
+     * UPB.2b: seleccionar una estacion null no solicita
+     * mostrar ninguna ubicacion ni lanza excepciones.
+     */
+    @Test
+    public void testSelectingNullStationDoesNothing() {
+        Station plazaItalia = createStation("Plaza de Italia", 5);
+        Station magdalena = createStation("Magdalena", 3);
+        Station plazaPombo = createStation("Plaza Pombo (NE)", 1);
+
+        initPresenterWith(Arrays.asList(
+                plazaItalia, magdalena, plazaPombo));
+
+        sut.onStationSelected(null);
+
+        verify(mockView, never()).showStationLocation(any(Station.class));
+    }
+
 }

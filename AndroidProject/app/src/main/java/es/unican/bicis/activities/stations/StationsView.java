@@ -14,6 +14,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.database.MatrixCursor;
 import android.provider.BaseColumns;
+import android.widget.AutoCompleteTextView;
 
 
 import androidx.annotation.NonNull;
@@ -29,6 +30,7 @@ import org.parceler.Parcels;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import javax.inject.Inject;
 
@@ -38,6 +40,7 @@ import es.unican.bicis.activities.details.DetailsView;
 import es.unican.bicis.model.Network;
 import es.unican.bicis.model.Station;
 import es.unican.bicis.repository.INetworksRepository;
+import es.unican.bicis.common.StationUtils;
 
 /**
  * View that displays the stations of a bike sharing network.
@@ -63,6 +66,12 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     private TextView tvStationsMessage;
     private ListView lvStations;
     private View stationsHeader;
+
+    /** Panel shown when no station has the searched name, with the "¿Quizás quisiste decir...?" suggestion */
+    private View searchNotFoundPanel;
+    private View suggestionGroup;
+    private TextView tvSuggestion;
+    private TextView tvNoSuggestion;
 
     /** Filter dialog currently open (null if it is closed) and its input field */
     private AlertDialog filterDialog;
@@ -101,6 +110,10 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         tvStationsMessage = findViewById(R.id.tvStationsMessage);
         lvStations = findViewById(R.id.lvStations);
         stationsHeader = findViewById(R.id.stationsHeader);
+        searchNotFoundPanel = findViewById(R.id.searchNotFoundPanel);
+        suggestionGroup = findViewById(R.id.suggestionGroup);
+        tvSuggestion = findViewById(R.id.tvSuggestion);
+        tvNoSuggestion = findViewById(R.id.tvNoSuggestion);
 
         // Get Network from the intent that triggered this activity
         Parcelable wrapped = IntentCompat.getParcelableExtra(getIntent(), INTENT_NETWORK, Parcelable.class);
@@ -142,6 +155,21 @@ public class StationsView extends AppCompatActivity implements IStationsContract
                 );
 
                 stationSearchView.setSuggestionsAdapter(suggestionsAdapter);
+                // Every time the text changes the presenter updates the results (HU 532314)
+                stationSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                    @Override
+                    public boolean onQueryTextSubmit(String query) {
+                        presenter.onSearchTextChanged(query);
+                        stationSearchView.clearFocus();
+                        return true;
+                    }
+
+                    @Override
+                    public boolean onQueryTextChange(String newText) {
+                        presenter.onSearchTextChanged(newText);
+                        return true;
+                    }
+                });
 
                 stationSearchView.setOnSuggestionListener(
                         new SearchView.OnSuggestionListener() {
@@ -180,7 +208,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
             return false;
         }
 
-        SearchView.SearchAutoComplete searchInput =
+        AutoCompleteTextView searchInput =
                 stationSearchView.findViewById(
                         androidx.appcompat.R.id.search_src_text
                 );
@@ -306,6 +334,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         lvStations.setVisibility(View.VISIBLE);
         stationsHeader.setVisibility(View.VISIBLE);
         tvStationsMessage.setVisibility(View.GONE);
+        searchNotFoundPanel.setVisibility(View.GONE);
     }
 
     /**
@@ -404,8 +433,6 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         // TODO HU 532314: desplegar el campo de búsqueda (tarea de la vista)
     }
 
-
-
     /**
      * @see IStationsContract.View#showSearchSuggestions(List)
      * @param stations the stations to suggest
@@ -446,11 +473,15 @@ public class StationsView extends AppCompatActivity implements IStationsContract
             return;
         }
 
+        // Allow suggestions to appear from the first character.
+        searchInput.setThreshold(1);
+
         if (suggestedStations.isEmpty()) {
             searchInput.dismissDropDown();
         } else {
             searchInput.post(() -> {
-                if (searchInput.hasFocus()) {
+                if (searchInput.hasFocus()
+                        && searchInput.getText().length() >= 1) {
                     searchInput.showDropDown();
                 }
             });
@@ -462,7 +493,15 @@ public class StationsView extends AppCompatActivity implements IStationsContract
      */
     @Override
     public void showStationNotFound() {
-        // TODO HU 532314: mostrar el mensaje de estación inexistente (tarea de la vista)
+        lvStations.setVisibility(View.GONE);
+        stationsHeader.setVisibility(View.GONE);
+        tvStationsMessage.setVisibility(View.GONE);
+
+        // Until the presenter sends a suggestion, "No hay sugerencias similares" is shown
+        suggestionGroup.setVisibility(View.GONE);
+        tvSuggestion.setOnClickListener(null);
+        tvNoSuggestion.setVisibility(View.VISIBLE);
+        searchNotFoundPanel.setVisibility(View.VISIBLE);
     }
 
     /**
@@ -471,7 +510,10 @@ public class StationsView extends AppCompatActivity implements IStationsContract
      */
     @Override
     public void showSuggestion(Station station) {
-        // TODO HU 532314: mostrar la sugerencia "¿Querías decir...?" (tarea de la vista)
+        tvSuggestion.setText(station.getName());
+        tvSuggestion.setOnClickListener(v -> presenter.onStationSelected(station));
+        tvNoSuggestion.setVisibility(View.GONE);
+        suggestionGroup.setVisibility(View.VISIBLE);
     }
 
     /**
@@ -480,7 +522,29 @@ public class StationsView extends AppCompatActivity implements IStationsContract
      */
     @Override
     public void showStationLocation(Station station) {
-        // TODO HU 532314: mostrar la ubicación de la estación (tarea de la vista)
+        String bikes = StationUtils.formatBikes(
+                station.getFreeBikes(), station.getEmptySlots(), station.getSlots());
+        String message = getString(R.string.stationBikes, bikes)
+                + "\n" + getString(R.string.stationLocationLatitude, formatCoordinate(station.getLatitude()))
+                + "\n" + getString(R.string.stationLocationLongitude, formatCoordinate(station.getLongitude()));
+
+        new AlertDialog.Builder(this)
+                .setTitle(station.getName())
+                .setMessage(message)
+                .setPositiveButton(R.string.stationLocationClose, null)
+                .show();
+    }
+
+    /**
+     * Formats a coordinate with four decimals and a dot (e.g. "43.4686").
+     * @param value the coordinate (may be null)
+     * @return the formatted coordinate, or "-" if it is not available
+     */
+    private String formatCoordinate(Double value) {
+        if (value == null) {
+            return StationUtils.NO_DATA;
+        }
+        return String.format(Locale.ROOT, "%.4f", value);
     }
 
     /**
@@ -492,6 +556,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         stationsHeader.setVisibility(View.GONE);
         tvStationsMessage.setText(message);
         tvStationsMessage.setVisibility(View.VISIBLE);
+        searchNotFoundPanel.setVisibility(View.GONE);
     }
 
     /**

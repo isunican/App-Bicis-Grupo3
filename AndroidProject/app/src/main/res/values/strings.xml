@@ -35,6 +35,14 @@
 
     <!-- Buscar estación por nombre (HU 532314) -->
     <string name="menuSearch">Buscar estación por nombre</string>
+    <string name="searchNotFound">No existe ninguna estación con ese nombre</string>
+    <string name="searchSuggestionTitle">¿Quizás quisiste decir...?</string>
+    <string name="searchSuggestionHint">Pulsa la sugerencia para ver su ubicación.</string>
+    <string name="searchNoSuggestion">No hay sugerencias similares.\n\nBorra el texto para intentar otra búsqueda.</string>
+    <string name="stationBikes">Bicis disponibles: %s</string>
+    <string name="stationLocationLatitude">Latitud: %s</string>
+    <string name="stationLocationLongitude">Longitud: %s</string>
+    <string name="stationLocationClose">Cerrar</string>
 
     <!-- Ver información detallada de la red (US532200) -->
     <string name="detailsTitle">Detalles de la red</string>
