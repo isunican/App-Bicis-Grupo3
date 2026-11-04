@@ -58,4 +58,15 @@
     <string name="filterEmptySlotsActive">Con al menos %d huecos libres</string>
     <string name="filterEmptySlotsNoResults">No hay estaciones con los huecos libres seleccionados</string>
     <string name="filterSubtitleSeparator">" · "</string>
+
+    <!-- Filtro de estaciones por distancia (HU 532304) -->
+    <string name="filterDistanceSwitch">Filtrar por distancia</string>
+    <string name="filterDistanceLabel">Distancia máxima</string>
+    <string name="filterDistanceHint">km</string>
+    <string name="filterDistanceUnit">km</string>
+    <string name="filterDistanceUnavailable">No se conoce tu ubicación: no se puede filtrar por distancia</string>
+    <string name="distanceFilterInvalid">Introduce un número mayor que 0</string>
+    <string name="distanceFilterActive">A menos de %s</string>
+    <string name="distanceFilterNoResults">No hay estaciones dentro de la distancia seleccionada</string>
+    <string name="distanceLocationUnavailable">No se puede obtener tu ubicación para filtrar por distancia</string>
 </resources>

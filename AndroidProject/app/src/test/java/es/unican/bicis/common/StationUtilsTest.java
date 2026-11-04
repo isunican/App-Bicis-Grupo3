@@ -160,4 +160,28 @@ public class StationUtilsTest {
     public void ordenarPorHuecosUnaListaNullDevuelveListaVacia() {
         assertTrue(StationUtils.sortByEmptySlots(null).isEmpty());
     }
+
+    // ── HU 532304: distancia junto al nombre de la estación (tarea 978139) ──
+
+    @Test
+    public void formatDistance_menosDeUnKm_seMuestraEnMetros() {
+        assertEquals("350 m", StationUtils.formatDistance(0.35));
+    }
+
+    @Test
+    public void formatDistance_unKmOMas_seMuestraEnKmConUnDecimal() {
+        assertEquals("1,0 km", StationUtils.formatDistance(1.0));
+        assertEquals("2,5 km", StationUtils.formatDistance(2.46));
+    }
+
+    @Test
+    public void formatDistance_casiUnKm_seRedondeaAKm() {
+        // 999,6 m se redondean a 1000 m, así que se muestra en km
+        assertEquals("1,0 km", StationUtils.formatDistance(0.9996));
+    }
+
+    @Test
+    public void formatDistance_sinDistancia_devuelveSinDato() {
+        assertEquals(StationUtils.NO_DATA, StationUtils.formatDistance(null));
+    }
 }

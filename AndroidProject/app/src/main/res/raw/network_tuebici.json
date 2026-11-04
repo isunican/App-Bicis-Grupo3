@@ -717,8 +717,6 @@
             {
                 "id": "e353498d91985c1661b0ccbaa95ddd46",
                 "name": "Valdenoja 2 (NE)",
-                "latitude": 43.47913,
-                "longitude": -3.801948,
                 "timestamp": "2026-09-24T11:11:30.549656+00:00Z",
                 "free_bikes": 0,
                 "empty_slots": 8,

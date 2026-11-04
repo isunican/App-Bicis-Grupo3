@@ -43,6 +43,8 @@ public class Station {
 
     @SerializedName("extra")                protected StationExtra extra;
 
+
+
     /**
      * Devuelve el número de bicis eléctricas disponibles en la estación.
      * @return número de bicis eléctricas, o null si la red no informa de ese dato
