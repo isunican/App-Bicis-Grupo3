@@ -49,12 +49,20 @@ public class StationsPresenterSearchITest {
     /** Numero de estaciones de la red TUeBICI en network_tuebici.json */
     private static final int TUEBICI_STATIONS = 42;
 
+    /** Vista simulada: la unica clase que no es real en estas pruebas */
     private IStationsContract.View mockView;
+
+
+    /** Presenter bajo prueba */
     private StationsPresenter sut;
 
     /** Estaciones que muestra la vista tras init, en el orden en que se muestran */
     private List<Station> initialStations;
 
+    /**
+     * Inicializa el presenter con la red TUeBICI y el repositorio JSON real, comprueba
+     * que se muestran sus 42 estaciones y guarda la lista inicial para comparar.
+     */
     @Before
     public void setUp() {
         Context context = ApplicationProvider.getApplicationContext();
