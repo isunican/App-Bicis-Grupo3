@@ -227,13 +227,13 @@ public interface IStationsContract {
          */
         public void showDistanceFilterActive(double maxDistKm);
 
-    }
 
-    /**
-     * The view is requested to display the list of stations with their distances.
-     * Only the Presenter should call this method.
-     * @param stations the stations already sorted by distance
-     * @param distances map from station to its distance in km; null if no distance available
-     */
-    public void showStationsWithDistance(List<Station> stations, Map<Station, Double> distances);
+        /**
+         * The view is requested to display the list of stations with their distances.
+         * Only the Presenter should call this method.
+         * @param stations the stations already sorted by distance
+         * @param distances map from station to its distance in km; null if no distance available
+         */
+        public void showStationsWithDistance(List<Station> stations, Map<Station, Double> distances);
+    }
 }

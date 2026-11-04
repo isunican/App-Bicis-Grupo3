@@ -23,6 +23,7 @@ import androidx.core.content.IntentCompat;
 import org.parceler.Parcels;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 
@@ -347,9 +348,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
 
     @Override
     public void showInvalidMaxDistance() {
-        if (distanceFilterInput != null) {
-            distanceFilterInput.setError(getString(R.string.distanceFilterInvalid));
-        }
+        // Se implementa en la 978139
     }
 
     @Override
@@ -357,7 +356,6 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         // implementado en HU 978139
     }
 
-    @Override
     public void showActiveFiltersCount(int count) {
         // implementado en HU 978139
     }
