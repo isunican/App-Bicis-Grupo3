@@ -32,15 +32,6 @@
     <string name="filterActive">Con al menos %d bicis libres</string>
     <string name="filterNoResults">No hay estaciones con al menos %d bicis libres</string>
 
-    <!-- Filtro de estaciones por distancia -->
-    <string name="menuDistanceFilter">Filtrar por distancia</string>
-    <string name="distanceFilterTitle">Filtrar por distancia</string>
-    <string name="distanceFilterHint">Distancia máxima (km)</string>
-    <string name="distanceFilterInvalid">Introduce un número mayor que 0</string>
-    <string name="distanceFilterActive">A menos de %.1f km</string>
-    <string name="distanceFilterNoResults">No hay estaciones a menos de %.1f km</string>
-    <string name="distanceLocationUnavailable">No se puede obtener tu ubicación para filtrar por distancia</string>
-
     <!-- Buscar estación por nombre (HU 532314) -->
     <string name="menuSearch">Buscar estación por nombre</string>
     <string name="searchNotFound">No existe ninguna estación con ese nombre</string>
@@ -67,4 +58,10 @@
     <string name="filterEmptySlotsActive">Con al menos %d huecos libres</string>
     <string name="filterEmptySlotsNoResults">No hay estaciones con los huecos libres seleccionados</string>
     <string name="filterSubtitleSeparator">" · "</string>
+
+    <!-- Filtro de estaciones por distancia (HU 532304) -->
+    <string name="distanceFilterInvalid">Introduce un número mayor que 0</string>
+    <string name="distanceFilterActive">A menos de %.1f km</string>
+    <string name="distanceFilterNoResults">No hay estaciones a menos de %.1f km</string>
+    <string name="distanceLocationUnavailable">No se puede obtener tu ubicación para filtrar por distancia</string>
 </resources>

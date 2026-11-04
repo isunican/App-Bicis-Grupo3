@@ -33,8 +33,8 @@ import org.parceler.Parcels;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Locale;
+import java.util.Map;
 
 import javax.inject.Inject;
 
@@ -262,7 +262,6 @@ public class StationsView extends AppCompatActivity implements IStationsContract
             return true;
         }
         return super.onOptionsItemSelected(item);
-
     }
 
     /**
@@ -272,7 +271,6 @@ public class StationsView extends AppCompatActivity implements IStationsContract
      * errors can be shown inside it. "Quitar filtros" is only enabled if
      * there is any filter active.
      */
-
     private void openFilterDialog() {
         View content = getLayoutInflater().inflate(R.layout.dialog_filters, null);
         filterInput = content.findViewById(R.id.etMinFreeBikes);
@@ -615,6 +613,64 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         return String.format(Locale.ROOT, "%.4f", value);
     }
 
+    // ── HU 532304 Filtrar por distancia ──────────────────────────────
+    // El selector de distancia del diálogo y la ubicación real se implementan en la tarea 978139.
+
+    /**
+     * @see IStationsContract.View#getUserLocation()
+     * @return the location of the user, or null if it is not available
+     */
+    @Override
+    public double[] getUserLocation() {
+        // Se implementa en la tarea 978139 (ubicación real del usuario)
+        return null;
+    }
+
+    /**
+     * @see IStationsContract.View#showNoStationsWithinDistance(double)
+     * @param maxDistKm the maximum distance requested, in km
+     */
+    @Override
+    public void showNoStationsWithinDistance(double maxDistKm) {
+        showMessage(getString(R.string.distanceFilterNoResults, maxDistKm));
+    }
+
+    /**
+     * @see IStationsContract.View#showLocationUnavailableForFilter()
+     */
+    @Override
+    public void showLocationUnavailableForFilter() {
+        showMessage(getString(R.string.distanceLocationUnavailable));
+    }
+
+    /**
+     * @see IStationsContract.View#showInvalidMaxDistance()
+     */
+    @Override
+    public void showInvalidMaxDistance() {
+        // Se implementa en la tarea 978139 (campo de distancia del diálogo de filtros)
+    }
+
+    /**
+     * @see IStationsContract.View#showDistanceFilterActive(double)
+     * @param maxDistKm the maximum distance of the active filter, in km
+     */
+    @Override
+    public void showDistanceFilterActive(double maxDistKm) {
+        // Se implementa en la tarea 978139 (subtítulo con la distancia elegida)
+    }
+
+    /**
+     * @see IStationsContract.View#showStationsWithDistance(List, Map)
+     * @param stations the stations sorted by distance
+     * @param distances the distance of each station, in km
+     */
+    @Override
+    public void showStationsWithDistance(List<Station> stations, Map<Station, Double> distances) {
+        // La distancia junto al nombre se implementa en la tarea 978139
+        showStations(stations);
+    }
+
     /**
      * Indicates whether any filter is active, to enable the "Quitar filtros" button.
      * A filter is active if the presenter has reported it (number over the filter icon)
@@ -685,42 +741,6 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     public boolean onSupportNavigateUp() {
         finish();
         return true;
-    }
-
-    @Override
-    public double[] getUserLocation() {
-        // TODO Sprint 2: obtener ubicación real con FusedLocationProvider
-        // Por ahora devuelve null → el presenter mostrará el error de ubicación no disponible
-        return null;
-    }
-
-    @Override
-    public void showNoStationsWithinDistance(double maxDistKm) {
-        showMessage(getString(R.string.distanceFilterNoResults, maxDistKm));
-    }
-
-    @Override
-    public void showLocationUnavailableForFilter() {
-        showMessage(getString(R.string.distanceLocationUnavailable));
-    }
-
-    @Override
-    public void showInvalidMaxDistance() {
-        // Se implementa en la 978139
-    }
-
-    @Override
-    public void showDistanceFilterActive(double maxDistKm) {
-        // implementado en HU 978139
-    }
-
-    public void showActiveFiltersCount(int count) {
-        // implementado en HU 978139
-    }
-    @Override
-    public void showStationsWithDistance(List<Station> stations, Map<Station, Double> distances) {
-        // TODO: implementado por HU 978139 (vista) - mostrar distancias en la lista
-        showStations(stations);  // fallback temporal: muestra sin distancia
     }
 
 }

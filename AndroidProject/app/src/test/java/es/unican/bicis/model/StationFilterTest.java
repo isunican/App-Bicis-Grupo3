@@ -16,13 +16,19 @@ import java.util.List;
  */
 public class StationFilterTest {
 
-    // --- Datos para pruebas de bicis libres ---
     private Station s0;       // 0 free bikes
     private Station s3;       // 3 free bikes
     private Station s5;       // 5 free bikes
     private Station sNull;    // does not report free bikes
     private Station sNeg;     // invalid value (negative)
     private List<Station> stations;
+
+    // HU 532335: estaciones para el filtro por huecos (lista L del plan de pruebas)
+    private Station h0;       // 0 empty slots
+    private Station h4;       // 4 empty slots
+    private Station h7;       // 7 empty slots
+    private Station hNull;    // does not report empty slots
+    private Station hNeg;     // invalid value (negative)
 
     // --- Datos para pruebas de distancia ---
     private static final double USER_LAT = 43.4623;
@@ -34,12 +40,23 @@ public class StationFilterTest {
     private Station sD; // ~1.5 km
     private Station sE; // Sin coordenadas
 
-    // HU 532335: estaciones para el filtro por huecos (lista L del plan de pruebas)
-    private Station h0;       // 0 empty slots
-    private Station h4;       // 4 empty slots
-    private Station h7;       // 7 empty slots
-    private Station hNull;    // does not report empty slots
-    private Station hNeg;     // invalid value (negative)
+    private void setUpDistanceStations() {
+        sA = createStationWithCoords("A", 43.4649, -3.8099);
+        sB = createStationWithCoords("B", 43.4695, -3.8099);
+        sC = createStationWithCoords("C", 43.47129, -3.8099); // Ajustado para dar < 1.0 km
+        sD = createStationWithCoords("D", 43.4758, -3.8099);
+        sE = new Station();
+        sE.setName("E sin coordenadas");
+    }
+
+    private Station createStationWithCoords(String name, Double lat, Double lon) {
+        Station station = new Station();
+        station.setName(name);
+        station.setLatitude(lat);
+        station.setLongitude(lon);
+        return station;
+    }
+
     private List<Station> stationsSlots;
 
     @Before
@@ -80,31 +97,12 @@ public class StationFilterTest {
         return station;
     }
 
-    private void setUpDistanceStations() {
-        sA = createStationWithCoords("A", 43.4649, -3.8099);
-        sB = createStationWithCoords("B", 43.4695, -3.8099);
-        sC = createStationWithCoords("C", 43.47129, -3.8099); // Ajustado para dar < 1.0 km
-        sD = createStationWithCoords("D", 43.4758, -3.8099);
-        sE = new Station();
-        sE.setName("E sin coordenadas");
-    }
-
-    private Station createStationWithCoords(String name, Double lat, Double lon) {
-        Station station = new Station();
-        station.setName(name);
-        station.setLatitude(lat);
-        station.setLongitude(lon);
-        return station;
-    }
-
-    // =====================================================================
-    // Pruebas de filterByMinFreeBikes
-    // =====================================================================
 
     /** UFE.1a: mínimo 3, se devuelven las estaciones con 3 o más bicis libres. */
     @Test
     public void testFilterReturnsStationsWithAtLeastMinimum() {
         List<Station> result = StationFilter.filterByMinFreeBikes(stations, 3);
+
         assertEquals(Arrays.asList(s3, s5), result);
     }
 
@@ -112,6 +110,7 @@ public class StationFilterTest {
     @Test
     public void testFilterIncludesStationsEqualToMinimum() {
         List<Station> result = StationFilter.filterByMinFreeBikes(stations, 5);
+
         assertEquals(Arrays.asList(s5), result);
     }
 
@@ -119,6 +118,7 @@ public class StationFilterTest {
     @Test
     public void testFilterWithMinimumZeroReturnsAllStationsWithValidData() {
         List<Station> result = StationFilter.filterByMinFreeBikes(stations, 0);
+
         assertEquals(Arrays.asList(s0, s3, s5), result);
     }
 
@@ -126,7 +126,9 @@ public class StationFilterTest {
     @Test
     public void testFilterDoesNotModifyOriginalList() {
         List<Station> original = new ArrayList<>(stations);
+
         StationFilter.filterByMinFreeBikes(stations, 3);
+
         assertEquals(original, stations);
     }
 
@@ -135,6 +137,7 @@ public class StationFilterTest {
     @Test
     public void testFilterWithMinimumAboveAllReturnsEmpty() {
         List<Station> result = StationFilter.filterByMinFreeBikes(stations, 6);
+
         assertTrue(result.isEmpty());
     }
 
@@ -142,13 +145,17 @@ public class StationFilterTest {
     @Test
     public void testFilterEmptyListReturnsEmpty() {
         List<Station> result = StationFilter.filterByMinFreeBikes(new ArrayList<>(), 1);
+
         assertTrue(result.isEmpty());
     }
+
+    // ---------- Valores no válidos ----------
 
     /** UFE.1f: lista de estaciones null: lista vacía. */
     @Test
     public void testFilterNullListReturnsEmpty() {
         List<Station> result = StationFilter.filterByMinFreeBikes(null, 1);
+
         assertTrue(result.isEmpty());
     }
 
@@ -156,6 +163,7 @@ public class StationFilterTest {
     @Test
     public void testFilterNegativeMinimumReturnsEmpty() {
         List<Station> result = StationFilter.filterByMinFreeBikes(stations, -1);
+
         assertTrue(result.isEmpty());
     }
 
@@ -164,7 +172,9 @@ public class StationFilterTest {
     @Test
     public void testFilterExcludesStationsWithoutDataOrInvalidData() {
         List<Station> onlyBadStations = Arrays.asList(sNull, sNeg, null);
+
         List<Station> result = StationFilter.filterByMinFreeBikes(onlyBadStations, 0);
+
         assertTrue(result.isEmpty());
     }
 
@@ -176,19 +186,6 @@ public class StationFilterTest {
         assertFalse(StationFilter.hasValidFreeBikes(sNull));
         assertFalse(StationFilter.hasValidFreeBikes(sNeg));
         assertFalse(StationFilter.hasValidFreeBikes(null));
-    }
-
-    // =====================================================================
-    // HU 532304 — Pruebas de filterByMaxDistance
-    // =====================================================================
-
-    /** UFD.1a: maxDistKm=1.0 -> [A, B, C] (A, B y C a <= 1 km) */
-    @Test
-    public void testFilterByMaxDistanceSuccess() {
-        setUpDistanceStations();
-        List<Station> input = Arrays.asList(sA, sB, sC, sD, sE);
-        List<Station> result = StationFilter.filterByMaxDistance(input, USER_LAT, USER_LON, 1.0);
-        assertEquals(Arrays.asList(sA, sB, sC, sE), result);
     }
 
     // HU 532335 - Filtrar las estaciones por huecos disponibles
@@ -251,6 +248,41 @@ public class StationFilterTest {
         List<Station> result = StationFilter.filterByMinEmptySlots(onlyBadStations, 1);
 
         assertTrue(result.isEmpty());
+    }
+
+    /** UFH.1j: se mantiene el orden de entrada y la lista original no se modifica. */
+    @Test
+    public void testFilterByMinEmptySlotsKeepsOrderAndDoesNotModifyList() {
+        List<Station> input = Arrays.asList(h7, h0, h4);
+        List<Station> original = new ArrayList<>(input);
+
+        List<Station> result = StationFilter.filterByMinEmptySlots(input, 4);
+
+        assertEquals(Arrays.asList(h7, h4), result);
+        assertEquals(original, input);
+    }
+
+    /** UFH.2a-2e: hasValidEmptySlots con 0, 7, sin dato, negativo y estación null. */
+    @Test
+    public void testHasValidEmptySlots() {
+        assertTrue(StationFilter.hasValidEmptySlots(h0));       // UFH.2a (valor límite)
+        assertTrue(StationFilter.hasValidEmptySlots(h7));       // UFH.2b
+        assertFalse(StationFilter.hasValidEmptySlots(hNull));   // UFH.2c
+        assertFalse(StationFilter.hasValidEmptySlots(hNeg));    // UFH.2d
+        assertFalse(StationFilter.hasValidEmptySlots(null));    // UFH.2e
+    }
+
+    // =====================================================================
+    // HU 532304 — Pruebas de filterByMaxDistance
+    // =====================================================================
+
+    /** UFD.1a: maxDistKm=1.0 -> [A, B, C] (A, B y C a <= 1 km) */
+    @Test
+    public void testFilterByMaxDistanceSuccess() {
+        setUpDistanceStations();
+        List<Station> input = Arrays.asList(sA, sB, sC, sD, sE);
+        List<Station> result = StationFilter.filterByMaxDistance(input, USER_LAT, USER_LON, 1.0);
+        assertEquals(Arrays.asList(sA, sB, sC, sE), result);
     }
 
     /** UFD.1b: maxDistKm=0.5 -> [A] (solo A a <= 0,5 km) */
@@ -373,27 +405,5 @@ public class StationFilterTest {
     public void testHasValidCoordinatesOutOfRange() {
         Station s = createStationWithCoords("Out of range", 91.0, -3.81);
         assertFalse(StationFilter.hasValidCoordinates(s));
-    }
-}
-    /** UFH.1j: se mantiene el orden de entrada y la lista original no se modifica. */
-    @Test
-    public void testFilterByMinEmptySlotsKeepsOrderAndDoesNotModifyList() {
-        List<Station> input = Arrays.asList(h7, h0, h4);
-        List<Station> original = new ArrayList<>(input);
-
-        List<Station> result = StationFilter.filterByMinEmptySlots(input, 4);
-
-        assertEquals(Arrays.asList(h7, h4), result);
-        assertEquals(original, input);
-    }
-
-    /** UFH.2a-2e: hasValidEmptySlots con 0, 7, sin dato, negativo y estación null. */
-    @Test
-    public void testHasValidEmptySlots() {
-        assertTrue(StationFilter.hasValidEmptySlots(h0));       // UFH.2a (valor límite)
-        assertTrue(StationFilter.hasValidEmptySlots(h7));       // UFH.2b
-        assertFalse(StationFilter.hasValidEmptySlots(hNull));   // UFH.2c
-        assertFalse(StationFilter.hasValidEmptySlots(hNeg));    // UFH.2d
-        assertFalse(StationFilter.hasValidEmptySlots(null));    // UFH.2e
     }
 }

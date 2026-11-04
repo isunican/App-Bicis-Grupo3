@@ -4,34 +4,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Filtra las estaciones de una red de bicicletas compartidas según distintos criterios.
- *
- * <p>Todos los métodos son estáticos. Esta clase no se instancia.</p>
+ * Filters the stations of a bike sharing network according to their number of free bikes,
+ * their number of empty slots or their distance to the user.
  */
 public class StationFilter {
 
-    // Constructor privado: clase de utilidades estáticas
+    // Private constructor: this class only has static methods
     private StationFilter() {
     }
 
-    // =========================================================================
-    // HU 532376 — Filtrar las estaciones por número mínimo de bicis libres
-    // =========================================================================
-
     /**
-     * Devuelve únicamente las estaciones cuyo número de bicis libres es igual o
-     * superior al mínimo indicado.
+     * Returns only the stations whose number of free bikes is equal to or greater than the given minimum.
+     * Stations that do not report their free bikes (null) or report an invalid value (negative)
+     * are excluded, since it cannot be guaranteed that they have bikes.
      *
-     * <p>Las estaciones que no informan de sus bicis libres ({@code null}) o que
-     * informan de un valor no válido (negativo) se excluyen, porque no se puede
-     * garantizar que tengan bicis disponibles.</p>
-     *
-     * @param stations     lista de estaciones a filtrar (puede ser {@code null})
-     * @param minFreeBikes número mínimo de bicis libres requerido
-     * @return nueva lista con las estaciones que cumplen la condición, en el mismo
-     *         orden que en la lista de entrada.
-     *         Es vacía si ninguna cumple la condición, si la lista es {@code null}
-     *         o si el mínimo es negativo.
+     * @param stations the stations to filter (may be null)
+     * @param minFreeBikes the minimum number of free bikes
+     * @return a new list with the stations that fulfil the condition, in the same order.
+     *         It is empty if no station fulfils it, if the list is null or if the minimum is negative.
      */
     public static List<Station> filterByMinFreeBikes(List<Station> stations, int minFreeBikes) {
         List<Station> result = new ArrayList<>();
@@ -47,66 +37,13 @@ public class StationFilter {
     }
 
     /**
-     * Comprueba si una estación informa de un número válido de bicis libres.
+     * Checks whether a station reports a valid number of free bikes.
      *
-     * <p>Se considera válido un valor no {@code null} y no negativo.</p>
-     *
-     * @param station estación a comprobar
-     * @return {@code true} si la estación no es {@code null}, sus bicis libres no
-     *         son {@code null} y el valor es mayor o igual que cero
+     * @param station the station to check
+     * @return true if the station is not null and its free bikes are not null and not negative
      */
     public static boolean hasValidFreeBikes(Station station) {
-        return station != null
-                && station.getFreeBikes() != null
-                && station.getFreeBikes() >= 0;
-    }
-
-    // =========================================================================
-    // HU 532304 — Filtrar las estaciones por distancia
-    // =========================================================================
-
-    /**
-     * Devuelve únicamente las estaciones que se encuentran a una distancia igual o
-     * inferior a {@code maxDistKm} kilómetros de la posición del usuario.
-     *
-     * <p>La distancia se calcula con la fórmula de Haversine. Las estaciones que
-     * no informan de sus coordenadas (latitud o longitud {@code null}) se excluyen,
-     * ya que no es posible calcular su distancia.</p>
-     *
-     * @param stations   lista de estaciones a filtrar (puede ser {@code null})
-     * @param userLat    latitud de la posición del usuario, en grados decimales
-     * @param userLon    longitud de la posición del usuario, en grados decimales
-     * @param maxDistKm  distancia máxima en kilómetros; debe ser estrictamente positiva
-     * @return nueva lista con las estaciones cuya distancia al usuario es menor o
-     *         igual a {@code maxDistKm}, en el mismo orden que en la lista de entrada.
-     *         Es vacía si ninguna cumple la condición, si la lista es {@code null}
-     *         o si {@code maxDistKm} no es positivo.
-     */
-    public static List<Station> filterByMaxDistance(
-            List<Station> stations, double userLat, double userLon, double maxDistKm) {
-
-        List<Station> dentro  = new ArrayList<>();
-        List<Station> sinCoords = new ArrayList<>();
-
-        if (stations == null || maxDistKm <= 0) {
-            return dentro; // lista vacía
-        }
-        for (Station station : stations) {
-            if (!hasValidCoordinates(station)) {
-                sinCoords.add(station);   // sin coords → al final
-            } else {
-                double dist = distanceKm(userLat, userLon,
-                        station.getLatitude(), station.getLongitude());
-                if (dist <= maxDistKm) {
-                    dentro.add(station);  // dentro del radio → incluida
-                }
-                // fuera del radio y con coords → descartada (no aparece)
-            }
-        }
-        if (!dentro.isEmpty()) {
-            dentro.addAll(sinCoords);
-        }
-        return dentro;
+        return station != null && station.getFreeBikes() != null && station.getFreeBikes() >= 0;
     }
 
     /**
@@ -148,7 +85,56 @@ public class StationFilter {
     public static boolean hasValidEmptySlots(Station station) {
         return station != null && station.getEmptySlots() != null && station.getEmptySlots() >= 0;
     }
-}
+
+    // =========================================================================
+    // HU 532304 — Filtrar las estaciones por distancia
+    // =========================================================================
+
+    /**
+     * Devuelve únicamente las estaciones que se encuentran a una distancia igual o
+     * inferior a {@code maxDistKm} kilómetros de la posición del usuario.
+     *
+     * <p>La distancia se calcula con la fórmula de Haversine. Las estaciones que
+     * no informan de sus coordenadas (no se puede calcular su distancia) se añaden
+     * al final, pero solo si hay al menos una estación dentro de la distancia.</p>
+     *
+     * @param stations   lista de estaciones a filtrar (puede ser {@code null})
+     * @param userLat    latitud de la posición del usuario, en grados decimales
+     * @param userLon    longitud de la posición del usuario, en grados decimales
+     * @param maxDistKm  distancia máxima en kilómetros; debe ser estrictamente positiva
+     * @return nueva lista con las estaciones cuya distancia al usuario es menor o
+     *         igual a {@code maxDistKm}, en el mismo orden que en la lista de entrada,
+     *         seguidas de las que no tienen coordenadas.
+     *         Es vacía si ninguna cumple la condición, si la lista es {@code null}
+     *         o si {@code maxDistKm} no es positivo.
+     */
+    public static List<Station> filterByMaxDistance(
+            List<Station> stations, double userLat, double userLon, double maxDistKm) {
+
+        List<Station> dentro  = new ArrayList<>();
+        List<Station> sinCoords = new ArrayList<>();
+
+        if (stations == null || maxDistKm <= 0) {
+            return dentro; // lista vacía
+        }
+        for (Station station : stations) {
+            if (!hasValidCoordinates(station)) {
+                sinCoords.add(station);   // sin coords → al final
+            } else {
+                double dist = distanceKm(userLat, userLon,
+                        station.getLatitude(), station.getLongitude());
+                if (dist <= maxDistKm) {
+                    dentro.add(station);  // dentro del radio → incluida
+                }
+                // fuera del radio y con coords → descartada (no aparece)
+            }
+        }
+        if (!dentro.isEmpty()) {
+            dentro.addAll(sinCoords);
+        }
+        return dentro;
+    }
+
     /**
      * Comprueba si una estación tiene coordenadas geográficas válidas.
      *

@@ -1,22 +1,18 @@
 package es.unican.bicis.activities.stations;
 
 import java.util.List;
+import java.util.Map;
 
 import es.unican.bicis.model.Network;
 import es.unican.bicis.model.Station;
 import es.unican.bicis.repository.INetworksRepository;
 
-import java.util.Map;
-
 /**
  * The Presenter-View contract for the Stations activity.
  * The Stations activity shows the stations of a bike sharing network,
- * allows to filter them by a minimum number of free bikes or by maximum
- * distance to the user, and gives access to the detailed information
- * of the network.
  * allows to filter them by a minimum number of free bikes and by a minimum
- * number of empty slots, allows to search a station by its name and gives access
- * to the detailed information of the network.
+ * number of empty slots and by a maximum distance to the user, allows to search a
+ * station by its name and gives access to the detailed information of the network.
  */
 public interface IStationsContract {
 
@@ -44,17 +40,6 @@ public interface IStationsContract {
         public void onFilterApplied(String minFreeBikesText);
 
         /**
-         * Devuelve la distancia máxima posible en la ciudad actual (en km),
-         * calculada como la mayor distancia entre cualquier par de estaciones
-         * con coordenadas válidas. Se usa como límite superior de la barra de distancia.
-         * Devuelve 0 si no hay suficientes estaciones con coordenadas.
-         * Solo la View debe llamar a este método.
-         *
-         * @return distancia máxima de la ciudad, en km
-         */
-        public double getMaxCityDistanceKm();
-
-        /**
          * The presenter is informed that the user wants to filter the stations
          * by a minimum number of empty slots (HU 532335).
          * A value of 0 shows all the stations of the network. Negative or non
@@ -64,6 +49,35 @@ public interface IStationsContract {
          * @param minEmptySlotsText the text introduced by the user
          */
         public void onMinEmptySlotsFilterApplied(String minEmptySlotsText);
+
+        /**
+         * The presenter is informed that the user wants to filter the stations
+         * by a maximum distance to their current location (HU 532304).
+         *
+         * The presenter asks the view for the user's location. If the location
+         * is not available, or if the introduced value is not a positive number,
+         * the presenter asks the view to show the appropriate error message.
+         * Otherwise, only the stations within the given distance are shown,
+         * sorted from the nearest to the farthest; the stations whose distance
+         * cannot be calculated go at the end. This filter is combined with the
+         * other active filters.
+         *
+         * Only the View should call this method.
+         *
+         * @param maxDistKmText the text introduced by the user (distance in km)
+         */
+        public void onDistanceFilterApplied(String maxDistKmText);
+
+        /**
+         * Returns the maximum distance (in km) from the user to the farthest station
+         * of the network with valid coordinates (HU 532304). It is used as the upper
+         * limit of the distance bar. Returns 0 if the location of the user is not
+         * available or no station has valid coordinates.
+         * Only the View should call this method.
+         *
+         * @return the maximum distance of the city, in km
+         */
+        public double getMaxCityDistanceKm();
 
         /**
          * Notifies the presenter that the user wants to remove
@@ -82,22 +96,6 @@ public interface IStationsContract {
          * Only the View should call this method
          */
         public void onInfoClicked();
-
-        /**
-         * The presenter is informed that the user wants to filter the stations
-         * by maximum distance to their current location.
-         *
-         * The presenter asks the view for the user's location. If the location
-         * is not available, or if the introduced value is not a positive number,
-         * the presenter asks the view to show the appropriate error message.
-         * Otherwise, only the stations within the given distance are shown,
-         * sorted by free bikes.
-         *
-         * Only the View should call this method.
-         *
-         * @param maxDistKmText the text introduced by the user (distance in km)
-         */
-        public void onDistanceFilterApplied(String maxDistKmText);
 
         /**
          * The presenter is informed that the user has pressed the search icon (magnifying glass)
@@ -260,7 +258,49 @@ public interface IStationsContract {
          */
         public void showNetworkDetails(Network network);
 
-        // ── HU Filtrar por distancia ──────────────────────────────────────
+        /**
+         * The view is requested to expand and display the station search field,
+         * ready for the user to type.
+         * Only the Presenter should call this method
+         */
+        public void showSearchField();
+
+        /**
+         * The view is requested to display, below the search field, the names of the
+         * given stations as suggestions, in the given order. The user can select one of them.
+         * An empty list hides the suggestions.
+         * Only the Presenter should call this method
+         * @param stations the stations to suggest (never null, may be empty)
+         */
+        public void showSearchSuggestions(List<Station> stations);
+
+        /**
+         * The view is requested to hide the list and display the message
+         * "No existe ninguna estación con ese nombre", because no station of the
+         * network contains the searched text.
+         * The message disappears the next time the view is requested to show stations.
+         * Only the Presenter should call this method
+         */
+        public void showStationNotFound();
+
+        /**
+         * The view is requested to display, together with the "station not found" message,
+         * the suggestion "¿Querías decir [name]?" with the station whose name is the most
+         * similar to the searched text. The user can select the suggestion.
+         * Only the Presenter should call this method
+         * @param station the most similar station (never null)
+         */
+        public void showSuggestion(Station station);
+
+        /**
+         * The view is requested to display the location (latitude and longitude)
+         * of the given station.
+         * Only the Presenter should call this method
+         * @param station the station whose location must be shown
+         */
+        public void showStationLocation(Station station);
+
+        // ── HU 532304 Filtrar por distancia ──────────────────────────────
 
         /**
          * Returns the user's current location as a two-element array {latitude, longitude},
@@ -304,55 +344,14 @@ public interface IStationsContract {
          */
         public void showDistanceFilterActive(double maxDistKm);
 
-
         /**
          * The view is requested to display the list of stations with their distances.
          * Only the Presenter should call this method.
          * @param stations the stations already sorted by distance
-         * @param distances map from station to its distance in km; null if no distance available
+         * @param distances map from station to its distance in km (stations without
+         *                  coordinates are not in the map)
          */
         public void showStationsWithDistance(List<Station> stations, Map<Station, Double> distances);
-        /**
-         * The view is requested to expand and display the station search field,
-         * ready for the user to type.
-         * Only the Presenter should call this method
-         */
-        public void showSearchField();
-
-        /**
-         * The view is requested to display, below the search field, the names of the
-         * given stations as suggestions, in the given order. The user can select one of them.
-         * An empty list hides the suggestions.
-         * Only the Presenter should call this method
-         * @param stations the stations to suggest (never null, may be empty)
-         */
-        public void showSearchSuggestions(List<Station> stations);
-
-        /**
-         * The view is requested to hide the list and display the message
-         * "No existe ninguna estación con ese nombre", because no station of the
-         * network contains the searched text.
-         * The message disappears the next time the view is requested to show stations.
-         * Only the Presenter should call this method
-         */
-        public void showStationNotFound();
-
-        /**
-         * The view is requested to display, together with the "station not found" message,
-         * the suggestion "¿Querías decir [name]?" with the station whose name is the most
-         * similar to the searched text. The user can select the suggestion.
-         * Only the Presenter should call this method
-         * @param station the most similar station (never null)
-         */
-        public void showSuggestion(Station station);
-
-        /**
-         * The view is requested to display the location (latitude and longitude)
-         * of the given station.
-         * Only the Presenter should call this method
-         * @param station the station whose location must be shown
-         */
-        public void showStationLocation(Station station);
 
     }
 }
