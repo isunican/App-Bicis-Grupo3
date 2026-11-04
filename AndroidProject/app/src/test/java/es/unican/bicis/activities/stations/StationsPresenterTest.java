@@ -24,7 +24,6 @@ import org.mockito.ArgumentCaptor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import es.unican.bicis.common.StationUtils;
 import es.unican.bicis.model.Location;
