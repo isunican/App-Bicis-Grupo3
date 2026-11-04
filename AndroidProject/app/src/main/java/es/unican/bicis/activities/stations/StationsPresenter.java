@@ -162,16 +162,6 @@ public class StationsPresenter implements IStationsContract.Presenter {
     }
 
     /**
-     * @see IStationsContract.Presenter#onSearchClicked()
-     */
-    @Override
-    public void onSearchClicked() {
-        if (view != null) {
-            view.showSearchField();
-        }
-    }
-
-    /**
      * @see IStationsContract.Presenter#onSearchTextChanged(String)
      * @param text the text introduced in the search field
      */

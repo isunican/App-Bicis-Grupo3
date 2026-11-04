@@ -425,14 +425,6 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         startActivity(intent);
     }
 
-   /**
-     * @see IStationsContract.View#showSearchField()
-     */
-    @Override
-    public void showSearchField() {
-        // TODO HU 532314: desplegar el campo de búsqueda (tarea de la vista)
-    }
-
     /**
      * @see IStationsContract.View#showSearchSuggestions(List)
      * @param stations the stations to suggest
