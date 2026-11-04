@@ -38,7 +38,7 @@ import es.unican.bicis.repository.StationsCallback;
  * The view and the repository are replaced by Mockito mocks.
  * Loading of the stations (UPR.2): HU 532377 Listar estaciones.
  * Filter by free bikes and access to the details (UPR.1, UPR.3, UPR.4): HU 532376 Filtrar estaciones.
- * Search by name (UPB): HU 532314 Buscar estación por nombre.
+ * Search by name and selection of a station (UPB.1, UPB.2, Tabla 5): HU 532314 Buscar estación por nombre.
  * Filter by empty slots (UPH.1): HU 532335 Filtrar estaciones por huecos.
  */
 public class StationsPresenterTest {
