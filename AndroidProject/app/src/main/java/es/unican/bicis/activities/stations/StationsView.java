@@ -57,6 +57,10 @@ import es.unican.bicis.repository.INetworksRepository;
  * View that displays the stations of a bike sharing network.
  * It follows the MVP pattern: all the logic is in {@link StationsPresenter},
  * this view only displays what the presenter tells it and forwards the user actions.
+ * The toolbar includes the station search (HU 532314 Buscar estación por nombre): every
+ * change of the text is sent to the presenter, the names of the matching stations are shown
+ * in a dropdown below the search field and, when no station matches, a panel shows the
+ * "not found" message with the suggestion of the most similar station.
  */
 @AndroidEntryPoint
 public class StationsView extends AppCompatActivity implements IStationsContract.View {
@@ -88,8 +92,14 @@ public class StationsView extends AppCompatActivity implements IStationsContract
 
     /** Panel shown when no station has the searched name, with the "¿Quizás quisiste decir...?" suggestion */
     private View searchNotFoundPanel;
+
+    /** Group of the not found panel with the suggestion title and the suggested station */
     private View suggestionGroup;
+
+    /** Name of the suggested station; pressing it shows the station location */
     private TextView tvSuggestion;
+
+    /** Message "No hay sugerencias similares", shown when no station is similar */
     private TextView tvNoSuggestion;
 
     /** Filter dialog currently open (null if it is closed) and its input fields */
@@ -127,12 +137,16 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     /** Search field displayed in the toolbar. */
     private SearchView stationSearchView;
 
-    /** Stations currently displayed in the suggestions dropdown. */
+    /**
+     * Stations currently displayed in the suggestions dropdown, in the same order as
+     * the rows of {@link #suggestionsAdapter}, to know which station the user selects.
+     */
     private List<Station> suggestedStations = new ArrayList<>();
 
     /**
-     * @see AppCompatActivity#onCreate(Bundle)
-     * @param savedInstanceState
+     * Links the view elements and creates the presenter with the network
+     * received in the intent ({@link #INTENT_NETWORK}).
+     * * @param savedInstanceState the saved state of the activity (not used)
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -191,7 +205,10 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     }
 
     /**
-     * Creates the stations toolbar menu and prepares the search suggestions.
+     * Creates the stations toolbar menu and prepares the station search (HU 532314).
+     * Every change of the text of the search field, and its submission, is sent to the
+     * presenter with {@link IStationsContract.Presenter#onSearchTextChanged(String)}.
+     * Selecting a name of the suggestions dropdown selects that station.
      *
      * @param menu the options menu
      * @return true if the menu has been created
@@ -260,10 +277,11 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     }
 
     /**
-     * Notifies the presenter when the user selects a station suggestion.
+     * Closes the suggestions dropdown and notifies the presenter that the user
+     * has selected the station in the given position of {@link #suggestedStations}.
      *
      * @param position position of the selected suggestion
-     * @return true if the selection was handled
+     * @return true if the selection was handled, false if the position is not valid
      */
     private boolean selectSuggestion(int position) {
         if (stationSearchView == null || presenter == null
@@ -294,7 +312,6 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     /**
      * This is called when an item in the action bar menu is selected.
      * @param item The menu item that was selected.
-     *
      * @return true if we have handled the selection
      */
     @Override
@@ -696,14 +713,8 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     }
 
     /**
-     * @see IStationsContract.View#showSearchField()
-     */
-    @Override
-    public void showSearchField() {
-        // TODO HU 532314: desplegar el campo de búsqueda (tarea de la vista)
-    }
-
-    /**
+     * Hides the list and shows the not found panel with the message
+     * "No hay sugerencias similares", until a suggestion is shown.
      * @see IStationsContract.View#showSearchSuggestions(List)
      * @param stations the stations to suggest
      */
@@ -775,6 +786,8 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     }
 
     /**
+     * Shows the name of the station in the not found panel. Pressing it
+     * informs the presenter that the user has selected that station.
      * @see IStationsContract.View#showSuggestion(Station)
      * @param station the most similar station
      */
@@ -787,6 +800,8 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     }
 
     /**
+     * Opens a dialog with the name of the station as title, its available bikes
+     * and its coordinates with four decimals.
      * @see IStationsContract.View#showStationLocation(Station)
      * @param station the station whose location must be shown
      */
@@ -878,6 +893,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     }
 
     /**
+     * Indicates whether any filter is active, to enable the "Quitar filtros" button.
      * Indicates whether any filter is active, to enable the "Quitar filtros" button.
      * A filter is active if the presenter has reported it (number over the filter icon)
      * or if its text is shown in the subtitle of the action bar.

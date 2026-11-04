@@ -280,16 +280,11 @@ public class StationsPresenter implements IStationsContract.Presenter {
     }
 
     /**
-     * @see IStationsContract.Presenter#onSearchClicked()
-     */
-    @Override
-    public void onSearchClicked() {
-        if (view != null) {
-            view.showSearchField();
-        }
-    }
-
-    /**
+     * Searches stations by name and, when there are no matches, finds the most
+     * similar station using {@link StationSearch#findMostSimilar(List, String)}.
+     * The search uses the complete list of loaded stations, sorted by free bikes.
+     * Does nothing if the presenter has not been initialized.
+     *
      * @see IStationsContract.Presenter#onSearchTextChanged(String)
      * @param text the text introduced in the search field
      */
@@ -316,7 +311,7 @@ public class StationsPresenter implements IStationsContract.Presenter {
         if (matches.isEmpty()) {
             view.showSearchSuggestions(new ArrayList<>());
             view.showStationNotFound();
-            view.showNetworkLocation(location + " · 0 estaciones");
+            view.showNetworkLocation(location + " \u00B7 0 estaciones");
             Station mostSimilar = StationSearch.findMostSimilar(stations, text);
             if (mostSimilar != null) {
                 view.showSuggestion(mostSimilar);
@@ -329,8 +324,8 @@ public class StationsPresenter implements IStationsContract.Presenter {
     }
 
     /**
-     * @see IStationsContract.Presenter#onStationSelected(Station)
-     * @param station the selected station
+     * Requests the view to show the location of the selected station.
+     * Does nothing if the station is null or the presenter has not been initialized.
      */
     @Override
     public void onStationSelected(Station station) {
@@ -443,12 +438,13 @@ public class StationsPresenter implements IStationsContract.Presenter {
     }
 
     /**
-     * Shows the given stations and their number in the header.
+     * Shows the given stations and their number in the header
+     * (e.g. "Santander, ES Â· 3 estaciones").
      * @param list the stations to show (not empty)
      */
     private void showStationList(List<Station> list) {
         view.showStations(list);
-        view.showNetworkLocation(location + " · " + list.size() + " estaciones");
+        view.showNetworkLocation(location + " \u00B7 " + list.size() + " estaciones");
     }
 
     /**
