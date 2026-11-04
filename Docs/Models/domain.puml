@@ -34,6 +34,7 @@ NetworksResponse *--> "*" Network : networks
 NetworkResponse *--> "1" Network : network
 
 ' HU 532377 Listar estaciones / HU 532376 Filtrar estaciones por bicis libres
+' HU 532335 Filtrar estaciones por huecos disponibles (emptySlots y metodos de StationFilter)
 class Station {
     - id : String
     - name : String
@@ -54,6 +55,8 @@ class StationExtra {
 class StationFilter {
     + {static} filterByMinFreeBikes(stations : List<Station>, minFreeBikes : int) : List<Station>
     + {static} hasValidFreeBikes(station : Station) : boolean
+    + {static} filterByMinEmptySlots(stations : List<Station>, minEmptySlots : int) : List<Station>
+    + {static} hasValidEmptySlots(station : Station) : boolean
 }
 
 Network *--> "*" Station : stations
