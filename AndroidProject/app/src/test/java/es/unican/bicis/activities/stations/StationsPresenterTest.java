@@ -1,7 +1,10 @@
 package es.unican.bicis.activities.stations;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -757,5 +760,238 @@ public class StationsPresenterTest {
 
         verify(mockView).showActiveFiltersCount(2);
         verify(mockView).showStations(Arrays.asList(both));
+    }
+
+    // =====================================================================
+    // Filtro por distancia (HU 532304 Filtrar estaciones por distancia)
+    // Pruebas unitarias UPD del plan de pruebas.
+    //
+    // Coordenadas de referencia (Santander):
+    //   usuario  → 43.4620, -3.8100
+    //   cerca    → 43.4630, -3.8120  (~0.17 km)
+    //   lejos    → 43.5200, -3.9000  (~7.6  km)
+    //   sinCoords → sin latitud/longitud
+    // =====================================================================
+
+    /** Latitud/longitud del usuario simulado (Santander centro). */
+    private static final double USER_LAT = 43.4620;
+    private static final double USER_LON = -3.8100;
+
+    /** Ubicación del usuario como array {lat, lon}, devuelta por getUserLocation(). */
+    private static final double[] USER_LOCATION = {USER_LAT, USER_LON};
+
+    /** Crea una estación con coordenadas geográficas. */
+    private Station createStationWithCoords(String name, Integer freeBikes,
+                                            Double lat, Double lon) {
+        Station station = createStation(name, freeBikes);
+        station.setLatitude(lat);
+        station.setLongitude(lon);
+        return station;
+    }
+
+    /**
+     * Inicializa el presenter con estaciones que tienen distintas distancias al usuario
+     * y prepara el mock de getUserLocation() para devolver la ubicación del usuario.
+     */
+    private Station dCerca;
+    private Station dLejos;
+    private Station dSinCoords;
+
+    private void initPresenterWithDistanceStations() {
+        dCerca    = createStationWithCoords("Cerca",     3, 43.4630, -3.8120);  // ~0.17 km
+        dLejos    = createStationWithCoords("Lejos",     1, 43.5200, -3.9000);  // ~7.6  km
+        dSinCoords = createStation("Sin coordenadas",    2);                     // sin coords
+        initPresenterWith(Arrays.asList(dCerca, dSinCoords, dLejos));
+        when(mockView.getUserLocation()).thenReturn(USER_LOCATION);
+    }
+
+    /**
+     * UPD.1a: distancia "1" km → la estación cercana más la sin coordenadas al final
+     * (el modelo las incluye siempre que haya al menos una dentro del radio).
+     * El presenter muestra las estaciones con distancia, el filtro activo y el contador.
+     */
+    @Test
+    public void testDistanceFilterShowsNearbyStations() {
+        initPresenterWithDistanceStations();
+
+        sut.onDistanceFilterApplied("1");
+
+        verify(mockView).showDistanceFilterActive(1.0);
+        verify(mockView).showActiveFiltersCount(1);
+        // dCerca (dentro del radio) + dSinCoords (sin coords, va al final)
+        verify(mockView).showStationsWithDistance(eq(Arrays.asList(dCerca, dSinCoords)), any());
+        verify(mockView).showNetworkLocation("Santander, ES · 2 estaciones");
+        verify(mockView, never()).showNoStationsWithinDistance(anyDouble());
+        verify(mockView, never()).showInvalidMaxDistance();
+    }
+
+    /**
+     * UPD.1b: distancia "10" km → se incluyen la estación cercana y la lejana
+     * (ordenadas de más cercana a más lejana); la sin coordenadas se añade al final.
+     */
+    @Test
+    public void testDistanceFilterLargeRadioIncludesAll() {
+        initPresenterWithDistanceStations();
+
+        sut.onDistanceFilterApplied("10");
+
+        verify(mockView).showActiveFiltersCount(1);
+        ArgumentCaptor<List<Station>> captor = ArgumentCaptor.forClass(List.class);
+        verify(mockView).showStationsWithDistance(captor.capture(), any());
+        List<Station> shown = captor.getValue();
+        // La primera debe ser la más cercana; la sin coordenadas va al final
+        assertEquals(dCerca, shown.get(0));
+        assertEquals(dSinCoords, shown.get(shown.size() - 1));
+    }
+
+    /**
+     * UPD.1c: distancia 0.5 km (valor límite holgado): la estación cercana se incluye,
+     * la lejana no; la sin coordenadas aparece al final por comportamiento del modelo.
+     */
+    @Test
+    public void testDistanceFilterBoundaryStationIsIncluded() {
+        initPresenterWithDistanceStations();
+        // dCerca está a ~0.17 km → dentro; dLejos a ~7.6 km → fuera
+        sut.onDistanceFilterApplied("0.5");
+
+        ArgumentCaptor<List<Station>> captor = ArgumentCaptor.forClass(List.class);
+        verify(mockView).showStationsWithDistance(captor.capture(), any());
+        assertTrue(captor.getValue().contains(dCerca));
+        assertFalse(captor.getValue().contains(dLejos));
+        // dSinCoords se añade al final porque hay resultados dentro del radio
+        assertTrue(captor.getValue().contains(dSinCoords));
+    }
+
+    /**
+     * UPD.1d: distancia muy pequeña ("0.001" km): ninguna estación la cumple →
+     * se muestra el mensaje de sin resultados.
+     */
+    @Test
+    public void testDistanceFilterNoResultsShowsMessage() {
+        initPresenterWithDistanceStations();
+
+        sut.onDistanceFilterApplied("0.001");
+
+        verify(mockView).showDistanceFilterActive(0.001);
+        verify(mockView).showNoStationsWithinDistance(0.001);
+        verify(mockView).showNetworkLocation("Santander, ES");
+        verify(mockView, never()).showStationsWithDistance(anyList(), any());
+    }
+
+    /**
+     * UPD.1e: sin estaciones en la red y distancia "5" km → mensaje de sin resultados.
+     */
+    @Test
+    public void testDistanceFilterEmptyNetworkShowsNoResults() {
+        initPresenterWith(new ArrayList<>());
+        when(mockView.getUserLocation()).thenReturn(USER_LOCATION);
+
+        sut.onDistanceFilterApplied("5");
+
+        verify(mockView).showNoStationsWithinDistance(5.0);
+        verify(mockView, never()).showStationsWithDistance(anyList(), any());
+    }
+
+    /**
+     * UPD.1f: la ubicación del usuario no está disponible (getUserLocation devuelve null):
+     * se muestra el mensaje de ubicación no disponible y no se filtra.
+     */
+    @Test
+    public void testDistanceFilterLocationUnavailableShowsMessage() {
+        initPresenterWithDistanceStations();
+        when(mockView.getUserLocation()).thenReturn(null);
+
+        sut.onDistanceFilterApplied("2");
+
+        verify(mockView).showLocationUnavailableForFilter();
+        verify(mockView, never()).showDistanceFilterActive(anyDouble());
+        verify(mockView, never()).showStationsWithDistance(anyList(), any());
+        verify(mockView, never()).showNoStationsWithinDistance(anyDouble());
+    }
+
+    /**
+     * UPD.1g: valores no válidos ("0", "-1", "abc", "", null) →
+     * se muestra el mensaje de distancia no válida y no se filtra.
+     */
+    @Test
+    public void testDistanceFilterInvalidValuesShowError() {
+        String[] invalidValues = {"0", "-1", "abc", "", null};
+        for (String value : invalidValues) {
+            initPresenterWithDistanceStations();
+
+            sut.onDistanceFilterApplied(value);
+
+            verify(mockView).showInvalidMaxDistance();
+            verify(mockView, never()).showDistanceFilterActive(anyDouble());
+            verify(mockView, never()).showActiveFiltersCount(anyInt());
+            verify(mockView, never()).showStationsWithDistance(anyList(), any());
+            verify(mockView, never()).showNoStationsWithinDistance(anyDouble());
+        }
+    }
+
+    /**
+     * UPD.1h: distancia con coma decimal ("1,5" km): se acepta igual que "1.5".
+     */
+    @Test
+    public void testDistanceFilterAcceptsCommaAsDecimalSeparator() {
+        initPresenterWithDistanceStations();
+
+        sut.onDistanceFilterApplied("1,5");
+
+        verify(mockView).showDistanceFilterActive(1.5);
+        verify(mockView, never()).showInvalidMaxDistance();
+    }
+
+    /**
+     * UPD.1i: distancia " 1 " con espacios: se acepta como 1.0 km.
+     */
+    @Test
+    public void testDistanceFilterAcceptsValueWithSpaces() {
+        initPresenterWithDistanceStations();
+
+        sut.onDistanceFilterApplied(" 1 ");
+
+        verify(mockView).showDistanceFilterActive(1.0);
+        verify(mockView, never()).showInvalidMaxDistance();
+    }
+
+    /**
+     * UPD.1j: filtro de distancia activo + filtro de bicis activo (mínimo 1 bici):
+     * solo se muestran las estaciones que cumplen los dos filtros y el embudo indica 2.
+     */
+    @Test
+    public void testDistanceFilterCombinedWithFreeBikesFilter() {
+        Station cercaConBicis = createStationWithCoords("Cerca con bicis", 3, 43.4630, -3.8120);
+        Station cercaSinBicis = createStationWithCoords("Cerca sin bicis", 0, 43.4635, -3.8125);
+        initPresenterWith(Arrays.asList(cercaConBicis, cercaSinBicis));
+        when(mockView.getUserLocation()).thenReturn(USER_LOCATION);
+        sut.onFilterApplied("1");
+        clearInvocations(mockView);
+
+        sut.onDistanceFilterApplied("1");
+
+        verify(mockView).showActiveFiltersCount(2);
+        ArgumentCaptor<List<Station>> captor = ArgumentCaptor.forClass(List.class);
+        verify(mockView).showStationsWithDistance(captor.capture(), any());
+        assertEquals(Arrays.asList(cercaConBicis), captor.getValue());
+    }
+
+    /**
+     * UPD.1k: al quitar los filtros tras el filtro de distancia, se restaura
+     * la lista completa y el filtro de distancia queda inactivo.
+     */
+    @Test
+    public void testClearFilterAfterDistanceFilterRestoresFullList() {
+        initPresenterWithDistanceStations();
+        sut.onDistanceFilterApplied("1");
+        clearInvocations(mockView);
+
+        sut.onFilterCleared();
+
+        verify(mockView).showFilterInactive();
+        verify(mockView).showActiveFiltersCount(0);
+        // Debe llamar a showStations (no a showStationsWithDistance) con la lista completa
+        verify(mockView).showStations(anyList());
+        verify(mockView, never()).showStationsWithDistance(anyList(), any());
     }
 }

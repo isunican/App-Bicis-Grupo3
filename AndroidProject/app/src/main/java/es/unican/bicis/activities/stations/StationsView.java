@@ -199,7 +199,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
 
             @Override
             public void onFailure(Throwable e) {
-                userLocation = null;
+                // the last known location (if any) is kept
             }
         });
     }
@@ -388,11 +388,12 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         distanceInput = content.findViewById(R.id.etMaxDistance);
         TextView unavailable = content.findViewById(R.id.tvDistanceUnavailable);
 
+        // the location is updated every time the dialog is opened, so that the bar goes
+        // up to the farthest station from where the user is now (not from where he was
+        // when the screen was opened)
+        requestUserLocation();
         int maxTenths = (int) Math.ceil(presenter.getMaxCityDistanceKm() * 10);
         boolean available = maxTenths > 0;
-        if (!available) {
-            requestUserLocation();      // maybe it is known the next time the dialog is opened
-        }
         unavailable.setVisibility(available ? View.GONE : View.VISIBLE);
         distanceSwitch.setEnabled(available);
         distanceSwitch.setChecked(available && appliedDistanceOn);
