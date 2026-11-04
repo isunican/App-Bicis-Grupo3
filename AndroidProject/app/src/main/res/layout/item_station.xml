@@ -19,6 +19,17 @@
         android:textColor="?android:attr/textColorPrimary"
         android:maxLines="2" />
 
+    <!-- Distancia al usuario: solo se muestra con el filtro por distancia activo (HU 532304) -->
+    <TextView
+        android:id="@+id/tvStationDistance"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="2"
+        android:gravity="end"
+        android:textSize="12sp"
+        android:textColor="?android:attr/textColorSecondary"
+        android:visibility="gone" />
+
     <TextView
         android:id="@+id/tvStationBikes"
         android:layout_width="0dp"

@@ -1,7 +1,10 @@
 package es.unican.bicis.activities.stations;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import es.unican.bicis.common.StationUtils;
 import es.unican.bicis.model.Location;
@@ -17,6 +20,7 @@ import es.unican.bicis.repository.StationsCallback;
  * It loads the stations of a network and sorts them by free bikes (HU 532377 Listar estaciones),
  * filters them by a minimum number of free bikes (HU 532376 Filtrar estaciones) and by a minimum
  * number of empty slots (HU 532335 Filtrar estaciones por huecos) introduced by the user,
+ * filters them by a maximum distance to the user (HU 532304 Filtrar estaciones por distancia),
  * searches stations by their name (HU 532314 Buscar estación por nombre) and decides what the
  * view must show. The filters can be combined: a station is shown only if it satisfies all the
  * active filters.
@@ -53,6 +57,12 @@ public class StationsPresenter implements IStationsContract.Presenter {
      */
     private Integer minEmptySlots = null;
 
+    /** Maximum distance (km) of the active distance filter, or null if that filter is not active */
+    private Double maxDistKm = null;
+
+    /** Location of the user {latitude, longitude} when the distance filter was applied */
+    private double[] userLocation = null;
+
     /**
      * @see IStationsContract.Presenter#init(IStationsContract.View, Network)
      * @param view the view to control
@@ -66,6 +76,8 @@ public class StationsPresenter implements IStationsContract.Presenter {
         this.loadFailed = false;
         this.minFreeBikes = null;
         this.minEmptySlots = null;
+        this.maxDistKm = null;
+        this.userLocation = null;
 
         if (network == null) {
             loadFailed = true;
@@ -142,7 +154,7 @@ public class StationsPresenter implements IStationsContract.Presenter {
             view.showNoStationsWithMinFreeBikes(value);
             view.showNetworkLocation(location);
         } else {
-            showStationList(filtered);
+            showFilteredStations(filtered);
         }
     }
 
@@ -166,16 +178,68 @@ public class StationsPresenter implements IStationsContract.Presenter {
         if (activeFiltersCount() == 0) {
             showAllStations();
         } else if (!filtered.isEmpty()) {
-            showStationList(filtered);
+            showFilteredStations(filtered);
         } else {
             if (minEmptySlots != null) {
                 view.showNoStationsWithMinEmptySlots(value);
+            } else if (maxDistKm != null) {
+                view.showNoStationsWithinDistance(maxDistKm);
             } else {
                 // Only the free bikes filter is active and no station satisfies it
                 view.showNoStationsWithMinFreeBikes(minFreeBikes);
             }
             view.showNetworkLocation(location);
         }
+    }
+
+    /**
+     * @see IStationsContract.Presenter#onDistanceFilterApplied(String)
+     * @param maxDistKmText the text introduced by the user (distance in km)
+     */
+    @Override
+    public void onDistanceFilterApplied(String maxDistKmText) {
+        Double value = parseMaxDistance(maxDistKmText);
+        if (value == null) {
+            view.showInvalidMaxDistance();
+            return;
+        }
+        double[] currentLocation = view.getUserLocation();
+        if (currentLocation == null) {
+            view.showLocationUnavailableForFilter();
+            return;
+        }
+
+        maxDistKm = value;
+        userLocation = currentLocation;
+        view.showDistanceFilterActive(value);
+        List<Station> filtered = applyFilters();
+        if (filtered.isEmpty()) {
+            view.showNoStationsWithinDistance(value);
+            view.showNetworkLocation(location);
+        } else {
+            showFilteredStations(filtered);
+        }
+    }
+
+    /**
+     * @see IStationsContract.Presenter#getMaxCityDistanceKm()
+     * @return the distance from the user to the farthest station, in km
+     */
+    @Override
+    public double getMaxCityDistanceKm() {
+        double[] currentLocation = view.getUserLocation();
+        if (currentLocation == null) {
+            return 0;
+        }
+        double max = 0;
+        for (Station s : stations) {
+            if (StationFilter.hasValidCoordinates(s)) {
+                double d = StationFilter.distanceKm(
+                        currentLocation[0], currentLocation[1], s.getLatitude(), s.getLongitude());
+                max = Math.max(max, d);
+            }
+        }
+        return max;
     }
 
     /**
@@ -194,6 +258,8 @@ public class StationsPresenter implements IStationsContract.Presenter {
     public void onFilterCleared() {
         minFreeBikes = null;
         minEmptySlots = null;
+        maxDistKm = null;
+        userLocation = null;
         view.showFilterInactive();
         view.showActiveFiltersCount(0);
         try {
@@ -272,7 +338,9 @@ public class StationsPresenter implements IStationsContract.Presenter {
      * Applies all the active filters to the stations of the network and tells the view
      * how many filters are active.
      * If the empty slots filter is active, the result is sorted from more to fewer empty
-     * slots (HU 532335); otherwise it keeps the order of the complete list.
+     * slots (HU 532335). If the distance filter is active, the result is sorted from the
+     * nearest to the farthest station (HU 532304); this order prevails over the order by
+     * empty slots. Otherwise it keeps the order of the complete list.
      * @return the stations that satisfy all the active filters
      */
     private List<Station> applyFilters() {
@@ -284,13 +352,18 @@ public class StationsPresenter implements IStationsContract.Presenter {
             filtered = StationFilter.filterByMinEmptySlots(filtered, minEmptySlots);
             filtered = StationUtils.sortByEmptySlots(filtered);
         }
+        if (maxDistKm != null) {
+            filtered = StationFilter.filterByMaxDistance(
+                    filtered, userLocation[0], userLocation[1], maxDistKm);
+            filtered = sortByDistance(filtered, distancesTo(filtered));
+        }
         view.showActiveFiltersCount(activeFiltersCount());
         return filtered;
     }
 
     /**
      * Counts the filters that are active.
-     * @return the number of active filters (0, 1 or 2)
+     * @return the number of active filters (0 to 3)
      */
     private int activeFiltersCount() {
         int count = 0;
@@ -300,7 +373,54 @@ public class StationsPresenter implements IStationsContract.Presenter {
         if (minEmptySlots != null) {
             count++;
         }
+        if (maxDistKm != null) {
+            count++;
+        }
         return count;
+    }
+
+    /**
+     * Shows the filtered stations: with their distance to the user if the distance
+     * filter is active, or as a normal list otherwise.
+     * @param list the filtered stations (not empty)
+     */
+    private void showFilteredStations(List<Station> list) {
+        if (maxDistKm != null) {
+            view.showStationsWithDistance(list, distancesTo(list));
+            view.showNetworkLocation(location + " · " + list.size() + " estaciones");
+        } else {
+            showStationList(list);
+        }
+    }
+
+    /**
+     * Calculates the distance from the user to each station with valid coordinates.
+     * @param list the stations
+     * @return map from station to its distance in km (stations without coordinates are not included)
+     */
+    private Map<Station, Double> distancesTo(List<Station> list) {
+        Map<Station, Double> distances = new HashMap<>();
+        for (Station s : list) {
+            if (StationFilter.hasValidCoordinates(s)) {
+                distances.put(s, StationFilter.distanceKm(
+                        userLocation[0], userLocation[1], s.getLatitude(), s.getLongitude()));
+            }
+        }
+        return distances;
+    }
+
+    /**
+     * Sorts the stations from the nearest to the farthest. The stations without a
+     * distance (without coordinates) go at the end.
+     * @param list the stations to sort
+     * @param distances the distance of each station
+     * @return a new sorted list
+     */
+    private List<Station> sortByDistance(List<Station> list, Map<Station, Double> distances) {
+        List<Station> sorted = new ArrayList<>(list);
+        sorted.sort(Comparator.comparing(
+                distances::get, Comparator.nullsLast(Comparator.<Double>naturalOrder())));
+        return sorted;
     }
 
     /**
@@ -344,6 +464,24 @@ public class StationsPresenter implements IStationsContract.Presenter {
      */
     private Integer parseMinEmptySlots(String text) {
         return parseMinimum(text, MIN_EMPTY_SLOTS_FILTER_VALUE);
+    }
+
+    /**
+     * Converts the text introduced by the user into the maximum distance in km.
+     * A comma is accepted as decimal separator.
+     * @param text the text introduced by the user
+     * @return the value if it is a number strictly greater than 0, or null otherwise
+     */
+    private Double parseMaxDistance(String text) {
+        if (text == null) {
+            return null;
+        }
+        try {
+            double value = Double.parseDouble(text.trim().replace(",", "."));
+            return value > 0 ? value : null;
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     /**

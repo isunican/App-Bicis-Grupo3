@@ -1,6 +1,7 @@
 package es.unican.bicis.activities.stations;
 
 import java.util.List;
+import java.util.Map;
 
 import es.unican.bicis.model.Network;
 import es.unican.bicis.model.Station;
@@ -10,8 +11,8 @@ import es.unican.bicis.repository.INetworksRepository;
  * The Presenter-View contract for the Stations activity.
  * The Stations activity shows the stations of a bike sharing network,
  * allows to filter them by a minimum number of free bikes and by a minimum
- * number of empty slots, allows to search a station by its name and gives access
- * to the detailed information of the network.
+ * number of empty slots and by a maximum distance to the user, allows to search a
+ * station by its name and gives access to the detailed information of the network.
  */
 public interface IStationsContract {
 
@@ -48,6 +49,35 @@ public interface IStationsContract {
          * @param minEmptySlotsText the text introduced by the user
          */
         public void onMinEmptySlotsFilterApplied(String minEmptySlotsText);
+
+        /**
+         * The presenter is informed that the user wants to filter the stations
+         * by a maximum distance to their current location (HU 532304).
+         *
+         * The presenter asks the view for the user's location. If the location
+         * is not available, or if the introduced value is not a positive number,
+         * the presenter asks the view to show the appropriate error message.
+         * Otherwise, only the stations within the given distance are shown,
+         * sorted from the nearest to the farthest; the stations whose distance
+         * cannot be calculated go at the end. This filter is combined with the
+         * other active filters.
+         *
+         * Only the View should call this method.
+         *
+         * @param maxDistKmText the text introduced by the user (distance in km)
+         */
+        public void onDistanceFilterApplied(String maxDistKmText);
+
+        /**
+         * Returns the maximum distance (in km) from the user to the farthest station
+         * of the network with valid coordinates (HU 532304). It is used as the upper
+         * limit of the distance bar. Returns 0 if the location of the user is not
+         * available or no station has valid coordinates.
+         * Only the View should call this method.
+         *
+         * @return the maximum distance of the city, in km
+         */
+        public double getMaxCityDistanceKm();
 
         /**
          * Notifies the presenter that the user wants to remove
@@ -262,6 +292,59 @@ public interface IStationsContract {
          * @param station the station whose location must be shown
          */
         public void showStationLocation(Station station);
+
+        // ── HU 532304 Filtrar por distancia ──────────────────────────────
+
+        /**
+         * Returns the user's current location as a two-element array {latitude, longitude},
+         * or null if the location is not available (GPS off, permission denied, etc.).
+         * Only the Presenter should call this method.
+         *
+         * @return double[]{latitude, longitude} or null if unavailable
+         */
+        public double[] getUserLocation();
+
+        /**
+         * The view is requested to hide the list and display a message indicating
+         * that no station is within the given maximum distance from the user.
+         * Only the Presenter should call this method.
+         *
+         * @param maxDistKm the maximum distance requested by the user, in km
+         */
+        public void showNoStationsWithinDistance(double maxDistKm);
+
+        /**
+         * The view is requested to display an error indicating that the user's
+         * location is not available and therefore the distance filter cannot be applied.
+         * The filter that was active before, if any, remains unchanged.
+         * Only the Presenter should call this method.
+         */
+        public void showLocationUnavailableForFilter();
+
+        /**
+         * The view is requested to display an error indicating that the introduced
+         * distance value is not valid (it must be a positive number greater than 0).
+         * The filter that was active before, if any, remains unchanged.
+         * Only the Presenter should call this method.
+         */
+        public void showInvalidMaxDistance();
+
+        /**
+         * The view is requested to indicate that a distance filter is active.
+         * Only the Presenter should call this method.
+         *
+         * @param maxDistKm the maximum distance of the active filter, in km
+         */
+        public void showDistanceFilterActive(double maxDistKm);
+
+        /**
+         * The view is requested to display the list of stations with their distances.
+         * Only the Presenter should call this method.
+         * @param stations the stations already sorted by distance
+         * @param distances map from station to its distance in km (stations without
+         *                  coordinates are not in the map)
+         */
+        public void showStationsWithDistance(List<Station> stations, Map<Station, Double> distances);
 
     }
 }

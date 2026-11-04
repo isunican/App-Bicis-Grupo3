@@ -3,4 +3,7 @@
     <!-- Ids of the input fields of the filter dialog of StationsView (layout dialog_filters) -->
     <item name="etMinFreeBikes" type="id" />
     <item name="etMinEmptySlots" type="id" />
+    <item name="sbMaxDistance" type="id" />
+    <item name="etMaxDistance" type="id" />
+    <item name="tvDistanceUnavailable" type="id" />
 </resources>
