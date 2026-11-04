@@ -17,7 +17,9 @@ import es.unican.bicis.model.StationSearch;
  * The presenter of the stations activity of the application. It controls {@link StationsView}.
  * It loads the stations of a network and sorts them by free bikes (HU 532377 Listar estaciones),
  * filters them by a minimum number of free bikes introduced by the user (HU 532376 Filtrar
- * estaciones) and decides what the view must show.
+ * estaciones), searches them by name while the user types, suggesting the most similar
+ * station when none matches (HU 532314 Buscar estación por nombre), and decides what the
+ * view must show.
  */
 public class StationsPresenter implements IStationsContract.Presenter {
 
@@ -162,7 +164,8 @@ public class StationsPresenter implements IStationsContract.Presenter {
     }
 
     /**
-     * @see IStationsContract.Presenter#onSearchClicked()
+     * Requests the view to show the search field.
+     * Does nothing if the presenter has not been initialized (view is null).
      */
     @Override
     public void onSearchClicked() {
@@ -172,8 +175,11 @@ public class StationsPresenter implements IStationsContract.Presenter {
     }
 
     /**
-     * @see IStationsContract.Presenter#onSearchTextChanged(String)
-     * @param text the text introduced in the search field
+     * Searches the stations whose name contains the text with
+     * {@link StationSearch#searchByName(List, String)} and, if there are none, looks for the
+     * most similar one with {@link StationSearch#findMostSimilar(List, String)}.
+     * The search is always done over all the loaded stations, sorted by free bikes.
+     * Does nothing if the presenter has not been initialized (view is null).
      */
     @Override
     public void onSearchTextChanged(String text) {
@@ -211,8 +217,8 @@ public class StationsPresenter implements IStationsContract.Presenter {
     }
 
     /**
-     * @see IStationsContract.Presenter#onStationSelected(Station)
-     * @param station the selected station
+     * Requests the view to show the location of the selected station.
+     * Does nothing if the station is null or the presenter has not been initialized.
      */
     @Override
     public void onStationSelected(Station station) {
@@ -220,6 +226,7 @@ public class StationsPresenter implements IStationsContract.Presenter {
             view.showStationLocation(station);
         }
     }
+
     /**
      * Shows all the stations of the network, or the corresponding message
      * if they could not be loaded or there are none.
@@ -235,14 +242,15 @@ public class StationsPresenter implements IStationsContract.Presenter {
     }
 
     /**
-     * Shows the given stations and their number in the header.
+     * Shows the given stations and their number in the header
+     * (e.g. "Santander, ES · 3 estaciones").
      * @param list the stations to show (not empty)
      */
     private void showStationList(List<Station> list) {
         view.showStations(list);
         view.showNetworkLocation(location + " · " + list.size() + " estaciones");
     }
-//
+
     /**
      * Converts the text introduced by the user into the minimum number of free bikes.
      * @param text the text introduced by the user

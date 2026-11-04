@@ -58,20 +58,24 @@ public interface IStationsContract {
         /**
          * The presenter is informed that the user has pressed the search icon (magnifying glass)
          * of the toolbar. The presenter requests the view to show the search field.
-         * Only the View should call this method
+         * It does nothing if {@link #init(View, Network)} has not been called before.
          */
         public void onSearchClicked();
 
         /**
          * The presenter is informed that the text of the station search field has changed.
          * It is called every time the user adds or removes a letter, without pressing any button.
-         * The presenter requests the view to show the stations whose name contains the text
-         * (ignoring case and accents, in the same order as the list of stations), all the
-         * stations if the text is empty or blank, or the "station not found" message, together
-         * with the most similar station as a suggestion if there is one. It also requests the
-         * view to show, below the search field, the names of the matching stations as suggestions.
-         * Only the View should call this method
-         * @param text the text introduced in the search field (may be null or empty)
+         * It is called every time the user adds or removes a letter, without pressing any button,
+         * and also when the user submits the search.
+         * The search ignores case and accents and keeps the order of the list of stations.
+         * The presenter requests the view to show:
+         * if some station contains the text: those stations, their number in the
+         * header and their names as suggestions below the search field;
+         * if the text is null, empty or blank: all the stations, without suggestions;
+         * if no station contains the text: the "station not found" message, "0 estaciones"
+         * in the header and, if there is one, the most similar station as a suggestion;
+         * if the stations could not be loaded: the load error, without suggestions.
+         *
          */
         public void onSearchTextChanged(String text);
 
@@ -80,7 +84,7 @@ public interface IStationsContract {
          * search results or from the suggestion of the most similar station.
          * The presenter requests the view to show the location of that station.
          * Only the View should call this method
-         * @param station the selected station
+         * @param station the selected station (if null, nothing is shown)
          */
         public void onStationSelected(Station station);
 
@@ -190,7 +194,8 @@ public interface IStationsContract {
 
         /**
          * The view is requested to display, below the search field, the names of the
-         * given stations as suggestions, in the given order. The user can select one of them.
+         * given stations as suggestions, in the given order. When the user selects one of them,
+         * the view informs the presenter with {@link Presenter#onStationSelected(Station)}.
          * An empty list hides the suggestions.
          * Only the Presenter should call this method
          * @param stations the stations to suggest (never null, may be empty)
@@ -200,24 +205,27 @@ public interface IStationsContract {
         /**
          * The view is requested to hide the list and display the message
          * "No existe ninguna estación con ese nombre", because no station of the
-         * network contains the searched text.
-         * The message disappears the next time the view is requested to show stations.
+         * network contains the searched text. Until {@link #showSuggestion(Station)} is called,
+         * the view also indicates that there are no similar suggestions.
+         * The message disappears the next time the view is requested to show stations
+         * or another message.
          * Only the Presenter should call this method
          */
         public void showStationNotFound();
 
         /**
          * The view is requested to display, together with the "station not found" message,
-         * the suggestion "¿Querías decir [name]?" with the station whose name is the most
-         * similar to the searched text. The user can select the suggestion.
+         * the suggestion "¿Quizás quisiste decir...?" followed by the name of the station whose
+         * name is the most similar to the searched text. When the user selects the suggestion,
+         * the view informs the presenter with {@link Presenter#onStationSelected(Station)}.
          * Only the Presenter should call this method
          * @param station the most similar station (never null)
          */
         public void showSuggestion(Station station);
 
         /**
-         * The view is requested to display the location (latitude and longitude)
-         * of the given station.
+         * The view is requested to display the name, the available bikes and the
+         * location (latitude and longitude) of the given station.
          * Only the Presenter should call this method
          * @param station the station whose location must be shown
          */

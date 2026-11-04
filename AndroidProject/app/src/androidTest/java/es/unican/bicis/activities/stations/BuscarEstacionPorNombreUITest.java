@@ -47,14 +47,22 @@ import es.unican.bicis.model.Station;
 
 /**
  * UI tests for HU 532314 - Buscar estación por nombre.
+ * Pruebas de interfaz UI.1a a UI.5a del plan de pruebas: cada prueba abre la lista de
+ * estaciones de TUeBICI desde la pantalla principal, escribe en el buscador de la barra
+ * superior y comprueba la lista, el desplegable de sugerencias, el mensaje de estación
+ * inexistente con la sugerencia y la ubicación de la estación seleccionada.
+ * Los datos son los de res/raw/network_tuebici.json (42 estaciones).
  */
+
 @HiltAndroidTest
 @UninstallModules(LocationModule.class)
 public class BuscarEstacionPorNombreUITest {
 
+    /** Regla de Hilt para inyectar las dependencias de prueba */
     @Rule(order = 0)
     public HiltAndroidRule hiltRule = new HiltAndroidRule(this);
 
+    /** Concede los permisos de ubicación para que no aparezca el diálogo del sistema */
     @Rule(order = 1)
     public GrantPermissionRule permissionRule =
             GrantPermissionRule.grant(
@@ -66,6 +74,7 @@ public class BuscarEstacionPorNombreUITest {
     @BindValue
     ILocationProvider ubicacionFalsa = cb -> { };
 
+    /** Lanza la pantalla principal (lista de redes) antes de cada prueba */
     @Rule(order = 2)
     public ActivityScenarioRule<MainView> activityRule =
             new ActivityScenarioRule<>(MainView.class);
