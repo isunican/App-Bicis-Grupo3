@@ -1,11 +1,10 @@
 package es.unican.bicis.activities.stations;
 
 import static org.junit.Assert.assertEquals;
-
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -17,7 +16,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.ArgumentMatchers.anyDouble;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -764,6 +762,7 @@ public class StationsPresenterTest {
         verify(mockView).showActiveFiltersCount(2);
         verify(mockView).showStations(Arrays.asList(both));
     }
+
     // =====================================================================
     // Filtro por distancia (HU 532304 Filtrar estaciones por distancia)
     // Pruebas unitarias UPD del plan de pruebas.
@@ -808,8 +807,9 @@ public class StationsPresenterTest {
     }
 
     /**
-     * UPD.1a: distancia "1" km → solo la estación cercana; el presenter muestra
-     * las estaciones con distancia, el filtro activo y el contador de filtros.
+     * UPD.1a: distancia "1" km → la estación cercana más la sin coordenadas al final
+     * (el modelo las incluye siempre que haya al menos una dentro del radio).
+     * El presenter muestra las estaciones con distancia, el filtro activo y el contador.
      */
     @Test
     public void testDistanceFilterShowsNearbyStations() {
@@ -819,8 +819,9 @@ public class StationsPresenterTest {
 
         verify(mockView).showDistanceFilterActive(1.0);
         verify(mockView).showActiveFiltersCount(1);
-        verify(mockView).showStationsWithDistance(eq(Arrays.asList(dCerca)), any());
-        verify(mockView).showNetworkLocation("Santander, ES · 1 estaciones");
+        // dCerca (dentro del radio) + dSinCoords (sin coords, va al final)
+        verify(mockView).showStationsWithDistance(eq(Arrays.asList(dCerca, dSinCoords)), any());
+        verify(mockView).showNetworkLocation("Santander, ES · 2 estaciones");
         verify(mockView, never()).showNoStationsWithinDistance(anyDouble());
         verify(mockView, never()).showInvalidMaxDistance();
     }
@@ -845,19 +846,21 @@ public class StationsPresenterTest {
     }
 
     /**
-     * UPD.1c: distancia igual a la distancia real de una estación (valor límite):
-     * la estación se incluye en el resultado.
+     * UPD.1c: distancia 0.5 km (valor límite holgado): la estación cercana se incluye,
+     * la lejana no; la sin coordenadas aparece al final por comportamiento del modelo.
      */
     @Test
     public void testDistanceFilterBoundaryStationIsIncluded() {
         initPresenterWithDistanceStations();
-        // La estación "Cerca" está a ~0.17 km; usamos 0.5 km como límite holgado de frontera
+        // dCerca está a ~0.17 km → dentro; dLejos a ~7.6 km → fuera
         sut.onDistanceFilterApplied("0.5");
 
         ArgumentCaptor<List<Station>> captor = ArgumentCaptor.forClass(List.class);
         verify(mockView).showStationsWithDistance(captor.capture(), any());
         assertTrue(captor.getValue().contains(dCerca));
         assertFalse(captor.getValue().contains(dLejos));
+        // dSinCoords se añade al final porque hay resultados dentro del radio
+        assertTrue(captor.getValue().contains(dSinCoords));
     }
 
     /**
