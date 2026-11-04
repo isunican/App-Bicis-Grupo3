@@ -6,21 +6,30 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Searches the stations of a bike sharing network by their name.
+ * Searches the stations of a bike sharing network by their name
+ * (HU 532314 Buscar estación por nombre).
  * The search ignores case and accents ("plaza" finds "Plaza" and "perines" finds "Perinés").
+ * It is used by {@link es.unican.bicis.activities.stations.StationsPresenter}:
+ * {@link #searchByName(List, String)} updates the list while the user types, and
+ * {@link #findMostSimilar(List, String)} gives the "¿Quizás quisiste decir...?" suggestion
+ * when no station contains the text. This class only has static methods.
  */
+
+
 public class StationSearch {
 
     /** Maximum number of letter changes for a name to be considered similar to the text */
     public static final int MAX_CHANGES = 2;
 
-    // Private constructor: this class only has static methods
+    /**
+     * Private constructor: this class only has static methods and must not be instantiated.
+     */
     private StationSearch() {
     }
 
     /**
-     * Returns the stations whose name contains the given text, ignoring case and accents.
-     * Stations without name (null) never match a text.
+     * The spaces at the beginning and at the end of the text are ignored.
+     * Null stations and stations without name (null) never match a text.
      *
      * @param stations the stations to search in (may be null)
      * @param text the text introduced by the user (may be null)
@@ -52,8 +61,8 @@ public class StationSearch {
      * and accents. A name is similar if the text can be converted into it by changing,
      * adding or removing at most {@link #MAX_CHANGES} letters. If several stations are
      * similar, the one that needs fewer changes is returned (the first one in the list
-     * if there is a tie). Stations without name (null) are never suggested.
-     *
+     * if there is a tie). The spaces at the beginning and at the end of the text and of the
+     * names are ignored. Null stations and stations without name (null) are never suggested.
      * @param stations the stations to search in (may be null)
      * @param text the text introduced by the user (may be null)
      * @return the most similar station, or null if no station is similar, if the text is
