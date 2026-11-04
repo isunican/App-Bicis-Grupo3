@@ -1,14 +1,15 @@
 package es.unican.bicis.activities.details;
 
-import java.util.List;
-
-import es.unican.bicis.activities.main.IMainContract;
 import es.unican.bicis.model.Network;
-import es.unican.bicis.repository.INetworksRepository;
+
+/**
+ * Contract between the view and the presenter of the network details screen,
+ * following the Model-View-Presenter pattern.
+ */
 public interface IDetailsContract {
 
     /**
-     * Methods that must be implemented in the Main Presenter.
+     * Methods that must be implemented in the Details Presenter.
      * Only the View should call these methods.
      */
     public interface Presenter {
@@ -32,7 +33,7 @@ public interface IDetailsContract {
     }
 
     /**
-     * Methods that must be implemented in the Main View.
+     * Methods that must be implemented in the Details View.
      * Only the Presenter should call these methods.
      */
     public interface View {

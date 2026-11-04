@@ -2,11 +2,14 @@ package es.unican.bicis.activities.stations;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.MatrixCursor;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.provider.BaseColumns;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -17,8 +20,10 @@ import androidx.annotation.OptIn;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.IntentCompat;
+import androidx.cursoradapter.widget.SimpleCursorAdapter;
 
 import com.google.android.material.badge.BadgeDrawable;
 import com.google.android.material.badge.BadgeUtils;
@@ -26,13 +31,16 @@ import com.google.android.material.badge.ExperimentalBadgeUtils;
 
 import org.parceler.Parcels;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import javax.inject.Inject;
 
 import dagger.hilt.android.AndroidEntryPoint;
 import es.unican.bicis.R;
 import es.unican.bicis.activities.details.DetailsView;
+import es.unican.bicis.common.StationUtils;
 import es.unican.bicis.model.Network;
 import es.unican.bicis.model.Station;
 import es.unican.bicis.repository.INetworksRepository;
@@ -63,6 +71,12 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     private View stationsHeader;
     private Toolbar toolbar;
 
+    /** Panel shown when no station has the searched name, with the "¿Quizás quisiste decir...?" suggestion */
+    private View searchNotFoundPanel;
+    private View suggestionGroup;
+    private TextView tvSuggestion;
+    private TextView tvNoSuggestion;
+
     /** Filter dialog currently open (null if it is closed) and its input fields */
     private AlertDialog filterDialog;
     private EditText filterInput;
@@ -82,6 +96,15 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     /** Number of active filters, shown over the filter icon */
     private int activeFilters = 0;
     private BadgeDrawable filterBadge;
+
+    /** Adapter used to display station name suggestions. */
+    private SimpleCursorAdapter suggestionsAdapter;
+
+    /** Search field displayed in the toolbar. */
+    private SearchView stationSearchView;
+
+    /** Stations currently displayed in the suggestions dropdown. */
+    private List<Station> suggestedStations = new ArrayList<>();
 
     /**
      * @see AppCompatActivity#onCreate(Bundle)
@@ -106,6 +129,10 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         tvStationsMessage = findViewById(R.id.tvStationsMessage);
         lvStations = findViewById(R.id.lvStations);
         stationsHeader = findViewById(R.id.stationsHeader);
+        searchNotFoundPanel = findViewById(R.id.searchNotFoundPanel);
+        suggestionGroup = findViewById(R.id.suggestionGroup);
+        tvSuggestion = findViewById(R.id.tvSuggestion);
+        tvNoSuggestion = findViewById(R.id.tvNoSuggestion);
 
         // Get Network from the intent that triggered this activity
         Parcelable wrapped = IntentCompat.getParcelableExtra(getIntent(), INTENT_NETWORK, Parcelable.class);
@@ -116,16 +143,103 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     }
 
     /**
-     * This creates the menu that is shown in the action bar (the upper toolbar)
-     * @param menu The options menu in which you place your items.
+     * Creates the stations toolbar menu and prepares the search suggestions.
      *
-     * @return true because we are defining a new menu
+     * @param menu the options menu
+     * @return true if the menu has been created
      */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_stations, menu);
+
+        MenuItem searchItem = menu.findItem(R.id.menuItemSearch);
+
+        if (searchItem != null) {
+            stationSearchView = (SearchView) searchItem.getActionView();
+
+            if (stationSearchView != null) {
+                stationSearchView.setQueryHint(getString(R.string.menuSearch));
+                stationSearchView.setIconifiedByDefault(true);
+
+                String[] from = {"station_name"};
+                int[] to = {android.R.id.text1};
+
+                suggestionsAdapter = new SimpleCursorAdapter(
+                        this,
+                        android.R.layout.simple_list_item_1,
+                        null,
+                        from,
+                        to,
+                        0
+                );
+
+                stationSearchView.setSuggestionsAdapter(suggestionsAdapter);
+                // Every time the text changes the presenter updates the results (HU 532314)
+                stationSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                    @Override
+                    public boolean onQueryTextSubmit(String query) {
+                        presenter.onSearchTextChanged(query);
+                        stationSearchView.clearFocus();
+                        return true;
+                    }
+
+                    @Override
+                    public boolean onQueryTextChange(String newText) {
+                        presenter.onSearchTextChanged(newText);
+                        return true;
+                    }
+                });
+
+                stationSearchView.setOnSuggestionListener(
+                        new SearchView.OnSuggestionListener() {
+                            @Override
+                            public boolean onSuggestionSelect(int position) {
+                                return selectSuggestion(position);
+                            }
+
+                            @Override
+                            public boolean onSuggestionClick(int position) {
+                                return selectSuggestion(position);
+                            }
+                        }
+                );
+            }
+        }
+
         // The menu is created after the presenter has loaded the stations: show the badge now
         toolbar.post(this::updateFilterBadge);
+        return true;
+    }
+
+    /**
+     * Notifies the presenter when the user selects a station suggestion.
+     *
+     * @param position position of the selected suggestion
+     * @return true if the selection was handled
+     */
+    private boolean selectSuggestion(int position) {
+        if (stationSearchView == null || presenter == null
+                || position < 0 || position >= suggestedStations.size()) {
+            return false;
+        }
+
+        Station station = suggestedStations.get(position);
+
+        if (station == null) {
+            return false;
+        }
+
+        AutoCompleteTextView searchInput =
+                stationSearchView.findViewById(
+                        androidx.appcompat.R.id.search_src_text
+                );
+
+        if (searchInput != null) {
+            searchInput.dismissDropDown();
+        }
+
+        presenter.onStationSelected(station);
+
         return true;
     }
 
@@ -254,6 +368,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         lvStations.setVisibility(View.VISIBLE);
         stationsHeader.setVisibility(View.VISIBLE);
         tvStationsMessage.setVisibility(View.GONE);
+        searchNotFoundPanel.setVisibility(View.GONE);
     }
 
     /**
@@ -376,9 +491,127 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     }
 
     /**
-     * Indicates whether any filter is active, to enable the "Quitar filtros" button.
-     * @return true if there is at least one filter active
+     * @see IStationsContract.View#showSearchField()
      */
+    @Override
+    public void showSearchField() {
+        // TODO HU 532314: desplegar el campo de búsqueda (tarea de la vista)
+    }
+
+    /**
+     * @see IStationsContract.View#showSearchSuggestions(List)
+     * @param stations the stations to suggest
+     */
+    @Override
+    public void showSearchSuggestions(List<Station> stations) {
+        if (suggestionsAdapter == null || stationSearchView == null) {
+            return;
+        }
+
+        suggestedStations = new ArrayList<>();
+
+        MatrixCursor cursor = new MatrixCursor(
+                new String[]{BaseColumns._ID, "station_name"}
+        );
+
+        if (stations != null) {
+            for (Station station : stations) {
+                if (station != null) {
+                    suggestedStations.add(station);
+
+                    cursor.addRow(new Object[]{
+                            suggestedStations.size() - 1,
+                            station.getName()
+                    });
+                }
+            }
+        }
+
+        suggestionsAdapter.changeCursor(cursor);
+
+        AutoCompleteTextView searchInput =
+                stationSearchView.findViewById(
+                        androidx.appcompat.R.id.search_src_text
+                );
+
+        if (searchInput == null) {
+            return;
+        }
+
+        // Allow suggestions to appear from the first character.
+        searchInput.setThreshold(1);
+
+        if (suggestedStations.isEmpty()) {
+            searchInput.dismissDropDown();
+        } else {
+            searchInput.post(() -> {
+                if (searchInput.hasFocus()
+                        && searchInput.getText().length() >= 1) {
+                    searchInput.showDropDown();
+                }
+            });
+        }
+    }
+
+    /**
+     * @see IStationsContract.View#showStationNotFound()
+     */
+    @Override
+    public void showStationNotFound() {
+        lvStations.setVisibility(View.GONE);
+        stationsHeader.setVisibility(View.GONE);
+        tvStationsMessage.setVisibility(View.GONE);
+
+        // Until the presenter sends a suggestion, "No hay sugerencias similares" is shown
+        suggestionGroup.setVisibility(View.GONE);
+        tvSuggestion.setOnClickListener(null);
+        tvNoSuggestion.setVisibility(View.VISIBLE);
+        searchNotFoundPanel.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * @see IStationsContract.View#showSuggestion(Station)
+     * @param station the most similar station
+     */
+    @Override
+    public void showSuggestion(Station station) {
+        tvSuggestion.setText(station.getName());
+        tvSuggestion.setOnClickListener(v -> presenter.onStationSelected(station));
+        tvNoSuggestion.setVisibility(View.GONE);
+        suggestionGroup.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * @see IStationsContract.View#showStationLocation(Station)
+     * @param station the station whose location must be shown
+     */
+    @Override
+    public void showStationLocation(Station station) {
+        String bikes = StationUtils.formatBikes(
+                station.getFreeBikes(), station.getEmptySlots(), station.getSlots());
+        String message = getString(R.string.stationBikes, bikes)
+                + "\n" + getString(R.string.stationLocationLatitude, formatCoordinate(station.getLatitude()))
+                + "\n" + getString(R.string.stationLocationLongitude, formatCoordinate(station.getLongitude()));
+
+        new AlertDialog.Builder(this)
+                .setTitle(station.getName())
+                .setMessage(message)
+                .setPositiveButton(R.string.stationLocationClose, null)
+                .show();
+    }
+
+    /**
+     * Formats a coordinate with four decimals and a dot (e.g. "43.4686").
+     * @param value the coordinate (may be null)
+     * @return the formatted coordinate, or "-" if it is not available
+     */
+    private String formatCoordinate(Double value) {
+        if (value == null) {
+            return StationUtils.NO_DATA;
+        }
+        return String.format(Locale.ROOT, "%.4f", value);
+    }
+
     /**
      * Indicates whether any filter is active, to enable the "Quitar filtros" button.
      * A filter is active if the presenter has reported it (number over the filter icon)
@@ -438,6 +671,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         stationsHeader.setVisibility(View.GONE);
         tvStationsMessage.setText(message);
         tvStationsMessage.setVisibility(View.VISIBLE);
+        searchNotFoundPanel.setVisibility(View.GONE);
     }
 
     /**

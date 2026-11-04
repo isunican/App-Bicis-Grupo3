@@ -8,6 +8,7 @@ import es.unican.bicis.model.Location;
 import es.unican.bicis.model.Network;
 import es.unican.bicis.model.Station;
 import es.unican.bicis.model.StationFilter;
+import es.unican.bicis.model.StationSearch;
 import es.unican.bicis.repository.INetworksRepository;
 import es.unican.bicis.repository.StationsCallback;
 
@@ -15,9 +16,10 @@ import es.unican.bicis.repository.StationsCallback;
  * The presenter of the stations activity of the application. It controls {@link StationsView}.
  * It loads the stations of a network and sorts them by free bikes (HU 532377 Listar estaciones),
  * filters them by a minimum number of free bikes (HU 532376 Filtrar estaciones) and by a minimum
- * number of empty slots (HU 532335 Filtrar estaciones por huecos) introduced by the user, and
- * decides what the view must show. The filters can be combined: a station is shown only if it
- * satisfies all the active filters.
+ * number of empty slots (HU 532335 Filtrar estaciones por huecos) introduced by the user,
+ * searches stations by their name (HU 532314 Buscar estación por nombre) and decides what the
+ * view must show. The filters can be combined: a station is shown only if it satisfies all the
+ * active filters.
  */
 public class StationsPresenter implements IStationsContract.Presenter {
 
@@ -208,6 +210,66 @@ public class StationsPresenter implements IStationsContract.Presenter {
     public void onInfoClicked() {
         if (network != null) {
             view.showNetworkDetails(network);
+        }
+    }
+
+    /**
+     * @see IStationsContract.Presenter#onSearchClicked()
+     */
+    @Override
+    public void onSearchClicked() {
+        if (view != null) {
+            view.showSearchField();
+        }
+    }
+
+    /**
+     * @see IStationsContract.Presenter#onSearchTextChanged(String)
+     * @param text the text introduced in the search field
+     */
+    @Override
+    public void onSearchTextChanged(String text) {
+        if (view == null) {
+            return;
+        }
+
+        if (loadFailed) {
+            view.showSearchSuggestions(new ArrayList<>());
+            view.showLoadError();
+            return;
+        }
+
+        if (text == null || text.trim().isEmpty()) {
+            view.showSearchSuggestions(new ArrayList<>());
+            showAllStations();
+            return;
+        }
+
+        List<Station> matches = StationSearch.searchByName(stations, text);
+
+        if (matches.isEmpty()) {
+            view.showSearchSuggestions(new ArrayList<>());
+            view.showStationNotFound();
+            view.showNetworkLocation(location + " · 0 estaciones");
+            Station mostSimilar = StationSearch.findMostSimilar(stations, text);
+            if (mostSimilar != null) {
+                view.showSuggestion(mostSimilar);
+            }
+            return;
+        }
+
+        showStationList(matches);
+        view.showSearchSuggestions(matches);
+    }
+
+    /**
+     * @see IStationsContract.Presenter#onStationSelected(Station)
+     * @param station the selected station
+     */
+    @Override
+    public void onStationSelected(Station station) {
+        if (view != null && station != null) {
+            view.showStationLocation(station);
         }
     }
 
