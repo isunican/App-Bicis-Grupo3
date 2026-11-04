@@ -435,6 +435,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
 
 
 
+    
     /**
      * @see IStationsContract.View#showSearchSuggestions(List)
      * @param stations the stations to suggest
@@ -466,7 +467,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
 
         suggestionsAdapter.changeCursor(cursor);
 
-        AutoCompleteTextView searchInput =
+        SearchView.SearchAutoComplete searchInput =
                 stationSearchView.findViewById(
                         androidx.appcompat.R.id.search_src_text
                 );
@@ -475,11 +476,15 @@ public class StationsView extends AppCompatActivity implements IStationsContract
             return;
         }
 
+        // Allow suggestions to appear from the first character.
+        searchInput.setThreshold(1);
+
         if (suggestedStations.isEmpty()) {
             searchInput.dismissDropDown();
         } else {
             searchInput.post(() -> {
-                if (searchInput.hasFocus()) {
+                if (searchInput.hasFocus()
+                        && searchInput.getText().length() >= 1) {
                     searchInput.showDropDown();
                 }
             });
