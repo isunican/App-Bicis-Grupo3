@@ -516,21 +516,21 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         boolean filterRemoved = (!appliedFreeBikesText.isEmpty() && freeBikesText.isEmpty())
                 || (!appliedEmptySlotsText.isEmpty() && emptySlotsText.isEmpty())
                 || (appliedDistanceOn && !distanceOn);
-        invalidValueShown = false;
+        boolean valid = true;
 
         if (!freeBikesText.isEmpty() || (emptySlotsText.isEmpty() && !distanceOn)) {
-            presenter.onFilterApplied(freeBikesText);
+            valid = applyFilterAndCheck(() -> presenter.onFilterApplied(freeBikesText));
         }
-        if (!invalidValueShown && !emptySlotsText.isEmpty()) {
-            presenter.onMinEmptySlotsFilterApplied(emptySlotsText);
+        if (valid && !emptySlotsText.isEmpty()) {
+            valid = applyFilterAndCheck(() -> presenter.onMinEmptySlotsFilterApplied(emptySlotsText));
         }
-        if (!invalidValueShown && distanceOn) {
-            presenter.onDistanceFilterApplied(distanceText);
+        if (valid && distanceOn) {
+            valid = applyFilterAndCheck(() -> presenter.onDistanceFilterApplied(distanceText));
         }
-        if (!invalidValueShown && filterRemoved) {
+        if (valid && filterRemoved) {
             reapplyFilters(freeBikesText, emptySlotsText, distanceOn ? distanceText : "");
         }
-        if (!invalidValueShown && filterDialog != null) {
+        if (valid && filterDialog != null) {
             appliedFreeBikesText = freeBikesText;
             appliedEmptySlotsText = emptySlotsText;
             // if the location was not known the distance filter has not been applied
@@ -538,6 +538,19 @@ public class StationsView extends AppCompatActivity implements IStationsContract
             appliedDistanceText = appliedDistanceOn ? distanceText : "";
             filterDialog.dismiss();
         }
+    }
+
+    /**
+     * Sends one filter to the presenter and tells whether its value was valid.
+     * The presenter reports an invalid value by calling one of the showInvalid... methods
+     * of this view, which set {@link #invalidValueShown}.
+     * @param filter the call to the presenter that applies the filter
+     * @return true if the value was valid, false if the presenter reported it as invalid
+     */
+    private boolean applyFilterAndCheck(Runnable filter) {
+        invalidValueShown = false;
+        filter.run();
+        return !invalidValueShown;
     }
 
     /**
