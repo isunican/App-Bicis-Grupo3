@@ -124,6 +124,16 @@ INetworksRepository ..> StationsCallback : <<use>>
 class StationsView {
     - openFilterDialog()
     - showMessage(message : String)
+    ' HU 532314 - Buscar estación por nombre
+    - stationSearchView : SearchView
+    - suggestionsAdapter : SimpleCursorAdapter
+    - suggestedStations : List<Station>
+    + onCreateOptionsMenu(menu : Menu) : boolean
+    - selectSuggestion(position : int) : boolean
+    + showSearchSuggestions(stations : List<Station>)
+    + showStationNotFound()
+    + showSuggestion(station : Station)
+    + showStationLocation(station : Station)
 }
 
 class StationsArrayAdapter
@@ -152,6 +162,9 @@ class StationsPresenter {
     - parseMaxDistance(text : String) : Double
     - parseMinimum(text : String, lowerLimit : int) : Integer
     - formatLocation(location : Location) : String
+    ' HU 532314 - Buscar estación por nombre
+    + onSearchTextChanged(text : String)
+    + onStationSelected(station : Station)
 }
 
 class StationFilter {
@@ -187,7 +200,6 @@ interface IStationsContract.Presenter {
     + getMaxCityDistanceKm() : double
     + onFilterCleared()
     + onInfoClicked()
-    + onSearchClicked()
     + onSearchTextChanged(text : String)
     + onStationSelected(station : Station)
 }
@@ -209,7 +221,6 @@ interface IStationsContract.View {
     + showFilterActive(minFreeBikes : int)
     + showFilterInactive()
     + showNetworkDetails(network : Network)
-    + showSearchField()
     + showSearchSuggestions(stations : List<Station>)
     + showStationNotFound()
     + showSuggestion(station : Station)
