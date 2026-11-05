@@ -1,3 +1,4 @@
+
 @startuml domain
 hide empty members
 
@@ -69,8 +70,11 @@ class StationFilter {
 
 class StationSearch {
     + {static} MAX_CHANGES : int = 2
+    - StationSearch()
     + {static} searchByName(stations : List<Station>, text : String) : List<Station>
     + {static} findMostSimilar(stations : List<Station>, text : String) : Station
+    ~ {static} countChanges(a : String, b : String) : int
+    ~ {static} normalize(text : String) : String
 }
 
 Network *--> "*" Station : stations
