@@ -404,8 +404,12 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         updateBarFromInput();
         updateDistanceControlsEnabled();
 
-        distanceSwitch.setOnCheckedChangeListener((button, checked) -> updateDistanceControlsEnabled());
-
+        distanceSwitch.setOnCheckedChangeListener((button, checked) -> {
+            if (checked) {
+                fillMaxDistanceIfEmpty();
+            }
+            updateDistanceControlsEnabled();
+        });
         distanceBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar bar, int progress, boolean fromUser) {
@@ -458,6 +462,21 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         } catch (NumberFormatException e) {
             // Not a number (or empty): the bar is not moved
         } finally {
+            syncingDistance = false;
+        }
+    }
+
+
+    /**
+     * Puts the maximum distance of the city (the end of the bar) in the distance field
+     * if it is empty, so that by default the filter shows all the stations
+     * (agreed with the Product Owner in the Sprint Planning).
+     */
+    private void fillMaxDistanceIfEmpty() {
+        if (distanceInput.getText().toString().trim().isEmpty()) {
+            syncingDistance = true;
+            distanceBar.setProgress(distanceBar.getMax());
+            distanceInput.setText(formatKm(distanceBar.getMax() / 10.0));
             syncingDistance = false;
         }
     }
