@@ -11,6 +11,14 @@ import java.util.concurrent.TimeUnit;
  */
 public class CityBikesService {
 
+
+
+    /**
+     * Private constructor: this class only has static members and must not be instantiated.
+     */
+    private CityBikesService() {
+    }
+
     /** CityBikes API base URL */
     final static String BASE_URL = "https://api.citybik.es/";
 
