@@ -21,6 +21,12 @@ import es.unican.bicis.repository.ApiNetworksRepository;
 @InstallIn(ActivityComponent.class)
 public abstract class RepositoriesModule {
 
+    /**
+     * Private constructor: Hilt only uses the static provider methods of this module.
+     */
+    private RepositoriesModule() {
+    }
+
     @Provides
     public static INetworksRepository provideRepository() {
         return ApiNetworksRepository.INSTANCE;
