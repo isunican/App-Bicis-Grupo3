@@ -762,6 +762,48 @@ public class StationsPresenterTest {
         verify(mockView).showStations(Arrays.asList(both));
     }
 
+    /**
+     * UPH.1j: las estaciones no se han podido cargar (sin conexión) y se aplica el mínimo "3":
+     * se muestra el mensaje "No se han podido filtrar las estaciones" y no se activa el filtro.
+     */
+    @Test
+    public void testEmptySlotsFilterWhenStationsCouldNotBeLoaded() {
+        repositoryFails();
+        sut.init(mockView, network);
+        clearInvocations(mockView);
+
+        sut.onMinEmptySlotsFilterApplied("3");
+
+        verify(mockView).showEmptySlotsFilterError();
+        verify(mockView, never()).showMinEmptySlotsFilterActive(anyInt());
+        verify(mockView, never()).showActiveFiltersCount(anyInt());
+        verify(mockView, never()).showStations(anyList());
+    }
+
+    /**
+     * UPH.1k: falla el filtro (una estación con datos inesperados lanza una excepción):
+     * se muestra el mensaje de error y el filtro de huecos no queda activo, así que
+     * al aplicar después otro filtro solo cuenta ese.
+     */
+    @Test
+    public void testEmptySlotsFilterFailsKeepsPreviousFilters() {
+        Station broken = mock(Station.class);
+        when(broken.getEmptySlots()).thenThrow(new IllegalStateException("dato corrupto"));
+        when(broken.getFreeBikes()).thenReturn(3);
+        initPresenterWith(Arrays.asList(broken));
+
+        sut.onMinEmptySlotsFilterApplied("3");
+
+        verify(mockView).showEmptySlotsFilterError();
+        verify(mockView, never()).showMinEmptySlotsFilterActive(anyInt());
+        verify(mockView, never()).showActiveFiltersCount(anyInt());
+
+        sut.onFilterApplied("1");
+
+        verify(mockView).showActiveFiltersCount(1);
+        verify(mockView).showStations(Arrays.asList(broken));
+    }
+
     // =====================================================================
     // Filtro por distancia (HU 532304 Filtrar estaciones por distancia)
     // Pruebas unitarias UPD del plan de pruebas.

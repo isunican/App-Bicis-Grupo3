@@ -207,6 +207,15 @@ public interface IStationsContract {
         public void showInvalidMinEmptySlots();
 
         /**
+         * The view is requested to hide the list and display a message indicating
+         * that the stations could not be filtered by empty slots, because they could
+         * not be loaded or the filter failed (HU 532335).
+         * The filters that were active before, if any, remain unchanged.
+         * Only the Presenter should call this method
+         */
+        public void showEmptySlotsFilterError();
+
+        /**
          * The view is requested to indicate in the filter icon how many filters
          * are active (HU 532335). With 0 the icon shows no indicator.
          * Only the Presenter should call this method
