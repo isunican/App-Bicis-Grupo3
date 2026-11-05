@@ -669,6 +669,14 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     }
 
     /**
+     * @see IStationsContract.View#showEmptySlotsFilterError()
+     */
+    @Override
+    public void showEmptySlotsFilterError() {
+        showMessage(getString(R.string.filterEmptySlotsError));
+    }
+
+    /**
      * @see IStationsContract.View#showActiveFiltersCount(int)
      * @param numActiveFilters the number of active filters
      */

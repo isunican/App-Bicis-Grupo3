@@ -57,6 +57,7 @@
     <string name="filterEmptySlotsInvalid">Introduce un número entero mayor o igual que 0</string>
     <string name="filterEmptySlotsActive">Con al menos %d huecos libres</string>
     <string name="filterEmptySlotsNoResults">No hay estaciones con los huecos libres seleccionados</string>
+    <string name="filterEmptySlotsError">No se han podido filtrar las estaciones</string>
     <string name="filterSubtitleSeparator">" · "</string>
 
     <!-- Filtro de estaciones por distancia (HU 532304) -->

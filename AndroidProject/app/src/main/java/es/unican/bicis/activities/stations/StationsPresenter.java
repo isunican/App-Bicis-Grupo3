@@ -170,10 +170,25 @@ public class StationsPresenter implements IStationsContract.Presenter {
             return;
         }
 
+        // The stations could not be loaded: there is nothing to filter
+        if (loadFailed) {
+            view.showEmptySlotsFilterError();
+            return;
+        }
+
         // With 0 all the stations are shown, so the empty slots filter is not active
+        Integer previousMinEmptySlots = minEmptySlots;
         minEmptySlots = value > 0 ? value : null;
+        List<Station> filtered;
+        try {
+            filtered = applyFilters();
+        } catch (RuntimeException e) {
+            // The filter failed (for example, unexpected station data): keep the previous filters
+            minEmptySlots = previousMinEmptySlots;
+            view.showEmptySlotsFilterError();
+            return;
+        }
         view.showMinEmptySlotsFilterActive(value);
-        List<Station> filtered = applyFilters();
 
         if (activeFiltersCount() == 0) {
             showAllStations();
