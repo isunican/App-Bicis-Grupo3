@@ -1,4 +1,3 @@
-
 package es.unican.bicis.activities.main;
 
 import static androidx.test.espresso.Espresso.onView;
@@ -13,6 +12,7 @@ import static org.junit.Assert.assertNotNull;
 
 import android.Manifest;
 import android.content.Context;
+import android.os.SystemClock;
 import android.view.View;
 import android.widget.ListView;
 
@@ -57,10 +57,10 @@ public class DetectarCiudadSinRedUITest {
 
     /**
      * Pone el GPS del dispositivo en Reinosa antes de abrir la aplicacion.
-     * @throws InterruptedException si se interrumpe la espera
      */
+
     @Before
-    public void setUp() throws InterruptedException {
+    public void setUp() {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         mockLocationManager = new MockLocationManager(context);
         mockLocationManager.setUp();
@@ -83,10 +83,9 @@ public class DetectarCiudadSinRedUITest {
     /**
      * Prueba 5: el usuario esta en Reinosa, sale el mensaje de que no hay red en su ciudad
      * y se muestra la lista con todas las ciudades.
-     * @throws InterruptedException si se interrumpe la espera
      */
     @Test
-    public void testNoHayRedEnLaCiudad() throws InterruptedException {
+    public void testNoHayRedEnLaCiudad() {
         escenario = ActivityScenario.launch(MainView.class);
         escenario.onActivity(activity -> decorView = activity.getWindow().getDecorView());
 
@@ -102,12 +101,11 @@ public class DetectarCiudadSinRedUITest {
                 if (i == 59) {
                     throw e;
                 }
-                Thread.sleep(500);
+                SystemClock.sleep(500);
             }
         }
 
-        // Comprueba las 10 redes cargadas desde networks.json.
-        // Se consulta el adaptador porque ListView solo crea las filas visibles.
+
         onView(withId(R.id.lvNetworks)).check((view, exception) -> {
             if (exception != null) {
                 throw exception;

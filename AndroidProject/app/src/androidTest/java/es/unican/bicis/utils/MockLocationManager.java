@@ -168,14 +168,14 @@ public class MockLocationManager {
      * @param timeoutMs maximum time to wait, in milliseconds
      * @return the mocked position, or {@code null} if it was not available in time
      */
-    public Location awaitMockedLocation(long timeoutMs) throws InterruptedException {
+    public Location awaitMockedLocation(long timeoutMs) {
         Assert.assertNotNull("No position has been injected yet", lastMockedLocation);
 
         long deadline = SystemClock.elapsedRealtime() + timeoutMs;
         Location lastKnown = locationManager.getLastKnownLocation(PROVIDER_NAME);
         while (!isMockedPosition(lastKnown) && SystemClock.elapsedRealtime() < deadline) {
             locationManager.setTestProviderLocation(PROVIDER_NAME, lastMockedLocation);
-            Thread.sleep(POLL_INTERVAL_MS);
+            SystemClock.sleep(POLL_INTERVAL_MS);
             lastKnown = locationManager.getLastKnownLocation(PROVIDER_NAME);
         }
         return isMockedPosition(lastKnown) ? lastKnown : null;

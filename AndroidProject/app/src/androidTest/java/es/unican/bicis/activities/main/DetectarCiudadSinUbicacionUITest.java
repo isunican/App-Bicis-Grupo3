@@ -11,6 +11,7 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
 
 import android.Manifest;
+import android.os.SystemClock;
 import android.view.View;
 import android.widget.ListView;
 
@@ -64,10 +65,9 @@ public class DetectarCiudadSinUbicacionUITest {
     /**
      * Prueba 4: no se puede obtener la ubicacion, sale su mensaje y se muestra la lista
      * con todas las ciudades.
-     * @throws InterruptedException si se interrumpe la espera
      */
     @Test
-    public void testNoSePuedeObtenerLaUbicacion() throws InterruptedException {
+    public void testNoSePuedeObtenerLaUbicacion()  {
         escenario = ActivityScenario.launch(MainView.class);
         escenario.onActivity(activity -> decorView = activity.getWindow().getDecorView());
 
@@ -83,7 +83,7 @@ public class DetectarCiudadSinUbicacionUITest {
                 if (i == 59) {
                     throw e;
                 }
-                Thread.sleep(500);
+                SystemClock.sleep(500);
             }
         }
 
