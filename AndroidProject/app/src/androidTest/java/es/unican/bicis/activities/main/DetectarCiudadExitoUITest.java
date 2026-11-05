@@ -11,6 +11,7 @@ import static org.junit.Assert.assertNotNull;
 
 import android.Manifest;
 import android.content.Context;
+import android.os.SystemClock;
 
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -33,10 +34,14 @@ import es.unican.bicis.utils.MockLocationManager;
 @HiltAndroidTest
 public class DetectarCiudadExitoUITest {
 
-    /** Coordenadas de Santander, donde esta la red TUeBICI */
+    /**
+     * Coordenadas de Santander, donde esta la red TUeBICI
+     */
     private static final double SANTANDER_LATITUDE = 43.4623057;
     private static final double SANTANDER_LONGITUDE = -3.8099803;
-    /** Tiempo maximo de espera de la ubicacion simulada, en milisegundos */
+    /**
+     * Tiempo maximo de espera de la ubicacion simulada, en milisegundos
+     */
     private static final long LOCATION_TIMEOUT_MS = 15000;
 
     @Rule(order = 0)
@@ -52,10 +57,9 @@ public class DetectarCiudadExitoUITest {
 
     /**
      * Pone el GPS del dispositivo en Santander antes de abrir la aplicacion.
-     * @throws InterruptedException si se interrumpe la espera
      */
     @Before
-    public void setUp() throws InterruptedException {
+    public void setUp() {
         Context context = InstrumentationRegistry
                 .getInstrumentation()
                 .getTargetContext();
@@ -90,14 +94,14 @@ public class DetectarCiudadExitoUITest {
     /**
      * Prueba 1: el usuario esta en Santander, se abre directamente la lista de estaciones
      * de TUeBICI y sale el nombre de la ciudad.
-     * @throws InterruptedException si se interrumpe la espera
      */
+
+
     @Test
-    public void testDetectarCiudadCorrectamente() throws InterruptedException {
+    public void testDetectarCiudadCorrectamente() {
         scenario = ActivityScenario.launch(MainView.class);
 
-        // la lista de estaciones se abre cuando llega la ubicacion, asi que se reintenta
-        // hasta que aparezca (max 30 s)
+
         for (int i = 0; i < 60; i++) {
             try {
                 onView(withId(R.id.tvNetworkName))
@@ -108,14 +112,12 @@ public class DetectarCiudadExitoUITest {
                 if (i == 59) {
                     throw e;
                 }
-                Thread.sleep(500);
+                SystemClock.sleep(500);
             }
         }
 
-        // sale el nombre de la ciudad detectada
         onView(withId(R.id.tvNetworkLocation)).check(matches(withText(containsString("Santander"))));
 
-        // se vuelve a la lista para que el siguiente test empiece limpio
         pressBack();
     }
 }
