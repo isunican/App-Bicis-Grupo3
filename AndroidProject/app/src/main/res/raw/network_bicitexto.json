@@ -1,0 +1,41 @@
+{
+  "network": {
+    "id": "bicitexto",
+    "name": "Bici Texto",
+    "location": {
+      "latitude": 42.3439,
+      "longitude": -3.6969,
+      "city": "Burgos",
+      "country": "ES"
+    },
+    "href": "/v2/networks/bicitexto",
+    "company": "Empresa C",
+    "ebikes": 1,
+    "stations": [
+      {
+        "id": "st01",
+        "name": "Plaza Mayor",
+        "latitude": 43.0,
+        "longitude": -4.0,
+        "timestamp": "2026-10-22T10:00:00.000000+00:00Z",
+        "free_bikes": 6,
+        "empty_slots": 4,
+        "extra": {
+          "ebikes": 0
+        }
+      },
+      {
+        "id": "st02",
+        "name": "Catedral",
+        "latitude": 43.0,
+        "longitude": -4.0,
+        "timestamp": "2026-10-22T10:00:00.000000+00:00Z",
+        "free_bikes": 8,
+        "empty_slots": 2,
+        "extra": {
+          "ebikes": 1
+        }
+      }
+    ]
+  }
+}

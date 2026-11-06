@@ -1,0 +1,44 @@
+{
+  "network": {
+    "id": "bicianomala",
+    "name": "Bici Anómala",
+    "location": {
+      "latitude": 42.5987,
+      "longitude": -5.5671,
+      "city": "León",
+      "country": "ES"
+    },
+    "href": "/v2/networks/bicianomala",
+    "company": [
+      "",
+      "Empresa B"
+    ],
+    "ebikes": "si",
+    "stations": [
+      {
+        "id": "st01",
+        "name": "Catedral",
+        "latitude": 43.0,
+        "longitude": -4.0,
+        "timestamp": "2026-10-22T10:00:00.000000+00:00Z",
+        "free_bikes": 4,
+        "empty_slots": 6,
+        "extra": {
+          "ebikes": 0
+        }
+      },
+      {
+        "id": "st02",
+        "name": "San Marcos",
+        "latitude": 43.0,
+        "longitude": -4.0,
+        "timestamp": "2026-10-22T10:00:00.000000+00:00Z",
+        "free_bikes": 1,
+        "empty_slots": 9,
+        "extra": {
+          "ebikes": 1
+        }
+      }
+    ]
+  }
+}

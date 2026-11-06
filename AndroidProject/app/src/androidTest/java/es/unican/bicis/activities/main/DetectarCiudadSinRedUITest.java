@@ -3,16 +3,18 @@ package es.unican.bicis.activities.main;
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.RootMatchers.withDecorView;
-import static androidx.test.espresso.matcher.ViewMatchers.hasChildCount;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.CoreMatchers.not;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import android.Manifest;
 import android.content.Context;
+import android.os.SystemClock;
 import android.view.View;
+import android.widget.ListView;
 
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -55,10 +57,10 @@ public class DetectarCiudadSinRedUITest {
 
     /**
      * Pone el GPS del dispositivo en Reinosa antes de abrir la aplicacion.
-     * @throws InterruptedException si se interrumpe la espera
      */
+
     @Before
-    public void setUp() throws InterruptedException {
+    public void setUp() {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         mockLocationManager = new MockLocationManager(context);
         mockLocationManager.setUp();
@@ -81,10 +83,9 @@ public class DetectarCiudadSinRedUITest {
     /**
      * Prueba 5: el usuario esta en Reinosa, sale el mensaje de que no hay red en su ciudad
      * y se muestra la lista con todas las ciudades.
-     * @throws InterruptedException si se interrumpe la espera
      */
     @Test
-    public void testNoHayRedEnLaCiudad() throws InterruptedException {
+    public void testNoHayRedEnLaCiudad() {
         escenario = ActivityScenario.launch(MainView.class);
         escenario.onActivity(activity -> decorView = activity.getWindow().getDecorView());
 
@@ -100,11 +101,18 @@ public class DetectarCiudadSinRedUITest {
                 if (i == 59) {
                     throw e;
                 }
-                Thread.sleep(500);
+                SystemClock.sleep(500);
             }
         }
 
-        // en networks.json hay 4 redes de prueba (Bicing, BiciMAD, TUeBICI y Bici Norte)
-        onView(withId(R.id.lvNetworks)).check(matches(hasChildCount(4)));
+
+        onView(withId(R.id.lvNetworks)).check((view, exception) -> {
+            if (exception != null) {
+                throw exception;
+            }
+
+            ListView listView = (ListView) view;
+            assertEquals(10, listView.getAdapter().getCount());
+        });
     }
 }

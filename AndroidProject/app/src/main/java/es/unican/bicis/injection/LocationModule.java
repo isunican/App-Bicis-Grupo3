@@ -17,6 +17,14 @@ import es.unican.bicis.location.ILocationProvider;
 @InstallIn(ActivityComponent.class)
 public abstract class LocationModule {
 
+
+
+    /**
+     * Private constructor: Hilt only uses the static provider methods of this module.
+     */
+    private LocationModule() {
+    }
+
     /**
      * Creates the provider of the real location of the device.
      * @param application the application (Hilt passes it automatically)

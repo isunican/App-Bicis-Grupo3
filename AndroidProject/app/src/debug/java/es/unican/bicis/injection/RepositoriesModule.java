@@ -24,6 +24,13 @@ import es.unican.bicis.repository.JsonNetworksRepository;
 @InstallIn(ActivityComponent.class)
 public abstract class RepositoriesModule {
 
+
+    /**
+     * Private constructor: Hilt only uses the static provider methods of this module.
+     */
+    private RepositoriesModule() {
+    }
+
     @Provides
     public static INetworksRepository provideRepository(Application application) {
         return new JsonNetworksRepository(application);

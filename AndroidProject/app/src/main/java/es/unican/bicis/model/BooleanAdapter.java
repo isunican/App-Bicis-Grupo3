@@ -21,10 +21,12 @@ public class BooleanAdapter extends TypeAdapter<Boolean> {
     /**
      * Reads a boolean from the json.
      * @param in the json reader
-     * @return the boolean value, or null if the value is missing or is not a boolean
+     * @return the boolean value, or null if the value is missing or is not a boolean.
+     * Returning null is intended: the field is then shown as "not available"
      * @throws IOException if the json cannot be read
      */
     @Override
+    @SuppressWarnings("java:S2447") // null is intended: it means "not available" (HU Ver informacion de la red)
     public Boolean read(JsonReader in) throws IOException {
         if (in.peek() == JsonToken.BOOLEAN) {
             return in.nextBoolean();

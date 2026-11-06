@@ -1,6 +1,10 @@
-@startuml
 
+@startuml domain
 hide empty members
+
+' ==========================================
+' Dominio principal - Redes
+' ==========================================
 
 class Network {
     - id : String
@@ -21,19 +25,22 @@ class Location {
     + hasValidCoordinates() : boolean
 }
 
-class NetworksResponse {
-
-}
-
-class NetworkResponse {
-    
-}
+class NetworksResponse
+class NetworkResponse
 
 Network *--> "1" Location : location
 NetworksResponse *--> "*" Network : networks
 NetworkResponse *--> "1" Network : network
 
-' HU 532377 Listar estaciones / HU 532376 Filtrar estaciones por bicis libres
+' ==========================================
+' HU 532377 Listar estaciones
+' HU 532376 Filtrar estaciones por bicis libres
+' HU 532317 Quitar los filtros aplicados
+' HU 532335 Filtrar estaciones por huecos disponibles
+' HU 532304 Filtrar estaciones por distancia
+' HU 532314 Buscar estación por nombre
+' ==========================================
+
 class Station {
     - id : String
     - name : String
@@ -54,10 +61,25 @@ class StationExtra {
 class StationFilter {
     + {static} filterByMinFreeBikes(stations : List<Station>, minFreeBikes : int) : List<Station>
     + {static} hasValidFreeBikes(station : Station) : boolean
+    + {static} filterByMinEmptySlots(stations : List<Station>, minEmptySlots : int) : List<Station>
+    + {static} hasValidEmptySlots(station : Station) : boolean
+    + {static} filterByMaxDistance(stations : List<Station>, lat : double, lon : double, maxDistKm : double) : List<Station>
+    + {static} hasValidCoordinates(station : Station) : boolean
+    + {static} distanceKm(lat1 : double, lon1 : double, lat2 : double, lon2 : double) : double
+}
+
+class StationSearch {
+    + {static} MAX_CHANGES : int = 2
+    - StationSearch()
+    + {static} searchByName(stations : List<Station>, text : String) : List<Station>
+    + {static} findMostSimilar(stations : List<Station>, text : String) : Station
+    ~ {static} countChanges(a : String, b : String) : int
+    ~ {static} normalize(text : String) : String
 }
 
 Network *--> "*" Station : stations
 Station *--> "0..1" StationExtra : extra
 StationFilter ..> Station : <<use>>
+StationSearch ..> Station : <<use>>
 
 @enduml

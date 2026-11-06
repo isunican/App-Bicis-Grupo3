@@ -24,6 +24,12 @@ import es.unican.bicis.model.NetworksResponse;
 public class Utils {
 
     /**
+     * Private constructor: this class only has static methods and must not be instantiated.
+     */
+    private Utils() {
+    }
+
+    /**
      * Parses a list of bike networks from a json resource file.
      * The json must contain a serialized NetworksResponse object.
      * It uses GSON to parse the json file

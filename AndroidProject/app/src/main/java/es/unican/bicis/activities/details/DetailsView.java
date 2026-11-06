@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.widget.Button;
 import android.widget.TextView;
+import android.view.View;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
@@ -39,6 +40,13 @@ public class DetailsView extends AppCompatActivity implements IDetailsContract.V
      */
     private TextView tvName;
     private TextView tvCity;
+    private TextView tvLatitude;
+    private TextView tvLongitude;
+    private TextView tvEbikes;
+    private TextView tvOperatorsCount;
+    private TextView tvOperators;
+    private TextView tvNoDetails;
+    private View layoutDetails;
 
     /**
      * @param savedInstanceState
@@ -61,6 +69,13 @@ public class DetailsView extends AppCompatActivity implements IDetailsContract.V
         // Link to view elements
         tvName = findViewById(R.id.tvName);
         tvCity = findViewById(R.id.tvCity);
+        tvLatitude = findViewById(R.id.tvLatitude);
+        tvLongitude = findViewById(R.id.tvLongitude);
+        tvEbikes = findViewById(R.id.tvEbikes);
+        tvOperatorsCount = findViewById(R.id.tvOperatorsCount);
+        tvOperators = findViewById(R.id.tvOperators);
+        tvNoDetails = findViewById(R.id.tvNoDetails);
+        layoutDetails = findViewById(R.id.layoutDetails);
         Button btnStations = findViewById(R.id.btnStations);
         btnStations.setOnClickListener(v -> presenter.onStationsClicked());
 
@@ -100,7 +115,7 @@ public class DetailsView extends AppCompatActivity implements IDetailsContract.V
      */
     @Override
     public void showLatitude(String latitude) {
-        // TODO: pending view element in layout (tvLatitude)
+        tvLatitude.setText(latitude);
     }
 
     /**
@@ -109,7 +124,7 @@ public class DetailsView extends AppCompatActivity implements IDetailsContract.V
      */
     @Override
     public void showLongitude(String longitude) {
-        // TODO: pending view element in layout (tvLongitude)
+        tvLongitude.setText(longitude);
     }
 
     /**
@@ -118,7 +133,7 @@ public class DetailsView extends AppCompatActivity implements IDetailsContract.V
      */
     @Override
     public void showEbikes(String ebikes) {
-        // TODO: pending view element in layout (tvEbikes)
+        tvEbikes.setText(ebikes);
     }
 
     /**
@@ -127,7 +142,7 @@ public class DetailsView extends AppCompatActivity implements IDetailsContract.V
      */
     @Override
     public void showOperatorsCount(String count) {
-        // TODO: pending view element in layout (tvOperatorsCount)
+        tvOperatorsCount.setText(count);
     }
 
     /**
@@ -136,7 +151,7 @@ public class DetailsView extends AppCompatActivity implements IDetailsContract.V
      */
     @Override
     public void showOperators(String operators) {
-        // TODO: pending view element in layout (tvOperators)
+        tvOperators.setText(operators);
     }
 
     /**
@@ -144,7 +159,8 @@ public class DetailsView extends AppCompatActivity implements IDetailsContract.V
      */
     @Override
     public void showNoDetailsAvailable() {
-        // TODO: pending view element in layout (hide details and show tvNoDetails message)
+        layoutDetails.setVisibility(View.GONE);
+        tvNoDetails.setVisibility(View.VISIBLE);
     }
 
     /**

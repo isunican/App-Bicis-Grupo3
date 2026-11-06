@@ -1,5 +1,4 @@
 @startuml architecture
-
 hide empty members
 
 ' ==========================================
@@ -30,7 +29,7 @@ class MainView {
 
 class MainPresenter {
     - networks : List<Network>
-    -load()
+    - load()
 }
 
 class InfoView
@@ -76,8 +75,8 @@ interface IMainContract.Presenter {
 }
 
 interface INetworksRepository {
-    + requestNetworks(cb : NetworksCallback )
-    + requestNetwork(cb: NetworkDetailsCallback , networkId : String)
+    + requestNetworks(cb : NetworksCallback)
+    + requestNetwork(cb : NetworkDetailsCallback, networkId : String)
     + requestStations(cb : StationsCallback, networkId : String)
 }
 
@@ -87,7 +86,7 @@ interface NetworksCallback {
 }
 
 interface NetworkDetailsCallback {
-    + onSuccess(network : Networ)
+    + onSuccess(network : Network)
     + onFailure(e : Throwable)
 }
 
@@ -101,7 +100,12 @@ interface LocationResultCallback {
 }
 
 ' ==========================================
-' HU 532377 Listar estaciones y HU 532376 Filtrar estaciones por bicis libres
+' HU 532377 Listar estaciones
+' HU 532376 Filtrar estaciones por bicis libres
+' HU 532317 Quitar los filtros aplicados
+' HU 532335 Filtrar estaciones por huecos disponibles
+' HU 532304 Filtrar estaciones por distancia
+' HU 532314 Buscar estación por nombre
 ' ==========================================
 
 DetailsView ..> StationsView : <<use>>
@@ -114,39 +118,90 @@ StationsView ..> StationsArrayAdapter : <<use>>
 StationsView ..> DetailsView : <<use>>
 StationsPresenter ..> StationFilter : <<use>>
 StationsPresenter ..> StationUtils : <<use>>
+StationsPresenter ..> StationSearch : <<use>>
 INetworksRepository ..> StationsCallback : <<use>>
 
 class StationsView {
     - openFilterDialog()
     - showMessage(message : String)
+    ' HU 532314 - Buscar estación por nombre
+    - stationSearchView : SearchView
+    - suggestionsAdapter : SimpleCursorAdapter
+    - suggestedStations : List<Station>
+    + onCreateOptionsMenu(menu : Menu) : boolean
+    - selectSuggestion(position : int) : boolean
+    + showSearchSuggestions(stations : List<Station>)
+    + showStationNotFound()
+    + showSuggestion(station : Station)
+    + showStationLocation(station : Station)
 }
 
 class StationsArrayAdapter
 
 class StationsPresenter {
     ~ {static} MIN_FILTER_VALUE : int = 1
+    ~ {static} MIN_EMPTY_SLOTS_FILTER_VALUE : int = 0
     - network : Network
     - location : String
     - stations : List<Station>
     - loadFailed : boolean
+    - minFreeBikes : Integer
+    - minEmptySlots : Integer
+    - maxDistKm : Double
+    - userLocation : double[]
     - load(networkId : String)
     - showAllStations()
     - showStationList(list : List<Station>)
+    - showFilteredStations(list : List<Station>)
+    - applyFilters() : List<Station>
+    - activeFiltersCount() : int
+    - distancesTo(list : List<Station>) : Map<Station, Double>
+    - sortByDistance(list : List<Station>, distances : Map<Station, Double>) : List<Station>
     - parseMinFreeBikes(text : String) : Integer
+    - parseMinEmptySlots(text : String) : Integer
+    - parseMaxDistance(text : String) : Double
+    - parseMinimum(text : String, lowerLimit : int) : Integer
     - formatLocation(location : Location) : String
+    ' HU 532314 - Buscar estación por nombre
+    + onSearchTextChanged(text : String)
+    + onStationSelected(station : Station)
 }
 
 class StationFilter {
     + {static} filterByMinFreeBikes(stations : List<Station>, minFreeBikes : int) : List<Station>
     + {static} hasValidFreeBikes(station : Station) : boolean
+    + {static} filterByMinEmptySlots(stations : List<Station>, minEmptySlots : int) : List<Station>
+    + {static} hasValidEmptySlots(station : Station) : boolean
+    + {static} filterByMaxDistance(stations : List<Station>, lat : double, lon : double, maxDistKm : double) : List<Station>
+    + {static} hasValidCoordinates(station : Station) : boolean
+    + {static} distanceKm(lat1 : double, lon1 : double, lat2 : double, lon2 : double) : double
 }
 
 class StationUtils {
     + {static} sortByFreeBikes(stations : List<Station>) : List<Station>
+    + {static} sortByEmptySlots(stations : List<Station>) : List<Station>
     + {static} formatValue(value : Integer) : String
     + {static} formatText(text : String) : String
     + {static} formatBikes(freeBikes : Integer, emptySlots : Integer, slots : Integer) : String
     + {static} hasEbikes(station : Station) : boolean
+}
+
+class StationSearch {
+    + {static} MAX_CHANGES : int = 2
+    + {static} searchByName(stations : List<Station>, text : String) : List<Station>
+    + {static} findMostSimilar(stations : List<Station>, text : String) : Station
+}
+
+interface IStationsContract.Presenter {
+    + init(view : View, network : Network)
+    + onFilterApplied(minFreeBikesText : String)
+    + onMinEmptySlotsFilterApplied(minEmptySlotsText : String)
+    + onDistanceFilterApplied(maxDistKmText : String)
+    + getMaxCityDistanceKm() : double
+    + onFilterCleared()
+    + onInfoClicked()
+    + onSearchTextChanged(text : String)
+    + onStationSelected(station : Station)
 }
 
 interface IStationsContract.View {
@@ -158,59 +213,29 @@ interface IStationsContract.View {
     + showLoadError()
     + showNoStationsWithMinFreeBikes(minFreeBikes : int)
     + showInvalidMinFreeBikes()
+    + showNoStationsWithMinEmptySlots(minEmptySlots : int)
+    + showInvalidMinEmptySlots()
+    + showActiveFiltersCount(numActiveFilters : int)
+    + showMinEmptySlotsFilterActive(minEmptySlots : int)
+    + mostrarErrorQuitarFiltros()
     + showFilterActive(minFreeBikes : int)
     + showFilterInactive()
     + showNetworkDetails(network : Network)
-}
-
-interface IStationsContract.Presenter {
-    + init(view : View, network : Network)
-    + onFilterApplied(minFreeBikesText : String)
-    + onFilterCleared()
-    + onInfoClicked()
+    + showSearchSuggestions(stations : List<Station>)
+    + showStationNotFound()
+    + showSuggestion(station : Station)
+    + showStationLocation(station : Station)
+    + getUserLocation() : double[]
+    + showNoStationsWithinDistance(maxDistKm : double)
+    + showLocationUnavailableForFilter()
+    + showInvalidMaxDistance()
+    + showDistanceFilterActive(maxDistKm : double)
+    + showStationsWithDistance(stations : List<Station>, distances : Map<Station, Double>)
 }
 
 interface StationsCallback {
     + onSuccess(stations : List<Station>)
     + onFailure(e : Throwable)
 }
-
-' ==========================================
-' HU 532317 - Quitar los filtros aplicados
-' ==========================================
-
-interface "IStationsContract.Presenter" as IStationsPresenter {
-    + init(view : View, stations : List<Station>)
-    + onFilterApplied(minFreeBikesText : String)
-    + onFilterCleared()
-}
-
-interface "IStationsContract.View" as IStationsView {
-    + showStations(stations : List<Station>)
-    + showNoStationsWithMinFreeBikes(minFreeBikes : int)
-    + showInvalidMinFreeBikes()
-    + mostrarErrorQuitarFiltros()
-}
-
-class StationsPresenter {
-    - view : IStationsContract.View
-    - stations : List<Station>
-    {static} ~ MIN_FILTER_VALUE : int
-    + init(view : View, stations : List<Station>)
-    + onFilterApplied(minFreeBikesText : String)
-    + onFilterCleared()
-    - parseMinFreeBikes(text : String) : Integer
-}
-
-class Station
-class StationFilter {
-    {static} + filterByMinFreeBikes(stations : List<Station>, minFreeBikes : int) : List<Station>
-}
-
-StationsPresenter ..|> IStationsPresenter
-StationsPresenter --> IStationsView : view
-StationsPresenter --> StationFilter : <<use>>
-StationsPresenter --> Station : stations
-IStationsView ..> Station : <<use>>
 
 @enduml
