@@ -1036,4 +1036,19 @@ public class StationsPresenterTest {
         verify(mockView).showStations(anyList());
         verify(mockView, never()).showStationsWithDistance(anyList(), any());
     }
+
+    // =====================================================================
+    // HU 532304 — Prueba de getMaxCityDistanceKm
+    // =====================================================================
+
+    /** UPD.2: getMaxCityDistanceKm() con estaciones cargadas -> devuelve la distancia máxima */
+    @Test
+    public void testGetMaxCityDistanceKmReturnsMaxDistance() {
+        initPresenterWithDistanceStations();
+
+        double result = sut.getMaxCityDistanceKm();
+        System.out.println("Distancia máxima: " + result);
+        // Valida que el resultado sea 9.71 km con un margen de 0.05 km
+        assertEquals(9.71, result, 0.05);
+    }
 }
