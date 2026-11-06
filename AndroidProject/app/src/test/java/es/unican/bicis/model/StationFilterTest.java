@@ -406,4 +406,22 @@ public class StationFilterTest {
         Station s = createStationWithCoords("Out of range", 91.0, -3.81);
         assertFalse(StationFilter.hasValidCoordinates(s));
     }
+    // =====================================================================
+    // HU 532304 — Prueba de distanceKm
+    // =====================================================================
+
+    /** UDK.1: distanceKm entre dos puntos conocidos -> valor aproximado esperado */
+    @Test
+    public void testDistanceKmKnownPoints() {
+        // Santander (43.4623, -3.8099) a Madrid (40.4168, -3.7038) ≈ 340 km
+        double result = StationFilter.distanceKm(43.4623, -3.8099, 40.4168, -3.7038);
+        assertTrue(result > 330 && result < 350);
+    }
+
+    /** UHC.1h: ambas coordenadas fuera de rango (lat=91, lon=181) -> false */
+    @Test
+    public void testHasValidCoordinatesBothOutOfRange() {
+        Station s = createStationWithCoords("Ambas fuera de rango", 91.0, 181.0);
+        assertFalse(StationFilter.hasValidCoordinates(s));
+    }
 }
