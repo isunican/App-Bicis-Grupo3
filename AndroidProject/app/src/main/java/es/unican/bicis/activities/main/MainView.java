@@ -248,6 +248,43 @@ public class MainView extends AppCompatActivity implements IMainContract.View {
     }
 
     /**
+     * @see IMainContract.View#showCitySelector(List, String, String)
+     * @param countries the ISO codes of the countries with networks
+     * @param country the ISO code of the selected country, or null
+     * @param city the name of the selected city, or null
+     */
+    @Override
+    public void showCitySelector(List<String> countries, String country, String city) {
+        // TODO HU 532301: mostrar los desplegables de país y ciudad (tarea de la vista)
+    }
+
+    /**
+     * @see IMainContract.View#showCities(List, String)
+     * @param cities the cities of the selected country
+     * @param city the name of the selected city, or null
+     */
+    @Override
+    public void showCities(List<String> cities, String city) {
+        // TODO HU 532301: rellenar el desplegable de ciudades (tarea de la vista)
+    }
+
+    /**
+     * @see IMainContract.View#showCitiesLoadError()
+     */
+    @Override
+    public void showCitiesLoadError() {
+        // TODO HU 532301: mostrar "No se han podido cargar las ciudades" (tarea de la vista)
+    }
+
+    /**
+     * @see IMainContract.View#showChooseCityHint()
+     */
+    @Override
+    public void showChooseCityHint() {
+        // TODO HU 532301: mostrar "Elige el país y la ciudad..." (tarea de la vista)
+    }
+
+    /**
      * Checks if the user has already given the location permission (approximate is enough).
      * @return true if the permission is granted
      */
