@@ -80,6 +80,32 @@ public class MainPresenter implements IMainContract.Presenter {
     }
 
     /**
+     * @see IMainContract.Presenter#onSelectCityClicked()
+     */
+    @Override
+    public void onSelectCityClicked() {
+        // TODO HU 532301: mostrar los desplegables de país y ciudad (tarea del presenter)
+    }
+
+    /**
+     * @see IMainContract.Presenter#onCountrySelected(String)
+     * @param countryCode the ISO code of the selected country, or null for "Todas"
+     */
+    @Override
+    public void onCountrySelected(String countryCode) {
+        // TODO HU 532301: actualizar las ciudades y filtrar las redes por país (tarea del presenter)
+    }
+
+    /**
+     * @see IMainContract.Presenter#onCitySelected(String)
+     * @param city the name of the selected city, or null if no city is selected
+     */
+    @Override
+    public void onCitySelected(String city) {
+        // TODO HU 532301: filtrar las redes por ciudad (tarea del presenter)
+    }
+
+    /**
      * Loads the bike networks from the repository, and sends them to the view.
      * If they are loaded correctly, the location permission is requested to detect the city.
      */

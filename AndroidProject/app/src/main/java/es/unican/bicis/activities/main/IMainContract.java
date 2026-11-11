@@ -45,6 +45,34 @@ public interface IMainContract {
          */
         public void onLocationPermissionResult(boolean granted);
 
+        /**
+         * The presenter is informed that the "select city" icon (the pin in the toolbar) has
+         * been clicked. If the networks could not be loaded, the presenter asks the view to show
+         * the load error. Otherwise it asks the view to show the country and city selectors and,
+         * if the city of the user was detected, it leaves it selected and filters the list.
+         * Only the View should call this method
+         */
+        public void onSelectCityClicked();
+
+        /**
+         * The presenter is informed that the user has selected a country in the country selector.
+         * The presenter updates the city selector with the cities of that country and asks the
+         * view to show the networks of the country.
+         * Only the View should call this method
+         * @param countryCode the ISO code of the selected country (for example "ES"),
+         *                    or null if the user has selected the option "Todas"
+         */
+        public void onCountrySelected(String countryCode);
+
+        /**
+         * The presenter is informed that the user has selected a city in the city selector.
+         * The presenter asks the view to show only the networks of that city.
+         * Only the View should call this method
+         * @param city the name of the selected city, or null if no city is selected
+         *             (then the networks of the selected country are shown)
+         */
+        public void onCitySelected(String city);
+
     }
 
     /**
@@ -149,6 +177,45 @@ public interface IMainContract {
          * @param network the network detected from the user's location
          */
         public void showNetworkStations(Network network);
+
+        /**
+         * The view is requested to show the country and city selectors above the list of
+         * networks. The first option of the country selector is "Todas", followed by the given
+         * countries (the view shows their name in Spanish). The city selector shows the cities
+         * of the selected country, or no options if no country is selected.
+         * Only the Presenter should call this method
+         * @param countries the ISO codes of the countries with networks, already sorted by
+         *                  their name in Spanish
+         * @param country the ISO code of the country that must appear selected,
+         *                or null if no country is selected
+         * @param city the name of the city that must appear selected,
+         *             or null if no city is selected
+         */
+        public void showCitySelector(List<String> countries, String country, String city);
+
+        /**
+         * The view is requested to replace the options of the city selector.
+         * Only the Presenter should call this method
+         * @param cities the cities of the selected country, already sorted alphabetically
+         *               (empty if the option "Todas" is selected)
+         * @param city the name of the city that must appear selected,
+         *             or null if no city is selected
+         */
+        public void showCities(List<String> cities, String city);
+
+        /**
+         * The view is requested to display the message "No se han podido cargar las ciudades".
+         * The country and city selectors must not show any option.
+         * Only the Presenter should call this method
+         */
+        public void showCitiesLoadError();
+
+        /**
+         * The view is requested to display the message "Elige el país y la ciudad en los que
+         * vas a usar las bicis", used when the city of the user could not be detected.
+         * Only the Presenter should call this method
+         */
+        public void showChooseCityHint();
 
     }
 }
