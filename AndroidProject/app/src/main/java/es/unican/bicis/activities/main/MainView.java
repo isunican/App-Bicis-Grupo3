@@ -1,13 +1,20 @@
 package es.unican.bicis.activities.main;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -19,8 +26,10 @@ import androidx.core.content.ContextCompat;
 
 import org.parceler.Parcels;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.inject.Inject;
 
@@ -31,6 +40,7 @@ import es.unican.bicis.activities.info.InfoView;
 import es.unican.bicis.activities.details.DetailsView;
 import es.unican.bicis.activities.stations.StationsView;
 import es.unican.bicis.location.ILocationProvider;
+import es.unican.bicis.model.CitySelector;
 import es.unican.bicis.model.Network;
 import es.unican.bicis.repository.INetworksRepository;
 
@@ -50,6 +60,18 @@ public class MainView extends AppCompatActivity implements IMainContract.View {
     /** Gives the location of the device. It is also injected by Hilt */
     @Inject
     ILocationProvider locationProvider;
+
+    /**
+     * ISO codes of the countries in the country selector, in the same order as its options.
+     * The first one is null, the option "Todos" (HU 532301).
+     */
+    private final List<String> countryCodes = new ArrayList<>();
+
+    /** ISO code of the country shown as selected in the country selector, or null if none */
+    private String shownCountry;
+
+    /** Name of the city shown as selected in the city selector, or null if none */
+    private String shownCity;
 
     /**
      * Shows the Android dialog asking for the location permission and tells the presenter
@@ -118,6 +140,23 @@ public class MainView extends AppCompatActivity implements IMainContract.View {
         list.setOnItemClickListener((parent, view, position, id) -> {
             Network network = (Network) parent.getItemAtPosition(position);
             presenter.onNetworkClicked(network);
+        });
+
+        // desplegables de pais y ciudad (HU 532301)
+        Spinner spCountry = findViewById(R.id.spCountry);
+        spCountry.setOnItemSelectedListener(new SimpleItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                onCountryOptionSelected(position);
+            }
+        });
+
+        Spinner spCity = findViewById(R.id.spCity);
+        spCity.setOnItemSelectedListener(new SimpleItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                onCityOptionSelected(parent, position);
+            }
         });
     }
 
@@ -259,7 +298,27 @@ public class MainView extends AppCompatActivity implements IMainContract.View {
      */
     @Override
     public void showCitySelector(List<String> countries, String country, String city) {
-        // TODO HU 532301: mostrar los desplegables de país y ciudad (tarea de la vista)
+        findViewById(R.id.llCitySelector).setVisibility(View.VISIBLE);
+
+        // la primera opcion es "Todos" (null) y despues los paises con su nombre en espanol
+        countryCodes.clear();
+        countryCodes.add(null);
+        countryCodes.addAll(countries);
+        List<String> names = new ArrayList<>();
+        names.add(getString(R.string.cityAllCountries));
+        for (String code : countries) {
+            names.add(CitySelector.getCountryName(code));
+        }
+
+        // se guarda antes de cambiar el desplegable, para que su aviso no llegue al presenter
+        shownCountry = country;
+        shownCity = city;
+
+        Spinner spCountry = findViewById(R.id.spCountry);
+        spCountry.setAdapter(new HintAdapter(this, names, getString(R.string.citySelectHint)));
+        spCountry.setEnabled(true);
+        int position = countryCodes.indexOf(country);
+        spCountry.setSelection(Math.max(position, 0), false);
     }
 
     /**
@@ -269,7 +328,24 @@ public class MainView extends AppCompatActivity implements IMainContract.View {
      */
     @Override
     public void showCities(List<String> cities, String city) {
-        // TODO HU 532301: rellenar el desplegable de ciudades (tarea de la vista)
+        shownCity = city;
+        Spinner spCity = findViewById(R.id.spCity);
+
+        // sin pais elegido el desplegable de ciudades no tiene opciones
+        if (cities.isEmpty()) {
+            spCity.setAdapter(new HintAdapter(this, new ArrayList<>(),
+                    getString(R.string.citySelectHint)));
+            spCity.setEnabled(false);
+            return;
+        }
+
+        // la primera opcion es "Todas" (null): se ven todas las redes del pais
+        List<String> options = new ArrayList<>();
+        options.add(getString(R.string.cityAllCities));
+        options.addAll(cities);
+        spCity.setAdapter(new HintAdapter(this, options, getString(R.string.citySelectHint)));
+        spCity.setEnabled(true);
+        spCity.setSelection(Math.max(indexOfIgnoreCase(cities, city) + 1, 0), false);
     }
 
     /**
@@ -277,7 +353,23 @@ public class MainView extends AppCompatActivity implements IMainContract.View {
      */
     @Override
     public void showCitiesLoadError() {
-        // TODO HU 532301: mostrar "No se han podido cargar las ciudades" (tarea de la vista)
+        findViewById(R.id.llCitySelector).setVisibility(View.VISIBLE);
+
+        // los dos desplegables se quedan sin ninguna opcion
+        countryCodes.clear();
+        shownCountry = null;
+        shownCity = null;
+        String hint = getString(R.string.citySelectHint);
+
+        Spinner spCountry = findViewById(R.id.spCountry);
+        spCountry.setAdapter(new HintAdapter(this, new ArrayList<>(), hint));
+        spCountry.setEnabled(false);
+
+        Spinner spCity = findViewById(R.id.spCity);
+        spCity.setAdapter(new HintAdapter(this, new ArrayList<>(), hint));
+        spCity.setEnabled(false);
+
+        Toast.makeText(this, R.string.citiesLoadError, Toast.LENGTH_LONG).show();
     }
 
     /**
@@ -285,7 +377,58 @@ public class MainView extends AppCompatActivity implements IMainContract.View {
      */
     @Override
     public void showChooseCityHint() {
-        // TODO HU 532301: mostrar "Elige el país y la ciudad..." (tarea de la vista)
+        Toast.makeText(this, R.string.chooseCityHint, Toast.LENGTH_LONG).show();
+    }
+
+    /**
+     * Called when an option of the country selector is selected. The presenter is only informed
+     * if the country is different from the one already shown: Android also calls the listener
+     * when the options are changed from the code, and that must not reach the presenter.
+     * @param position the position of the option (0 is "Todos")
+     */
+    private void onCountryOptionSelected(int position) {
+        if (position < 0 || position >= countryCodes.size()) {
+            return;
+        }
+        String country = countryCodes.get(position);
+        if (Objects.equals(country, shownCountry)) {
+            return;
+        }
+        shownCountry = country;
+        shownCity = null;
+        presenter.onCountrySelected(country);
+    }
+
+    /**
+     * Called when an option of the city selector is selected. As with the countries, the
+     * presenter is only informed if the city is different from the one already shown.
+     * @param parent the city selector
+     * @param position the position of the option (0 is "Todas", that is, no city)
+     */
+    private void onCityOptionSelected(AdapterView<?> parent, int position) {
+        String city = position <= 0 ? null : (String) parent.getItemAtPosition(position);
+        if (city == null ? shownCity == null : city.equalsIgnoreCase(shownCity)) {
+            return;
+        }
+        shownCity = city;
+        presenter.onCitySelected(city);
+    }
+
+    /**
+     * Looks for a text in a list, ignoring case.
+     * @param list the list of texts
+     * @param text the text to look for (can be null)
+     * @return the position of the text in the list, or -1 if it is not in the list or is null
+     */
+    private static int indexOfIgnoreCase(List<String> list, String text) {
+        if (text != null) {
+            for (int i = 0; i < list.size(); i++) {
+                if (list.get(i).equalsIgnoreCase(text)) {
+                    return i;
+                }
+            }
+        }
+        return -1;
     }
 
     /**
@@ -306,5 +449,64 @@ public class MainView extends AppCompatActivity implements IMainContract.View {
         boolean granted = Boolean.TRUE.equals(answers.get(Manifest.permission.ACCESS_COARSE_LOCATION))
                 || Boolean.TRUE.equals(answers.get(Manifest.permission.ACCESS_FINE_LOCATION));
         presenter.onLocationPermissionResult(granted);
+    }
+
+    /**
+     * Listener of the selectors that only needs to know when an option is selected.
+     */
+    private abstract static class SimpleItemSelectedListener
+            implements AdapterView.OnItemSelectedListener {
+
+        /**
+         * Nothing to do: the selectors always have an option selected when they have options.
+         * @param parent the selector
+         */
+        @Override
+        public void onNothingSelected(AdapterView<?> parent) {
+            // no se usa
+        }
+    }
+
+    /**
+     * Adapter of the country and city selectors. The first option ("Todos" or "Todas") means
+     * that nothing is selected: in the open list it shows its own text, but in the closed
+     * selector it shows the hint "Selecciona…", as in the mock-up.
+     */
+    private static class HintAdapter extends ArrayAdapter<String> {
+
+        /** Text shown in the closed selector when the first option is selected */
+        private final String hint;
+
+        /**
+         * Creates the adapter.
+         * @param context the context
+         * @param options the options of the selector
+         * @param hint the text shown when the first option is selected
+         */
+        HintAdapter(Context context, List<String> options, String hint) {
+            super(context, android.R.layout.simple_spinner_item, options);
+            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            this.hint = hint;
+        }
+
+        /**
+         * Returns the view of the closed selector.
+         * @param position the position of the selected option
+         * @param convertView the old view to reuse, if possible
+         * @param parent the selector
+         * @return the view, with the hint (and lighter) if the first option is selected
+         */
+        @NonNull
+        @Override
+        public View getView(int position, View convertView, @NonNull ViewGroup parent) {
+            TextView view = (TextView) super.getView(position, convertView, parent);
+            if (position == 0) {
+                view.setText(hint);
+                view.setAlpha(0.5f);
+            } else {
+                view.setAlpha(1f);
+            }
+            return view;
+        }
     }
 }
