@@ -87,7 +87,7 @@ public class DetectarCiudadSinUbicacionUITest {
             }
         }
 
-        // Comprueba las 10 redes cargadas desde networks.json.
+        // Comprueba las 13 redes cargadas desde networks.json.
         // Se consulta el adaptador porque ListView solo crea las filas visibles.
         onView(withId(R.id.lvNetworks)).check((view, exception) -> {
             if (exception != null) {
@@ -95,7 +95,7 @@ public class DetectarCiudadSinUbicacionUITest {
             }
 
             ListView listView = (ListView) view;
-            assertEquals(10, listView.getAdapter().getCount());
+            assertEquals(13, listView.getAdapter().getCount());
         });
     }
 }
