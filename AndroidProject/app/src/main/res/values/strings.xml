@@ -70,4 +70,7 @@
     <string name="distanceFilterActive">A menos de %s</string>
     <string name="distanceFilterNoResults">No hay estaciones dentro de la distancia seleccionada</string>
     <string name="distanceLocationUnavailable">No se puede obtener tu ubicación para filtrar por distancia</string>
+
+    <!-- Seleccionar la ciudad (HU 532301) -->
+    <string name="menuSelectCity">Seleccionar ciudad</string>
 </resources>

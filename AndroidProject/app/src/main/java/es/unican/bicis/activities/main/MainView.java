@@ -101,6 +101,10 @@ public class MainView extends AppCompatActivity implements IMainContract.View {
             presenter.onMenuInfoClicked();
             return true;
         }
+        if (itemId == R.id.menuItemSelectCity) {
+            presenter.onSelectCityClicked();
+            return true;
+        }
         return super.onOptionsItemSelected(item);
     }
 
