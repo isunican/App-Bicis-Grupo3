@@ -60,6 +60,11 @@
     <string name="filterEmptySlotsError">No se han podido filtrar las estaciones</string>
     <string name="filterSubtitleSeparator">" · "</string>
 
+    <!-- Filtro por tipo de bicicleta (HU 532305) -->
+    <string name="filterBikeTypeLabel">Tipo de bicicleta</string>
+    <string name="filterBikeTypeElectric">Eléctrica</string>
+    <string name="filterBikeTypeMechanical">Mecánica</string>
+
     <!-- Filtro de estaciones por distancia (HU 532304) -->
     <string name="filterDistanceSwitch">Filtrar por distancia</string>
     <string name="filterDistanceLabel">Distancia máxima</string>
