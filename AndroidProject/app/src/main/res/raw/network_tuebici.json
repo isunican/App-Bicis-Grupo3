@@ -23,6 +23,8 @@
                 "free_bikes": 5,
                 "empty_slots": 7,
                 "extra": {
+                    "ebikes": 5,
+                    "normal_bikes": 0,
                     "uid": "336941744",
                     "number": "37407",
                     "slots": 12,
@@ -45,6 +47,8 @@
                 "free_bikes": 11,
                 "empty_slots": 0,
                 "extra": {
+                    "ebikes": 0,
+                    "normal_bikes": 11,
                     "uid": "565206004",
                     "number": "37440",
                     "slots": 10,
@@ -92,6 +96,8 @@
                 "free_bikes": 0,
                 "empty_slots": 20,
                 "extra": {
+                    "ebikes": 0,
+                    "normal_bikes": 0,
                     "uid": "336941205",
                     "number": "37405",
                     "slots": 20,
@@ -130,6 +136,8 @@
                 "free_bikes": 1,
                 "empty_slots": 5,
                 "extra": {
+                    "ebikes": 1,
+                    "normal_bikes": 0,
                     "uid": "506614986",
                     "number": "37433",
                     "slots": 6,
@@ -148,6 +156,8 @@
                 "free_bikes": 3,
                 "empty_slots": "sin dato",
                 "extra": {
+                    "ebikes": 3,
+                    "normal_bikes": 0,
                     "uid": "336945010",
                     "number": "37421",
                     "slots": 6,
@@ -168,6 +178,8 @@
                 "free_bikes": 2,
                 "empty_slots": 4,
                 "extra": {
+                    "ebikes": 0,
+                    "normal_bikes": 2,
                     "uid": "336945257",
                     "number": "37422",
                     "slots": 6,
@@ -187,6 +199,8 @@
                 "free_bikes": 0,
                 "empty_slots": 19,
                 "extra": {
+                    "ebikes": 0,
+                    "normal_bikes": 0,
                     "uid": "336932310",
                     "number": "37403",
                     "slots": 22,
@@ -203,6 +217,8 @@
                 "free_bikes": 4,
                 "empty_slots": 6,
                 "extra": {
+                    "ebikes": 4,
+                    "normal_bikes": 0,
                     "uid": "552576903",
                     "number": "37439",
                     "slots": 10,
@@ -224,6 +240,8 @@
                 "free_bikes": 0,
                 "empty_slots": 10,
                 "extra": {
+                    "ebikes": 0,
+                    "normal_bikes": 0,
                     "uid": "506616361",
                     "number": "37435",
                     "slots": 10,
@@ -240,6 +258,8 @@
                 "free_bikes": 6,
                 "empty_slots": 4,
                 "extra": {
+                    "ebikes": 3,
+                    "normal_bikes": 3,
                     "uid": "506617138",
                     "number": "37436",
                     "slots": 10,
@@ -263,6 +283,8 @@
                 "free_bikes": 5,
                 "empty_slots": 5,
                 "extra": {
+                    "ebikes": 5,
+                    "normal_bikes": 0,
                     "uid": "506612595",
                     "number": "37429",
                     "slots": 10,
@@ -285,6 +307,8 @@
                 "free_bikes": 2,
                 "empty_slots": 12,
                 "extra": {
+                    "ebikes": 0,
+                    "normal_bikes": 2,
                     "uid": "336942745",
                     "number": "37410",
                     "slots": 14,
@@ -304,6 +328,8 @@
                 "free_bikes": 2,
                 "empty_slots": 8,
                 "extra": {
+                    "ebikes": 1,
+                    "normal_bikes": 1,
                     "uid": "506622272",
                     "number": "37437",
                     "slots": 10,
@@ -323,6 +349,8 @@
                 "free_bikes": 0,
                 "empty_slots": 0,
                 "extra": {
+                    "ebikes": 0,
+                    "normal_bikes": 0,
                     "uid": "337903038",
                     "number": "37497",
                     "slots": 4,
@@ -339,6 +367,8 @@
                 "free_bikes": 1,
                 "empty_slots": 5,
                 "extra": {
+                    "ebikes": 0,
+                    "normal_bikes": 1,
                     "uid": "336945551",
                     "number": "37423",
                     "slots": 6,
@@ -357,6 +387,8 @@
                 "free_bikes": 3,
                 "empty_slots": 9,
                 "extra": {
+                    "ebikes": 1,
+                    "normal_bikes": 2,
                     "uid": "340969136",
                     "number": "37424",
                     "slots": 12,
@@ -377,6 +409,8 @@
                 "free_bikes": 5,
                 "empty_slots": 15,
                 "extra": {
+                    "ebikes": 5,
+                    "normal_bikes": 0,
                     "uid": "336926289",
                     "number": "37400",
                     "slots": 20,
@@ -399,6 +433,8 @@
                 "free_bikes": 4,
                 "empty_slots": 12,
                 "extra": {
+                    "ebikes": 0,
+                    "normal_bikes": 4,
                     "uid": "336927971",
                     "number": "37402",
                     "slots": 17,
@@ -420,6 +456,8 @@
                 "free_bikes": 0,
                 "empty_slots": 8,
                 "extra": {
+                    "ebikes": 0,
+                    "normal_bikes": 0,
                     "uid": "506605293",
                     "number": "37426",
                     "slots": 8,
@@ -436,6 +474,8 @@
                 "free_bikes": 4,
                 "empty_slots": 16,
                 "extra": {
+                    "ebikes": 4,
+                    "normal_bikes": 0,
                     "uid": "336941453",
                     "number": "37406",
                     "slots": 20,
@@ -457,6 +497,8 @@
                 "free_bikes": 2,
                 "empty_slots": 8,
                 "extra": {
+                    "ebikes": 0,
+                    "normal_bikes": 2,
                     "uid": "552577269",
                     "number": "37438",
                     "slots": 10,
@@ -476,6 +518,8 @@
                 "free_bikes": 3,
                 "empty_slots": 15,
                 "extra": {
+                    "ebikes": 1,
+                    "normal_bikes": 2,
                     "uid": "336943435",
                     "number": "37413",
                     "slots": 18,
@@ -496,6 +540,8 @@
                 "free_bikes": 4,
                 "empty_slots": 10,
                 "extra": {
+                    "ebikes": 4,
+                    "normal_bikes": 0,
                     "uid": "336943540",
                     "number": "37414",
                     "slots": 14,
@@ -517,6 +563,8 @@
                 "free_bikes": 0,
                 "empty_slots": 14,
                 "extra": {
+                    "ebikes": 0,
+                    "normal_bikes": 0,
                     "uid": "336940411",
                     "number": "37404",
                     "slots": 14,
@@ -532,6 +580,8 @@
                 "timestamp": "2026-09-24T11:11:30.549054+00:00Z",
                 "free_bikes": 2,
                 "extra": {
+                    "ebikes": 1,
+                    "normal_bikes": 1,
                     "uid": "336944777",
                     "number": "37420",
                     "slots": 6,
@@ -551,6 +601,8 @@
                 "free_bikes": 3,
                 "empty_slots": -1,
                 "extra": {
+                    "ebikes": 3,
+                    "normal_bikes": 0,
                     "uid": "336944437",
                     "number": "37419",
                     "slots": 6,
@@ -571,6 +623,8 @@
                 "free_bikes": 1,
                 "empty_slots": 18,
                 "extra": {
+                    "ebikes": 0,
+                    "normal_bikes": 1,
                     "uid": "336942080",
                     "number": "37408",
                     "slots": 20,
@@ -589,6 +643,8 @@
                 "free_bikes": 0,
                 "empty_slots": 10,
                 "extra": {
+                    "ebikes": 0,
+                    "normal_bikes": 0,
                     "uid": "506613648",
                     "number": "37430",
                     "slots": 10,
@@ -605,6 +661,8 @@
                 "free_bikes": 0,
                 "empty_slots": 11,
                 "extra": {
+                    "ebikes": 0,
+                    "normal_bikes": 0,
                     "uid": "336944084",
                     "number": "37418",
                     "slots": 11,
@@ -621,6 +679,8 @@
                 "free_bikes": 1,
                 "empty_slots": 19,
                 "extra": {
+                    "ebikes": 0,
+                    "normal_bikes": 1,
                     "uid": "336942441",
                     "number": "37409",
                     "slots": 20,
@@ -639,6 +699,8 @@
                 "free_bikes": 5,
                 "empty_slots": 14,
                 "extra": {
+                    "ebikes": 2,
+                    "normal_bikes": 3,
                     "uid": "336927189",
                     "number": "37401",
                     "slots": 20,
@@ -661,6 +723,8 @@
                 "free_bikes": 5,
                 "empty_slots": 9,
                 "extra": {
+                    "ebikes": 5,
+                    "normal_bikes": 0,
                     "uid": "336943777",
                     "number": "37416",
                     "slots": 14,
@@ -683,6 +747,8 @@
                 "free_bikes": 0,
                 "empty_slots": 6,
                 "extra": {
+                    "ebikes": 0,
+                    "normal_bikes": 0,
                     "uid": "506609951",
                     "number": "37428",
                     "slots": 6,
@@ -699,6 +765,8 @@
                 "free_bikes": 7,
                 "empty_slots": 0,
                 "extra": {
+                    "ebikes": 3,
+                    "normal_bikes": 4,
                     "uid": "340969382",
                     "number": "37425",
                     "slots": 6,
@@ -721,6 +789,8 @@
                 "free_bikes": 0,
                 "empty_slots": 8,
                 "extra": {
+                    "ebikes": 0,
+                    "normal_bikes": 0,
                     "uid": "506614246",
                     "number": "37431",
                     "slots": 8,
@@ -737,6 +807,8 @@
                 "free_bikes": 8,
                 "empty_slots": 12,
                 "extra": {
+                    "ebikes": 0,
+                    "normal_bikes": 8,
                     "uid": "336943668",
                     "number": "37415",
                     "slots": 20,
@@ -762,6 +834,8 @@
                 "free_bikes": 4,
                 "empty_slots": 9,
                 "extra": {
+                    "ebikes": 2,
+                    "normal_bikes": 2,
                     "uid": "336943891",
                     "number": "37417",
                     "slots": 14,
@@ -783,6 +857,8 @@
                 "free_bikes": 3,
                 "empty_slots": 15,
                 "extra": {
+                    "ebikes": 3,
+                    "normal_bikes": 0,
                     "uid": "336943300",
                     "number": "37412",
                     "slots": 18,
@@ -803,6 +879,8 @@
                 "free_bikes": 15,
                 "empty_slots": 5,
                 "extra": {
+                    "ebikes": 0,
+                    "normal_bikes": 15,
                     "uid": "336943030",
                     "number": "37411",
                     "slots": 20,
@@ -835,6 +913,8 @@
                 "free_bikes": 3,
                 "empty_slots": 7,
                 "extra": {
+                    "ebikes": 1,
+                    "normal_bikes": 2,
                     "uid": "506615390",
                     "number": "37434",
                     "slots": 10,
