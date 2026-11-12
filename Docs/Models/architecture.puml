@@ -10,8 +10,8 @@ MainPresenter ..|> IMainContract.Presenter
 MainView --> INetworksRepository : repository
 ApiNetworksRepository ..|> INetworksRepository
 JsonNetworksRepository ..|> INetworksRepository
-MainView --> MainPresenter : presenter
-MainPresenter --> MainView : view
+MainView --> IMainContract.Presenter : presenter
+MainPresenter --> IMainContract.View : view
 MainView ..> InfoView : <<use>>
 MainView ..> DetailsView : <<use>>
 MainView ..> StationsView : <<use>>
@@ -21,19 +21,62 @@ DeviceLocationProvider ..|> ILocationProvider
 LocationModule ..> DeviceLocationProvider : <<create>>
 ILocationProvider ..> LocationResultCallback : <<use>>
 MainPresenter ..> NetworkLocator : <<use>>
+' HU 532301 - Seleccionar la ciudad
+MainPresenter ..> CitySelector : <<use>>
 
 class MainView {
     - onLocationPermissionAnswer(answers : Map<String, Boolean>)
     - hasLocationPermission() : boolean
+    ' HU 532301 - Seleccionar la ciudad
+    - countryCodes : List<String>
+    - onCountryOptionSelected(position : int)
+    - onCityOptionSelected(parent : AdapterView, position : int)
 }
 
 class MainPresenter {
     - networks : List<Network>
     - load()
+    ' HU 532301 - Seleccionar la ciudad
+    - detectedNetwork : Network
+    - selectedCountry : String
+    - selectedCity : String
+    - {static} hasCountryAndCity(network : Network) : boolean
 }
 
 class InfoView
 class DetailsView
+
+' Detalle de una red (faltaba en el diagrama)
+DetailsView ..|> IDetailsContract.View
+DetailsPresenter ..|> IDetailsContract.Presenter
+DetailsView --> IDetailsContract.Presenter : presenter
+DetailsPresenter --> IDetailsContract.View : view
+
+class DetailsPresenter {
+    - textOrNotAvailable(text : String) : String
+    - formatLocation(location : Location) : String
+    - formatLatitude(location : Location) : String
+    - formatLongitude(location : Location) : String
+    - formatBoolean(value : Boolean) : String
+    - formatOperators(companies : String[]) : String
+}
+
+interface IDetailsContract.Presenter {
+    + init(view : View, network : Network)
+    + onStationsClicked()
+}
+
+interface IDetailsContract.View {
+    + showName(name : String)
+    + showLocation(location : String)
+    + showLatitude(latitude : String)
+    + showLongitude(longitude : String)
+    + showEbikes(ebikes : String)
+    + showOperatorsCount(count : String)
+    + showOperators(operators : String)
+    + showNoDetailsAvailable()
+    + showStations(network : Network)
+}
 class ApiNetworksRepository
 class JsonNetworksRepository
 
@@ -41,6 +84,14 @@ class NetworkLocator {
     + {static} MAX_DISTANCE_KM : double = 20
     + {static} findNearestNetwork(networks : List<Network>, lat : double, lon : double, maxKm : double) : Network
     + {static} distanceKm(lat1 : double, lon1 : double, lat2 : double, lon2 : double) : double
+}
+
+' HU 532301 - Seleccionar la ciudad
+class CitySelector {
+    + {static} getCountries(networks : List<Network>) : List<String>
+    + {static} getCountryName(countryCode : String) : String
+    + {static} getCities(networks : List<Network>, countryCode : String) : List<String>
+    + {static} filterByCity(networks : List<Network>, countryCode : String, city : String) : List<Network>
 }
 
 class DeviceLocationProvider {
@@ -65,6 +116,11 @@ interface IMainContract.View {
     + showNoNetworkNearby()
     + getLocationProvider() : ILocationProvider
     + showNetworkStations(network : Network)
+    ' HU 532301 - Seleccionar la ciudad
+    + showCitySelector(countries : List<String>, country : String, city : String)
+    + showCities(cities : List<String>, city : String)
+    + showCitiesLoadError()
+    + showChooseCityHint()
 }
 
 interface IMainContract.Presenter {
@@ -72,6 +128,10 @@ interface IMainContract.Presenter {
     + onNetworkClicked(network : Network)
     + onMenuInfoClicked()
     + onLocationPermissionResult(granted : boolean)
+    ' HU 532301 - Seleccionar la ciudad
+    + onSelectCityClicked()
+    + onCountrySelected(countryCode : String)
+    + onCitySelected(city : String)
 }
 
 interface INetworksRepository {
@@ -111,7 +171,7 @@ interface LocationResultCallback {
 DetailsView ..> StationsView : <<use>>
 StationsView ..|> IStationsContract.View
 StationsPresenter ..|> IStationsContract.Presenter
-StationsView --> StationsPresenter : presenter
+StationsView --> IStationsContract.Presenter : presenter
 StationsPresenter --> IStationsContract.View : view
 StationsView --> INetworksRepository : repository
 StationsView ..> StationsArrayAdapter : <<use>>
@@ -183,6 +243,7 @@ class StationUtils {
     + {static} formatValue(value : Integer) : String
     + {static} formatText(text : String) : String
     + {static} formatBikes(freeBikes : Integer, emptySlots : Integer, slots : Integer) : String
+    + {static} formatDistance(distanceKm : Double) : String
     + {static} hasEbikes(station : Station) : boolean
 }
 
@@ -215,6 +276,7 @@ interface IStationsContract.View {
     + showInvalidMinFreeBikes()
     + showNoStationsWithMinEmptySlots(minEmptySlots : int)
     + showInvalidMinEmptySlots()
+    + showEmptySlotsFilterError()
     + showActiveFiltersCount(numActiveFilters : int)
     + showMinEmptySlotsFilterActive(minEmptySlots : int)
     + mostrarErrorQuitarFiltros()
