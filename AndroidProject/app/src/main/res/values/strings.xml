@@ -64,6 +64,7 @@
     <string name="filterBikeTypeLabel">Tipo de bicicleta</string>
     <string name="filterBikeTypeElectric">Eléctrica</string>
     <string name="filterBikeTypeMechanical">Mecánica</string>
+    <string name="filterBikeTypeRequired">Debe seleccionar al menos un tipo de bicicleta</string>
 
     <!-- Filtro de estaciones por distancia (HU 532304) -->
     <string name="filterDistanceSwitch">Filtrar por distancia</string>

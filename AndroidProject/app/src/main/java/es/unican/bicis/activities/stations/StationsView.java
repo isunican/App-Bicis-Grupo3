@@ -13,6 +13,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SeekBar;
@@ -337,11 +338,45 @@ public class StationsView extends AppCompatActivity implements IStationsContract
      */
     private void openFilterDialog() {
         View content = getLayoutInflater().inflate(R.layout.dialog_filters, null);
+
         filterInput = content.findViewById(R.id.etMinFreeBikes);
         emptySlotsInput = content.findViewById(R.id.etMinEmptySlots);
+
         filterInput.setText(appliedFreeBikesText);
         emptySlotsInput.setText(appliedEmptySlotsText);
+
         setUpDistanceControls(content);
+
+        // HU 532305: bike type checkboxes
+        CheckBox electricCheckBox = content.findViewById(R.id.cbElectricBike);
+        CheckBox mechanicalCheckBox = content.findViewById(R.id.cbMechanicalBike);
+
+        // Both types are initially selected.
+        electricCheckBox.setChecked(true);
+        mechanicalCheckBox.setChecked(true);
+
+        // Prevent unchecking the last selected bike type.
+        electricCheckBox.setOnCheckedChangeListener((button, checked) -> {
+            if (!checked && !mechanicalCheckBox.isChecked()) {
+                electricCheckBox.setChecked(true);
+                Toast.makeText(
+                        this,
+                        R.string.filterBikeTypeRequired,
+                        Toast.LENGTH_SHORT
+                ).show();
+            }
+        });
+
+        mechanicalCheckBox.setOnCheckedChangeListener((button, checked) -> {
+            if (!checked && !electricCheckBox.isChecked()) {
+                mechanicalCheckBox.setChecked(true);
+                Toast.makeText(
+                        this,
+                        R.string.filterBikeTypeRequired,
+                        Toast.LENGTH_SHORT
+                ).show();
+            }
+        });
 
         filterDialog = new AlertDialog.Builder(this)
                 .setTitle(R.string.filterTitle)
@@ -354,7 +389,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
                 .setNegativeButton(R.string.filterCancel, null)
                 .create();
 
-        // The positive button is overridden so that the dialog does not close on invalid values
+        // The dialog remains open when filter values are invalid.
         filterDialog.setOnShowListener(d -> {
             Button apply = filterDialog.getButton(DialogInterface.BUTTON_POSITIVE);
             apply.setOnClickListener(v -> onApplyFiltersClicked());
