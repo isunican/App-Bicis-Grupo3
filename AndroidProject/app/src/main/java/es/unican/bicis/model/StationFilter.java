@@ -5,11 +5,12 @@ import java.util.List;
 
 /**
  * Filters the stations of a bike sharing network according to their number of free bikes,
- * their number of empty slots or their distance to the user.
+ * their number of empty slots, their distance to the user or their bike type
+ * (electric / mechanical).
  */
 public class StationFilter {
 
-    // Private constructor: this class only has static methods
+    // Constructor privado: esta clase solo tiene métodos estáticos
     private StationFilter() {
     }
 
@@ -174,5 +175,81 @@ public class StationFilter {
                 * Math.cos(Math.toRadians(lat2))
                 * Math.pow(Math.sin(dLon / 2), 2);
         return radioTierraKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    // =========================================================================
+    // HU 532305 — Filtrar las estaciones por tipo de bici
+    // =========================================================================
+
+    /**
+     * Devuelve únicamente las estaciones que tienen disponible al menos una bicicleta
+     * del tipo o tipos solicitados.
+     *
+     * <p>Lógica de inclusión (combinable con otros filtros):
+     * <ul>
+     *   <li>Si {@code electricas} es {@code true}: la estación debe tener al menos
+     *       una bici eléctrica disponible (campo {@link Station#getEbikes()} &gt; 0).</li>
+     *   <li>Si {@code mecanicas} es {@code true}: la estación debe tener al menos
+     *       una bici mecánica disponible. Las bicis mecánicas se calculan como
+     *       {@code freeBikes - ebikes}; si la red no informa de bicis eléctricas
+     *       (ebikes es {@code null}), todas las bicis libres se tratan como mecánicas.</li>
+     *   <li>Si ambos son {@code true}: basta con que cumpla uno de los dos (OR).</li>
+     *   <li>Si ambos son {@code false}: se devuelve una lista vacía.</li>
+     * </ul>
+     * Las estaciones que no informan de bicis libres (freeBikes nulo o negativo) se excluyen
+     * siempre, ya que no puede garantizarse que tengan bicis.</p>
+     *
+     * @param stations   lista de estaciones a filtrar (puede ser {@code null})
+     * @param electricas {@code true} si se quieren incluir estaciones con bicis eléctricas
+     * @param mecanicas  {@code true} si se quieren incluir estaciones con bicis mecánicas
+     * @return nueva lista con las estaciones que cumplen la condición, en el mismo orden.
+     *         Es vacía si ninguna cumple la condición, si la lista es {@code null}
+     *         o si ambos parámetros son {@code false}.
+     */
+    public static List<Station> filterByBikeType(
+            List<Station> stations, boolean electricas, boolean mecanicas) {
+
+        List<Station> result = new ArrayList<>();
+        if (stations == null || (!electricas && !mecanicas)) {
+            return result;
+        }
+        for (Station station : stations) {
+            if (!hasValidFreeBikes(station)) {
+                continue; // sin dato de bicis libres → excluida
+            }
+            if (electricas && tieneEbikesDisponibles(station)) {
+                result.add(station);
+            } else if (mecanicas && tieneMecanicasDisponibles(station)) {
+                result.add(station);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Comprueba si una estación tiene al menos una bicicleta eléctrica disponible.
+     *
+     * @param station estación a comprobar (no {@code null})
+     * @return {@code true} si {@code ebikes} es mayor que 0
+     */
+    public static boolean tieneEbikesDisponibles(Station station) {
+        Integer ebikes = station.getEbikes();
+        return ebikes != null && ebikes > 0;
+    }
+
+    /**
+     * Comprueba si una estación tiene al menos una bicicleta mecánica disponible.
+     * Las bicis mecánicas se calculan como {@code freeBikes - ebikes}.
+     * Si la red no informa de bicis eléctricas (ebikes es {@code null}),
+     * se asume que todas las bicis libres son mecánicas.
+     *
+     * @param station estación a comprobar (no {@code null}, con freeBikes válido)
+     * @return {@code true} si hay al menos una bici mecánica disponible
+     */
+    public static boolean tieneMecanicasDisponibles(Station station) {
+        int freeBikes = station.getFreeBikes(); // ya validado por hasValidFreeBikes
+        Integer ebikes = station.getEbikes();
+        int mecanicas = (ebikes == null) ? freeBikes : (freeBikes - ebikes);
+        return mecanicas > 0;
     }
 }

@@ -424,4 +424,198 @@ public class StationFilterTest {
         Station s = createStationWithCoords("Ambas fuera de rango", 91.0, 181.0);
         assertFalse(StationFilter.hasValidCoordinates(s));
     }
+
+    // =====================================================================
+    // HU 532305 — Pruebas de filterByBikeType
+    // =====================================================================
+
+    /**
+     * Crea una estación con freeBikes y ebikes para las pruebas de tipo de bici (HU 532305).
+     *
+     * @param name      nombre de la estación
+     * @param freeBikes total de bicis libres (puede ser null)
+     * @param ebikes    bicis eléctricas disponibles (puede ser null si la red no informa)
+     * @return la estación creada con su StationExtra configurado
+     */
+    private Station createStationWithBikeType(String name, Integer freeBikes, Integer ebikes) {
+        Station station = new Station();
+        station.setName(name);
+        station.setFreeBikes(freeBikes);
+        if (ebikes != null) {
+            StationExtra extra = new StationExtra();
+            extra.setEbikes(ebikes);
+            station.setExtra(extra);
+        }
+        return station;
+    }
+
+    // Estaciones de referencia para HU 532305:
+    //   bE3M2 : 5 bicis libres, 3 eléctricas, 2 mecánicas
+    //   bE0M4 : 4 bicis libres, 0 eléctricas, 4 mecánicas
+    //   bE2M0 : 2 bicis libres, 2 eléctricas, 0 mecánicas
+    //   bSinInfo : 3 bicis libres, sin información de eléctricas (todas se tratan como mecánicas)
+    //   bSinFreeBikes : sin dato de freeBikes (excluida siempre)
+    //   bFreeBikesNeg  : freeBikes negativo (excluida siempre)
+
+    /** UFT.1a: solo eléctricas (electricas=true, mecanicas=false) -> estaciones con ebikes > 0 */
+    @Test
+    public void testFilterByBikeTypeSoloElectricas() {
+        Station bE3M2 = createStationWithBikeType("E3M2", 5, 3);
+        Station bE0M4 = createStationWithBikeType("E0M4", 4, 0);
+        Station bE2M0 = createStationWithBikeType("E2M0", 2, 2);
+        Station bSinInfo = createStationWithBikeType("SinInfo", 3, null);
+        List<Station> input = Arrays.asList(bE3M2, bE0M4, bE2M0, bSinInfo);
+
+        List<Station> result = StationFilter.filterByBikeType(input, true, false);
+
+        assertEquals(Arrays.asList(bE3M2, bE2M0), result);
+    }
+
+    /** UFT.1b: solo mecánicas (electricas=false, mecanicas=true) -> estaciones con mecánicas > 0 */
+    @Test
+    public void testFilterByBikeTypeSoloMecanicas() {
+        Station bE3M2 = createStationWithBikeType("E3M2", 5, 3);
+        Station bE0M4 = createStationWithBikeType("E0M4", 4, 0);
+        Station bE2M0 = createStationWithBikeType("E2M0", 2, 2);
+        Station bSinInfo = createStationWithBikeType("SinInfo", 3, null);
+        List<Station> input = Arrays.asList(bE3M2, bE0M4, bE2M0, bSinInfo);
+
+        List<Station> result = StationFilter.filterByBikeType(input, false, true);
+
+        // E3M2 (5-3=2 mec), E0M4 (4-0=4 mec), SinInfo (3 mec por no tener info de eléctricas)
+        assertEquals(Arrays.asList(bE3M2, bE0M4, bSinInfo), result);
+    }
+
+    /** UFT.1c: ambas (electricas=true, mecanicas=true) -> todas las que tengan freeBikes válido */
+    @Test
+    public void testFilterByBikeTypeAmbas() {
+        Station bE3M2 = createStationWithBikeType("E3M2", 5, 3);
+        Station bE0M4 = createStationWithBikeType("E0M4", 4, 0);
+        Station bE2M0 = createStationWithBikeType("E2M0", 2, 2);
+        Station bSinInfo = createStationWithBikeType("SinInfo", 3, null);
+        List<Station> input = Arrays.asList(bE3M2, bE0M4, bE2M0, bSinInfo);
+
+        List<Station> result = StationFilter.filterByBikeType(input, true, true);
+
+        assertEquals(Arrays.asList(bE3M2, bE0M4, bE2M0, bSinInfo), result);
+    }
+
+    /** UFT.1d: ninguna (electricas=false, mecanicas=false) -> lista vacía */
+    @Test
+    public void testFilterByBikeTypeNinguna() {
+        Station bE3M2 = createStationWithBikeType("E3M2", 5, 3);
+        List<Station> input = Arrays.asList(bE3M2);
+
+        List<Station> result = StationFilter.filterByBikeType(input, false, false);
+
+        assertTrue(result.isEmpty());
+    }
+
+    /** UFT.1e: lista null -> lista vacía */
+    @Test
+    public void testFilterByBikeTypeNullList() {
+        List<Station> result = StationFilter.filterByBikeType(null, true, true);
+
+        assertTrue(result.isEmpty());
+    }
+
+    /** UFT.1f: lista vacía -> lista vacía */
+    @Test
+    public void testFilterByBikeTypeEmptyList() {
+        List<Station> result = StationFilter.filterByBikeType(new ArrayList<>(), true, false);
+
+        assertTrue(result.isEmpty());
+    }
+
+    /** UFT.1g: estación sin freeBikes (null) -> excluida siempre */
+    @Test
+    public void testFilterByBikeTypeExcludeNullFreeBikes() {
+        Station bSinFreeBikes = createStationWithBikeType("SinFreeBikes", null, 2);
+        List<Station> input = Arrays.asList(bSinFreeBikes);
+
+        List<Station> result = StationFilter.filterByBikeType(input, true, true);
+
+        assertTrue(result.isEmpty());
+    }
+
+    /** UFT.1h: estación con freeBikes negativo -> excluida siempre */
+    @Test
+    public void testFilterByBikeTypeExcludeNegativeFreeBikes() {
+        Station bNeg = createStationWithBikeType("FreeBikesNeg", -1, 1);
+        List<Station> input = Arrays.asList(bNeg);
+
+        List<Station> result = StationFilter.filterByBikeType(input, true, true);
+
+        assertTrue(result.isEmpty());
+    }
+
+    /** UFT.1i: red sin información de eléctricas (ebikes null) y filtro solo eléctricas -> excluida */
+    @Test
+    public void testFilterByBikeTypeSoloElectricasExcludeSinInfo() {
+        Station bSinInfo = createStationWithBikeType("SinInfo", 5, null);
+        List<Station> input = Arrays.asList(bSinInfo);
+
+        // Sin información de ebikes: no podemos asegurar que tenga eléctricas
+        List<Station> result = StationFilter.filterByBikeType(input, true, false);
+
+        assertTrue(result.isEmpty());
+    }
+
+    /** UFT.1j: orden de la lista de entrada se conserva */
+    @Test
+    public void testFilterByBikeTypeKeepsOrder() {
+        Station bE3M2 = createStationWithBikeType("E3M2", 5, 3);
+        Station bE2M0 = createStationWithBikeType("E2M0", 2, 2);
+        List<Station> input = Arrays.asList(bE2M0, bE3M2);
+
+        List<Station> result = StationFilter.filterByBikeType(input, true, false);
+
+        assertEquals(Arrays.asList(bE2M0, bE3M2), result);
+    }
+
+    // =====================================================================
+    // HU 532305 — Pruebas de tieneEbikesDisponibles y tieneMecanicasDisponibles
+    // =====================================================================
+
+    /** UFT.2a: tieneEbikesDisponibles con ebikes > 0 -> true */
+    @Test
+    public void testTieneEbikesDisponiblesTrue() {
+        Station s = createStationWithBikeType("Con ebikes", 5, 3);
+        assertTrue(StationFilter.tieneEbikesDisponibles(s));
+    }
+
+    /** UFT.2b: tieneEbikesDisponibles con ebikes = 0 -> false */
+    @Test
+    public void testTieneEbikesDisponiblesCero() {
+        Station s = createStationWithBikeType("Ebikes cero", 4, 0);
+        assertFalse(StationFilter.tieneEbikesDisponibles(s));
+    }
+
+    /** UFT.2c: tieneEbikesDisponibles con ebikes null (red sin info) -> false */
+    @Test
+    public void testTieneEbikesDisponiblesNull() {
+        Station s = createStationWithBikeType("Sin info ebikes", 3, null);
+        assertFalse(StationFilter.tieneEbikesDisponibles(s));
+    }
+
+    /** UFT.3a: tieneMecanicasDisponibles con mecanicas > 0 (freeBikes - ebikes) -> true */
+    @Test
+    public void testTieneMecanicasDisponiblesTrue() {
+        Station s = createStationWithBikeType("Tiene mec", 5, 3); // 5-3=2 mec
+        assertTrue(StationFilter.tieneMecanicasDisponibles(s));
+    }
+
+    /** UFT.3b: tieneMecanicasDisponibles con mecanicas = 0 (todas eléctricas) -> false */
+    @Test
+    public void testTieneMecanicasDisponiblesCero() {
+        Station s = createStationWithBikeType("Solo elec", 2, 2); // 2-2=0 mec
+        assertFalse(StationFilter.tieneMecanicasDisponibles(s));
+    }
+
+    /** UFT.3c: tieneMecanicasDisponibles sin info de ebikes -> todas las bicis libres son mecánicas */
+    @Test
+    public void testTieneMecanicasDisponiblesSinInfoEbikes() {
+        Station s = createStationWithBikeType("Sin info ebikes", 3, null); // 3 mec asumidas
+        assertTrue(StationFilter.tieneMecanicasDisponibles(s));
+    }
 }
