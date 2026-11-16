@@ -8,8 +8,6 @@ import org.parceler.Parcel;
 import lombok.Getter;
 import lombok.Setter;
 
-import com.google.gson.annotations.JsonAdapter;
-
 /**
  * A station of a bike sharing network, as defined in the
  * <a href="https://api.citybik.es/v2/">CityBikes API</a>.
@@ -43,8 +41,6 @@ public class Station {
 
     @SerializedName("extra")                protected StationExtra extra;
 
-
-
     /**
      * Devuelve el número de bicis eléctricas disponibles en la estación.
      * @return número de bicis eléctricas, o null si la red no informa de ese dato
@@ -54,6 +50,21 @@ public class Station {
             return null;
         }
         return extra.getEbikes();
+    }
+
+    /**
+     * Devuelve el número de bicis mecánicas disponibles en la estación,
+     * si la red lo informa explícitamente mediante el campo {@code normal_bikes} (HU 532305).
+     * Si la red no informa de ese dato, devuelve null; en ese caso, el presenter
+     * puede estimarlo como {@code freeBikes - ebikes}.
+     *
+     * @return número de bicis mecánicas, o null si la red no informa de ese dato
+     */
+    public Integer getNormalBikes() {
+        if (extra == null) {
+            return null;
+        }
+        return extra.getNormalBikes();
     }
 
     /**
