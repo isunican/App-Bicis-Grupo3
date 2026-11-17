@@ -185,19 +185,19 @@ public class StationFilter {
      * Devuelve únicamente las estaciones que tienen disponible al menos una bicicleta
      * del tipo o tipos solicitados.
      *
-     * <p>Lógica de inclusión (combinable con otros filtros):
+     * <p>Lógica de inclusión:
      * <ul>
      *   <li>Si {@code electricas} es {@code true}: la estación debe tener al menos
-     *       una bici eléctrica disponible (campo {@link Station#getEbikes()} &gt; 0).</li>
-     *   <li>Si {@code mecanicas} es {@code true}: la estación debe tener al menos
-     *       una bici mecánica disponible. Las bicis mecánicas se calculan como
-     *       {@code freeBikes - ebikes}; si la red no informa de bicis eléctricas
-     *       (ebikes es {@code null}), todas las bicis libres se tratan como mecánicas.</li>
+     *       una bici eléctrica disponible ({@link Station#getEbikes()} &gt; 0).</li>
+     *   <li>Si {@code mecanicas} es {@code true}: la estación debe informar
+     *       explícitamente de bicis mecánicas ({@code freeBikes - ebikes} &gt; 0).
+     *       Las estaciones que no informan de ebikes (null) se excluyen del filtro
+     *       de un único tipo, ya que no puede acreditarse disponibilidad positiva.</li>
      *   <li>Si ambos son {@code true}: basta con que cumpla uno de los dos (OR).</li>
      *   <li>Si ambos son {@code false}: se devuelve una lista vacía.</li>
      * </ul>
      * Las estaciones que no informan de bicis libres (freeBikes nulo o negativo) se excluyen
-     * siempre, ya que no puede garantizarse que tengan bicis.</p>
+     * siempre.</p>
      *
      * @param stations   lista de estaciones a filtrar (puede ser {@code null})
      * @param electricas {@code true} si se quieren incluir estaciones con bicis eléctricas
@@ -230,7 +230,7 @@ public class StationFilter {
      * Comprueba si una estación tiene al menos una bicicleta eléctrica disponible.
      *
      * @param station estación a comprobar (no {@code null})
-     * @return {@code true} si {@code ebikes} es mayor que 0
+     * @return {@code true} si {@code ebikes} no es null y es mayor que 0
      */
     public static boolean tieneEbikesDisponibles(Station station) {
         Integer ebikes = station.getEbikes();
@@ -239,17 +239,21 @@ public class StationFilter {
 
     /**
      * Comprueba si una estación tiene al menos una bicicleta mecánica disponible.
-     * Las bicis mecánicas se calculan como {@code freeBikes - ebikes}.
+     *
+     * <p>Las bicis mecánicas se calculan como {@code freeBikes - ebikes}.
      * Si la red no informa de bicis eléctricas (ebikes es {@code null}),
-     * se asume que todas las bicis libres son mecánicas.
+     * se devuelve {@code false}: sin información explícita del tipo no puede
+     * acreditarse disponibilidad positiva de bicis mecánicas (plan de pruebas US532305).</p>
      *
      * @param station estación a comprobar (no {@code null}, con freeBikes válido)
-     * @return {@code true} si hay al menos una bici mecánica disponible
+     * @return {@code true} si {@code ebikes} no es null y {@code freeBikes - ebikes} &gt; 0
      */
     public static boolean tieneMecanicasDisponibles(Station station) {
-        int freeBikes = station.getFreeBikes(); // ya validado por hasValidFreeBikes
         Integer ebikes = station.getEbikes();
-        int mecanicas = (ebikes == null) ? freeBikes : (freeBikes - ebikes);
-        return mecanicas > 0;
+        if (ebikes == null) {
+            return false; // sin info de tipo → no acredita mecánicas
+        }
+        int freeBikes = station.getFreeBikes();
+        return (freeBikes - ebikes) > 0;
     }
 }
