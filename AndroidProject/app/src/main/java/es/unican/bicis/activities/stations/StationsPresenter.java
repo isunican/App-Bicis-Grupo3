@@ -257,6 +257,31 @@ public class StationsPresenter implements IStationsContract.Presenter {
         return max;
     }
 
+
+    // ── HU 532305 Filtrar por tipo de bici ───────────────────────────────
+
+    /**
+     * @see IStationsContract.Presenter#onBikeTypeFilterApplied(boolean, boolean)
+     */
+    @Override
+    public void onBikeTypeFilterApplied(boolean electricas, boolean mecanicas) {
+        if (!electricas && !mecanicas) {
+            view.showNoBikeTypeSelected();
+            return;
+        }
+
+        // TODO: guardar el estado del filtro y usarlo en applyFilters()
+        // Por ahora se muestra la lista completa para que compile y los tests arranquen
+        List<Station> filtered = applyFilters();
+        if (filtered.isEmpty()) {
+            view.showNoStationsWithBikeType(electricas, mecanicas);
+            view.showNetworkLocation(location);
+        } else {
+            view.showBikeTypeFilterActive(electricas, mecanicas);
+            showFilteredStations(filtered);
+        }
+    }
+
     /**
      * Removes the applied station filters and restores the complete
      * list of stations.

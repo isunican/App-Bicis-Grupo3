@@ -217,7 +217,10 @@ public class StationFilter {
             if (!hasValidFreeBikes(station)) {
                 continue; // sin dato de bicis libres → excluida
             }
-            if (electricas && tieneEbikesDisponibles(station)) {
+            if (electricas && mecanicas) {
+                // Ambos tipos seleccionados: cualquier estación con freeBikes válido se incluye
+                result.add(station);
+            } else if (electricas && tieneEbikesDisponibles(station)) {
                 result.add(station);
             } else if (mecanicas && tieneMecanicasDisponibles(station)) {
                 result.add(station);

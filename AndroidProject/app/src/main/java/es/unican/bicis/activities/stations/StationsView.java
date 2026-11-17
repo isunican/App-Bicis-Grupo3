@@ -1032,6 +1032,36 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         searchNotFoundPanel.setVisibility(View.GONE);
     }
 
+    // ── HU 532305 Filtrar por tipo de bici ───────────────────────────────
+
+    /**
+     * @see IStationsContract.View#showNoBikeTypeSelected()
+     */
+    @Override
+    public void showNoBikeTypeSelected() {
+        Toast.makeText(this, R.string.filterBikeTypeRequired, Toast.LENGTH_SHORT).show();
+    }
+
+    /**
+     * @see IStationsContract.View#showNoStationsWithBikeType(boolean, boolean)
+     * @param electricas true si se filtraba por bicis eléctricas
+     * @param mecanicas  true si se filtraba por bicis mecánicas
+     */
+    @Override
+    public void showNoStationsWithBikeType(boolean electricas, boolean mecanicas) {
+        showMessage(getString(R.string.filterBikeTypeNoResults));
+    }
+
+    /**
+     * @see IStationsContract.View#showBikeTypeFilterActive(boolean, boolean)
+     * @param electricas true si el filtro activo incluye bicis eléctricas
+     * @param mecanicas  true si el filtro activo incluye bicis mecánicas
+     */
+    @Override
+    public void showBikeTypeFilterActive(boolean electricas, boolean mecanicas) {
+        updateSubtitle();
+    }
+
     /**
      * Closes this activity when the back button of the action bar is pressed.
      * @return true because the navigation has been handled
