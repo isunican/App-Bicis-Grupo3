@@ -42,8 +42,13 @@ public class MainPresenterITest {
     /** Paises de networks.json ordenados por su nombre en espanol: Alemania, Argentina, Espana, Portugal */
     private static final List<String> PAISES = Arrays.asList("DE", "AR", "ES", "PT");
 
+    /** Vista simulada, para comprobar lo que el presenter le pide mostrar */
     private IMainContract.View mockView;
+
+    /** Proveedor de ubicacion simulado: por defecto falla, salvo en IMS.1f */
     private ILocationProvider mockLocation;
+
+    /** El presenter que se prueba, con el repositorio JSON real */
     private MainPresenter sut;
 
     /**

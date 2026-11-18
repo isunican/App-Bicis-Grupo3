@@ -13,6 +13,10 @@ import es.unican.bicis.repository.NetworksCallback;
 
 /**
  * The presenter of the main activity of the application. It controls {@link MainView}
+ * It loads the bike sharing networks, detects the city of the user from their location
+ * (HU 532319 Detectar la ciudad según mi ubicación) and filters the list of networks by the
+ * country and city selected by the user (HU 532301 Seleccionar la ciudad). The countries, the
+ * cities and the filtered networks are obtained with {@link CitySelector}.
  */
 public class MainPresenter implements IMainContract.Presenter {
 
@@ -31,10 +35,10 @@ public class MainPresenter implements IMainContract.Presenter {
      */
     private Network detectedNetwork;
 
-    /** ISO code of the country selected in the city selector, or null if none ("Todos") */
+    /** ISO code of the country selected in the country selector, or null if none ("Todos") */
     private String selectedCountry;
 
-    /** Name of the city selected in the city selector, or null if none */
+    /** Name of the city selected in the city selector, or null if none ("Todas") */
     private String selectedCity;
 
     /**
@@ -178,7 +182,9 @@ public class MainPresenter implements IMainContract.Presenter {
 
     /**
      * Loads the bike networks from the repository, and sends them to the view.
-     * If they are loaded correctly, the location permission is requested to detect the city.
+     * If they are loaded correctly, they are kept to fill the country and city selectors and
+     * the location permission is requested to detect the city. If the load fails, the view is
+     * asked to show the load error and the networks stay null.
      */
     private void load() {
         INetworksRepository repository = view.getNetworksRepository();

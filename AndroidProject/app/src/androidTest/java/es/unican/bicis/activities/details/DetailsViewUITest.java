@@ -1,4 +1,4 @@
-package es.unican.bicis;
+package es.unican.bicis.activities.details;
 
 import static androidx.test.espresso.Espresso.onData;
 import static androidx.test.espresso.Espresso.onView;
@@ -17,6 +17,7 @@ import android.content.Context;
 import android.os.SystemClock;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.espresso.matcher.ViewMatchers;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.rule.GrantPermissionRule;
@@ -38,7 +39,7 @@ import dagger.hilt.android.testing.BindValue;
 import dagger.hilt.android.testing.HiltAndroidRule;
 import dagger.hilt.android.testing.HiltAndroidTest;
 import dagger.hilt.android.testing.UninstallModules;
-import es.unican.bicis.activities.details.DetailsView;
+import es.unican.bicis.R;
 import es.unican.bicis.activities.main.MainView;
 import es.unican.bicis.injection.LocationModule;
 import es.unican.bicis.location.ILocationProvider;
@@ -153,7 +154,7 @@ public class DetailsViewUITest {
     /** Pulsa la red con ese nombre en la lista principal, sin depender de su posición. */
     private void openDetails(String networkName) {
         onData(networkNamed(networkName))
-                .inAdapterView(withId(R.id.lvNetworks))
+                .inAdapterView(ViewMatchers.withId(R.id.lvNetworks))
                 .perform(click());
     }
 

@@ -10,15 +10,16 @@ import java.util.Locale;
  * Gets the countries and the cities that have bike sharing networks, and filters the networks
  * by country and city, so that the user can select the city where they are going to use the bikes
  * (HU 532301 Seleccionar la ciudad).
- *
  * Countries are identified by their ISO 3166 code, as given by the
  * <a href="https://api.citybik.es/v2/">CityBikes API</a> (for example, "ES"), and are shown
  * with their name in Spanish (for example, "España").
- *
  * Only networks that report both their country and their city are offered in the selectors.
  * Texts are compared without taking into account the surrounding spaces nor the case, so
  * "Madrid" and "madrid " are the same city. Names are sorted with the Spanish rules, so a name
  * with an accent (for example, "Ávila") is sorted in its place and not at the end.
+ * It is used by {@link es.unican.bicis.activities.main.MainPresenter} to fill the country and
+ * city selectors of the main activity and to filter its list of networks.
+ * This class only has static methods.
  */
 public class CitySelector {
 
@@ -26,7 +27,7 @@ public class CitySelector {
     private static final Locale SPANISH = new Locale("es", "ES");
 
     /**
-     * Private constructor, this class only has static methods.
+     * Private constructor: this class only has static methods and must not be instantiated.
      */
     private CitySelector() {
     }
@@ -35,9 +36,7 @@ public class CitySelector {
      * Returns the codes of the countries that have at least one network with country and city,
      * without duplicates and sorted alphabetically by their name in Spanish
      * (for example, "DE" (Alemania) goes before "AR" (Argentina)).
-     *
      * Precondition: networks is not null (it can contain null elements, which are skipped).
-     *
      * @param networks the networks
      * @return a new list with the country codes in upper case; empty if no network
      *         reports its country and its city
@@ -60,7 +59,6 @@ public class CitySelector {
     /**
      * Returns the name in Spanish of a country from its ISO 3166 code
      * (for example, "ES" returns "España").
-     *
      * @param countryCode the code of the country (case and surrounding spaces are ignored)
      * @return the name of the country in Spanish; the code itself if it is not a known code;
      *         null if the code is null
@@ -83,9 +81,7 @@ public class CitySelector {
      * and sorted alphabetically with the Spanish rules. If a city has several networks it
      * appears only once, with the name (without surrounding spaces) of its first network.
      * Networks with the city null or blank are not taken into account.
-     *
      * Precondition: networks is not null (it can contain null elements, which are skipped).
-     *
      * @param networks the networks
      * @param countryCode the code of the country, or null if the option "Todos" is selected
      * @return a new list with the names of the cities; empty if the country is null, or
@@ -112,12 +108,10 @@ public class CitySelector {
      * Returns the networks of a country and a city, in the same order as in the given list.
      * If the city is null, all the networks of the country are returned (also those that do not
      * report their city). If the country is null (option "Todos"), all the networks are returned.
-     *
      * Precondition: networks is not null.
-     *
      * @param networks the networks
      * @param countryCode the code of the country, or null if the option "Todos" is selected
-     * @param city the name of the city, or null if no city is selected
+     * @param city the name of the city, or null if no city is selected (option "Todas")
      * @return a new list with the networks that fulfil the condition; the given list
      *         is not modified
      */
@@ -190,7 +184,8 @@ public class CitySelector {
     }
 
     /**
-     * Removes the spaces at the beginning and at the end of a text.
+     * Removes the spaces at the beginning and at the end of a text, so that "Madrid" and
+     * "Madrid " are compared as the same text.
      *
      * @param s the text, not null
      * @return the text without surrounding spaces

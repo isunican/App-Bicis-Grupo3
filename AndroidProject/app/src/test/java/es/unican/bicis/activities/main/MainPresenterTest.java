@@ -27,16 +27,26 @@ import es.unican.bicis.repository.NetworksCallback;
  * Pruebas unitarias de MainPresenter con Mockito.
  * UMP.1: HU 532319 Detectar la ciudad segun mi ubicacion.
  * UMP.2a a UMP.4e: HU 532301 Seleccionar la ciudad (Tablas 2, 3 y 4 del plan de pruebas).
+ * La vista, el repositorio y el proveedor de ubicacion son mocks; el modelo es el real.
  */
 public class MainPresenterTest {
 
+    /** Vista simulada, para comprobar lo que el presenter le pide mostrar */
     private IMainContract.View mockView;
+
+    /** Repositorio simulado, que devuelve las redes que se le indican */
     private INetworksRepository mockRepository;
+
+    /** Proveedor de ubicacion simulado, que devuelve la ubicacion que se le indica */
     private ILocationProvider mockLocation;
 
+    /** El presenter que se prueba */
     private MainPresenter sut;
 
+    /** Red TUeBICI de Santander, usada en las pruebas UMP.1 */
     private Network tuebici;
+
+    /** Redes de las pruebas UMP.1: TUeBICI (Santander) y BiciMAD (Madrid) */
     private List<Network> redes;
 
     /**
@@ -216,10 +226,19 @@ public class MainPresenterTest {
     // TUeBICI (Santander, ES) y Bici Lisboa (Lisboa, PT).
     // ==========================================================================================
 
+    /** Red BiciMAD (Madrid, ES) */
     private Network bicimad;
+
+    /** Red Bici Metro (Madrid, ES), la segunda red de Madrid */
     private Network bicimetro;
+
+    /** Red TUeBICI (Santander, ES), la ciudad que se detecta en las pruebas con ubicacion */
     private Network tuebiciSantander;
+
+    /** Red Bici Lisboa (Lisboa, PT) */
     private Network bicilisboa;
+
+    /** Redes de las pruebas UMP.2 a UMP.4, en el orden en que las devuelve el repositorio */
     private List<Network> redesCiudades;
 
     /**
