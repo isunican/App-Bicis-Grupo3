@@ -64,6 +64,18 @@ public class StationsPresenter implements IStationsContract.Presenter {
     private double[] userLocation = null;
 
     /**
+     * Whether the bike type filter includes electric bikes (HU 532305),
+     * or null if the bike type filter is not active.
+     */
+    private Boolean filterElectricas = null;
+
+    /**
+     * Whether the bike type filter includes mechanical bikes (HU 532305),
+     * or null if the bike type filter is not active.
+     */
+    private Boolean filterMecanicas = null;
+
+    /**
      * @see IStationsContract.Presenter#init(IStationsContract.View, Network)
      * @param view the view to control
      * @param network the network whose stations must be shown
@@ -78,6 +90,8 @@ public class StationsPresenter implements IStationsContract.Presenter {
         this.minEmptySlots = null;
         this.maxDistKm = null;
         this.userLocation = null;
+        this.filterElectricas = null;
+        this.filterMecanicas = null;
 
         if (network == null) {
             loadFailed = true;
@@ -270,8 +284,8 @@ public class StationsPresenter implements IStationsContract.Presenter {
             return;
         }
 
-        // TODO: guardar el estado del filtro y usarlo en applyFilters()
-        // Por ahora se muestra la lista completa para que compile y los tests arranquen
+        filterElectricas = electricas;
+        filterMecanicas = mecanicas;
         List<Station> filtered = applyFilters();
         if (filtered.isEmpty()) {
             view.showNoStationsWithBikeType(electricas, mecanicas);
@@ -300,6 +314,8 @@ public class StationsPresenter implements IStationsContract.Presenter {
         minEmptySlots = null;
         maxDistKm = null;
         userLocation = null;
+        filterElectricas = null;
+        filterMecanicas = null;
         view.showFilterInactive();
         view.showActiveFiltersCount(0);
         try {
@@ -392,6 +408,9 @@ public class StationsPresenter implements IStationsContract.Presenter {
             filtered = StationFilter.filterByMinEmptySlots(filtered, minEmptySlots);
             filtered = StationUtils.sortByEmptySlots(filtered);
         }
+        if (filterElectricas != null) {
+            filtered = StationFilter.filterByBikeType(filtered, filterElectricas, filterMecanicas);
+        }
         if (maxDistKm != null) {
             filtered = StationFilter.filterByMaxDistance(
                     filtered, userLocation[0], userLocation[1], maxDistKm);
@@ -414,6 +433,9 @@ public class StationsPresenter implements IStationsContract.Presenter {
             count++;
         }
         if (maxDistKm != null) {
+            count++;
+        }
+        if (filterElectricas != null) {
             count++;
         }
         return count;
