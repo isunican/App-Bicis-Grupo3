@@ -208,7 +208,7 @@ public interface IMainContract {
 
         /**
          * The view is requested to replace the options of the city selector. The first option
-         * is "Todos" (no city selected, all the networks of the country), followed by the
+         * is "Todas" (no city selected, all the networks of the country), followed by the
          * given cities.
          * Only the Presenter should call this method
          * @param cities the cities of the selected country, already sorted alphabetically
