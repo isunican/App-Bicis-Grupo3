@@ -35,6 +35,7 @@ import es.unican.bicis.repository.StationsCallback;
  * la app no tiene redes. Al pulsar la chincheta se muestran los desplegables de país y ciudad
  * sin ninguna opción. El mensaje «No se han podido cargar las ciudades» es un Toast y,
  * como indica el plan de pruebas, no se comprueba.
+ * Los números de los comentarios de la prueba son los pasos del caso UI.5 del plan de pruebas.
  */
 @HiltAndroidTest
 @UninstallModules(RepositoriesModule.class)
@@ -50,16 +51,19 @@ public class SeleccionarCiudadErrorCargaUITest {
      */
     @BindValue
     INetworksRepository repositorioSinRedes = new INetworksRepository() {
+        /** Falla siempre, como si no hubiera conexión */
         @Override
         public void requestNetworks(NetworksCallback cb) {
             cb.onFailure(new Exception("sin conexion"));
         }
 
+        /** No se usa en esta prueba; también falla */
         @Override
         public void requestNetwork(NetworkDetailsCallback cb, String networkId) {
             cb.onFailure(new Exception("sin conexion"));
         }
 
+        /** No se usa en esta prueba; también falla */
         @Override
         public void requestStations(StationsCallback cb, String networkId) {
             cb.onFailure(new Exception("sin conexion"));

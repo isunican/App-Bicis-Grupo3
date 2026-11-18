@@ -50,6 +50,7 @@ import es.unican.bicis.model.Network;
  * redes de Madrid (BiciMAD y Bici Metro). Pulsa BiciMAD, abre sus estaciones y, al volver
  * atrás, la lista sigue mostrando solo las redes de Madrid.
  * Se ejecuta sobre la versión de depuración con los datos de res/raw/networks.json.
+ * Los números de los comentarios de la prueba son los pasos del caso UI.1 del plan de pruebas.
  */
 @HiltAndroidTest
 @UninstallModules(LocationModule.class)

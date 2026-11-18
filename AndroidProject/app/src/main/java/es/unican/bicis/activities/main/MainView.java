@@ -46,6 +46,9 @@ import es.unican.bicis.repository.INetworksRepository;
 
 /**
  * The main view of the application. It shows a list of bike sharing networks.
+ * The pin of the toolbar shows, above the list, a country selector and a city selector
+ * (HU 532301 Seleccionar la ciudad). When the user selects an option, the view informs
+ * {@link MainPresenter}, which decides which networks are shown.
  */
 @AndroidEntryPoint
 public class MainView extends AppCompatActivity implements IMainContract.View {
@@ -63,14 +66,21 @@ public class MainView extends AppCompatActivity implements IMainContract.View {
 
     /**
      * ISO codes of the countries in the country selector, in the same order as its options.
-     * The first one is null, the option "Todos" (HU 532301).
+     * The first one is null, the option "Todos" (HU 532301). It is empty if the networks
+     * could not be loaded.
      */
     private final List<String> countryCodes = new ArrayList<>();
 
-    /** ISO code of the country shown as selected in the country selector, or null if none */
+    /**
+     * ISO code of the country shown as selected in the country selector, or null if none.
+     * It is used to know if a selection comes from the user or from the code.
+     */
     private String shownCountry;
 
-    /** Name of the city shown as selected in the city selector, or null if none */
+    /**
+     * Name of the city shown as selected in the city selector, or null if none.
+     * It is used to know if a selection comes from the user or from the code.
+     */
     private String shownCity;
 
     /**
@@ -81,6 +91,11 @@ public class MainView extends AppCompatActivity implements IMainContract.View {
             registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(),
                     this::onLocationPermissionAnswer);
 
+    /**
+     * Creates the activity: sets its layout and its toolbar, and creates the presenter,
+     * which initializes the view and loads the networks.
+     * @param savedInstanceState the saved state of the activity, if it is being re-created
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -111,7 +126,8 @@ public class MainView extends AppCompatActivity implements IMainContract.View {
     }
 
     /**
-     * This is called when an item in the action bar menu is selected.
+     * This is called when an item in the action bar menu is selected: the Info item or the
+     * pin that shows the country and city selectors.
      * @param item The menu item that was selected.
      *
      * @return true if we have handled the selection
@@ -182,7 +198,7 @@ public class MainView extends AppCompatActivity implements IMainContract.View {
 
     /**
      * @see IMainContract.View#showLoadCorrect(int)
-     * @param networks
+     * @param networks the number of networks that have been loaded
      */
     @Override
     public void showLoadCorrect(int networks) {
@@ -201,7 +217,6 @@ public class MainView extends AppCompatActivity implements IMainContract.View {
      * @see IMainContract.View#showNetworkDetails(Network)
      * @param network the network
      */
-
     @Override
     public void showNetworkDetails(Network network) {
         Intent intent = new Intent(this, DetailsView.class);
