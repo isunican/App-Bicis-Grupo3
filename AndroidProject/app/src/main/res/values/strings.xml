@@ -70,4 +70,14 @@
     <string name="distanceFilterActive">A menos de %s</string>
     <string name="distanceFilterNoResults">No hay estaciones dentro de la distancia seleccionada</string>
     <string name="distanceLocationUnavailable">No se puede obtener tu ubicación para filtrar por distancia</string>
+
+    <!-- Seleccionar la ciudad (HU 532301) -->
+    <string name="menuSelectCity">Seleccionar ciudad</string>
+    <string name="cityCountryLabel">País</string>
+    <string name="cityCityLabel">Ciudad</string>
+    <string name="citySelectHint">Selecciona…</string>
+    <string name="cityAllCountries">Todos</string>
+    <string name="cityAllCities">Todas</string>
+    <string name="citiesLoadError">No se han podido cargar las ciudades</string>
+    <string name="chooseCityHint">Elige el país y la ciudad en los que vas a usar las bicis</string>
 </resources>
