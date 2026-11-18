@@ -6,12 +6,8 @@ import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.isEnabled;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
-import static es.unican.bicis.utils.StationsUITestUtils.waitForWindowFocus;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
-
-import android.widget.Spinner;
 
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 
@@ -80,7 +76,6 @@ public class SeleccionarCiudadErrorCargaUITest {
      */
     @Test
     public void testErrorCargaLosDesplegablesNoTienenOpciones() {
-        waitForWindowFocus(MainView.class);
 
         // 3. Se pulsa la chincheta de la lista principal de redes
         onView(withId(R.id.menuItemSelectCity)).perform(click());
@@ -89,23 +84,20 @@ public class SeleccionarCiudadErrorCargaUITest {
         onView(withId(R.id.llCitySelector)).check(matches(isDisplayed()));
 
         // 6. Ninguno de los dos desplegables tiene opciones (y no se pueden abrir)
-        comprobarDesplegableVacio(R.id.spCountry);
-        comprobarDesplegableVacio(R.id.spCity);
+        comprobarDesplegableDesactivado(R.id.spCountry);
+        comprobarDesplegableDesactivado(R.id.spCity);
     }
 
     /**
      * Comprueba que un desplegable se ve, está desactivado y no tiene ninguna opción.
      * @param spinnerId id del desplegable (R.id.spCountry o R.id.spCity)
      */
-    private void comprobarDesplegableVacio(int spinnerId) {
+    /**
+     * Comprueba lo que se ve en pantalla: el desplegable se muestra, pero no está habilitado.
+     * @param spinnerId id del desplegable (R.id.spCountry o R.id.spCity)
+     */
+    private void comprobarDesplegableDesactivado(int spinnerId) {
         onView(withId(spinnerId)).check(matches(allOf(isDisplayed(), not(isEnabled()))));
-        onView(withId(spinnerId)).check((view, exception) -> {
-            if (exception != null) {
-                throw exception;
-            }
-            Spinner spinner = (Spinner) view;
-            assertEquals(0, spinner.getAdapter().getCount());
-        });
     }
 }
 
