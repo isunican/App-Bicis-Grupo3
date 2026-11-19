@@ -1090,6 +1090,45 @@ public class StationsPresenterTest {
     }
 
     /**
+     * Red sin dato de tipo de bici (caso Tuebici): con una sola casilla activa se avisa de que
+     * la red no especifica el tipo y no se muestra el mensaje genérico de "sin resultados".
+     */
+    @Test
+    public void testBikeTypeFilterNetworkWithoutTypeDataShowsNotSpecified() {
+        initPresenterWith(Arrays.asList(createStation("A", 5), createStation("B", 3)));
+
+        sut.onBikeTypeFilterApplied(true, false);
+
+        verify(mockView).showBikeTypeNotSpecified();
+        verify(mockView, never()).showNoStationsWithBikeType(anyBoolean(), anyBoolean());
+        verify(mockView, never()).showBikeTypeFilterActive(anyBoolean(), anyBoolean());
+    }
+
+    /** Red sin dato de tipo: con ambas casillas activas se muestran todas las estaciones. */
+    @Test
+    public void testBikeTypeFilterNetworkWithoutTypeDataBothTypesShowsAll() {
+        Station a = createStation("A", 5);
+        Station b = createStation("B", 3);
+        initPresenterWith(Arrays.asList(a, b));
+
+        sut.onBikeTypeFilterApplied(true, true);
+
+        verify(mockView, never()).showBikeTypeNotSpecified();
+        verify(mockView).showStations(Arrays.asList(a, b));
+    }
+
+    /** Red que sí informa del tipo pero sin coincidencias: se mantiene el mensaje genérico. */
+    @Test
+    public void testBikeTypeFilterNetworkWithTypeDataNoMatchKeepsGenericMessage() {
+        initPresenterWith(Arrays.asList(createStationWithBikeTypes("M", 3, 0, 3)));
+
+        sut.onBikeTypeFilterApplied(true, false);
+
+        verify(mockView).showNoStationsWithBikeType(true, false);
+        verify(mockView, never()).showBikeTypeNotSpecified();
+    }
+
+    /**
      * UPT.1a: solo eléctricas (Prueba 1 del PO): se muestran las estaciones con al menos una
      * bici eléctrica libre [ambas, eléctricas] y el embudo indica 1 filtro.
      */

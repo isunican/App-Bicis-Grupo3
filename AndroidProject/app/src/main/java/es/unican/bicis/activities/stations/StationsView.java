@@ -573,21 +573,21 @@ public class StationsView extends AppCompatActivity implements IStationsContract
 
         boolean bikeTypeFilterRemoved =
                 (appliedElectricBike != wantElectric)
-                || (appliedMechanicalBike != wantMechanical);
+                        || (appliedMechanicalBike != wantMechanical);
 
         boolean filterRemoved =
                 (!appliedFreeBikesText.isEmpty() && freeBikesText.isEmpty())
-                || (!appliedEmptySlotsText.isEmpty() && emptySlotsText.isEmpty())
-                || (appliedDistanceOn && !distanceOn)
-                || bikeTypeFilterRemoved;
+                        || (!appliedEmptySlotsText.isEmpty() && emptySlotsText.isEmpty())
+                        || (appliedDistanceOn && !distanceOn)
+                        || bikeTypeFilterRemoved;
 
         boolean valid = true;
 
         // Solo validar el mínimo vacío cuando no hay ningún otro filtro.
         if (!freeBikesText.isEmpty()
                 || (emptySlotsText.isEmpty()
-                    && !distanceOn
-                    && !bikeTypeFilterActive)) {
+                && !distanceOn
+                && !bikeTypeFilterActive)) {
 
             valid = applyFilterAndCheck(
                     () -> presenter.onFilterApplied(freeBikesText)
@@ -1130,6 +1130,14 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     @Override
     public void showNoStationsWithBikeType(boolean electricas, boolean mecanicas) {
         showMessage(getString(R.string.filterBikeTypeNoResults));
+    }
+
+    /**
+     * @see IStationsContract.View#showBikeTypeNotSpecified()
+     */
+    @Override
+    public void showBikeTypeNotSpecified() {
+        showMessage(getString(R.string.filterBikeTypeNotSpecified));
     }
 
     /**
