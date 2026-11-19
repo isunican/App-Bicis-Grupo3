@@ -11,7 +11,8 @@ import es.unican.bicis.repository.INetworksRepository;
  * The Presenter-View contract for the Stations activity.
  * The Stations activity shows the stations of a bike sharing network,
  * allows to filter them by a minimum number of free bikes and by a minimum
- * number of empty slots and by a maximum distance to the user, allows to search a
+ * number of empty slots and by a maximum distance to the user, allows to filter
+ * them by bike type (electric or mechanical) (HU 532305), allows to search a
  * station by its name and gives access to the detailed information of the network.
  */
 public interface IStationsContract {
@@ -78,6 +79,25 @@ public interface IStationsContract {
          * @return the maximum distance of the city, in km
          */
         public double getMaxCityDistanceKm();
+
+        // ── HU 532305 Filtrar por tipo de bici ───────────────────────────
+
+        /**
+         * El presenter es informado de que el usuario quiere filtrar las estaciones
+         * por tipo de bicicleta (eléctrica y/o mecánica) (HU 532305).
+         *
+         * Si ningún tipo está seleccionado, el presenter pide a la vista que muestre
+         * el mensaje de error correspondiente y no cambia el filtro activo.
+         * En caso contrario, se aplica el filtro combinado con los demás filtros activos.
+         * Si no hay estaciones que cumplan la condición, el presenter pide a la vista
+         * que muestre el mensaje adecuado.
+         *
+         * Only the View should call this method.
+         *
+         * @param electricas {@code true} si el usuario quiere ver estaciones con bicis eléctricas
+         * @param mecanicas  {@code true} si el usuario quiere ver estaciones con bicis mecánicas
+         */
+        public void onBikeTypeFilterApplied(boolean electricas, boolean mecanicas);
 
         /**
          * Notifies the presenter that the user wants to remove
@@ -354,6 +374,35 @@ public interface IStationsContract {
          *                  coordinates are not in the map)
          */
         public void showStationsWithDistance(List<Station> stations, Map<Station, Double> distances);
+
+        // ── HU 532305 Filtrar por tipo de bici ───────────────────────────
+
+        /**
+         * La vista debe mostrar un error indicando que no es posible aplicar el filtro
+         * por tipo de bicicleta porque no hay ningún tipo seleccionado.
+         * El filtro activo anterior, si había alguno, no se modifica.
+         * Only the Presenter should call this method.
+         */
+        public void showNoBikeTypeSelected();
+
+        /**
+         * La vista debe ocultar la lista y mostrar un mensaje indicando que no hay
+         * estaciones con el tipo de bicicleta solicitado.
+         * Only the Presenter should call this method.
+         *
+         * @param electricas {@code true} si se filtraba por bicis eléctricas
+         * @param mecanicas  {@code true} si se filtraba por bicis mecánicas
+         */
+        public void showNoStationsWithBikeType(boolean electricas, boolean mecanicas);
+
+        /**
+         * La vista debe indicar que el filtro por tipo de bicicleta está activo.
+         * Only the Presenter should call this method.
+         *
+         * @param electricas {@code true} si el filtro activo incluye bicis eléctricas
+         * @param mecanicas  {@code true} si el filtro activo incluye bicis mecánicas
+         */
+        public void showBikeTypeFilterActive(boolean electricas, boolean mecanicas);
 
     }
 }

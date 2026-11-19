@@ -3,6 +3,7 @@ package es.unican.bicis.activities.stations;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.clearInvocations;
@@ -38,6 +39,9 @@ import es.unican.bicis.repository.JsonNetworksRepository;
  *     <li>ILE.6 del plan de pruebas de US532377 (Listar estaciones): carga de estaciones con StationUtils.</li>
  *     <li>IFH.1 del plan de pruebas de US532335 (Filtrar estaciones por huecos): filtro por huecos con
  *     StationFilter, sobre la red TUeBICI de res/raw/network_tuebici.json (Anexo 1 del plan).</li>
+ *     <li>IFT.1 del plan de pruebas de US532305 (Filtrar estaciones por tipo de bici): filtro por tipo con
+ *     StationFilter, sobre TUeBICI (20 estaciones con eléctricas libres, 19 con mecánicas libres) y
+ *     sobre Bici Límites (sin bicis eléctricas).</li>
  * </ul>
  */
 @RunWith(RobolectricTestRunner.class)
@@ -295,5 +299,145 @@ public class StationsPresenterITest {
         assertTrue(names.contains("Sector 3 (NE)"));
         assertTrue(names.contains("San Román Corbán (NE)"));
         assertTrue(names.contains("Alisal (NE)"));
+    }
+
+
+    // =====================================================================
+    // US532305 - Filtrar las estaciones por tipo de bici
+    // Pruebas de integracion IFT.1 (David González).
+    // Datos: red TUeBICI (42 estaciones): 20 con alguna bici eléctrica libre, 19 con alguna
+    // mecánica libre y 40 con dato válido de bicis libres ("Plaza Pombo (NE)" y
+    // "Calle Alta (NE)" no lo tienen). Red Bici Límites: una estación ("Puerto") con 3 bicis
+    // libres, todas mecánicas.
+    // =====================================================================
+
+    /**
+     * IFT.1a: solo eléctricas (Prueba 1 del PO): 20 estaciones, de más a menos bicis libres.
+     * La primera es "Ernest Lluch II (NE)" (7 libres, 3 eléctricas). No aparecen estaciones sin
+     * eléctricas libres, como "Nueva Montaña" (15 libres, 0 eléctricas).
+     */
+    @Test
+    public void onBikeTypeFilterApplied_onlyElectric_showsTwentyStations() {
+        initTuebici();
+
+        sut.onBikeTypeFilterApplied(true, false);
+
+        List<String> names = names(shownStations());
+        assertEquals(20, names.size());
+        assertEquals("Ernest Lluch II (NE)", names.get(0));
+        assertTrue(names.contains("Magdalena"));
+        assertTrue(names.contains("TUS (NE)"));             // 1 libre y es eléctrica (límite)
+        assertFalse(names.contains("Nueva Montaña"));
+        assertFalse(names.contains("PTCAN 1"));
+        assertFalse(names.contains("Plaza Pombo (NE)"));    // sin dato de bicis libres
+        verify(mockView).showBikeTypeFilterActive(true, false);
+        verify(mockView).showActiveFiltersCount(1);
+        verify(mockView).showNetworkLocation("Santander, ES · 20 estaciones");
+    }
+
+    /**
+     * IFT.1b: solo mecánicas (Prueba 2 del PO): 19 estaciones. La primera es "Nueva Montaña"
+     * (15 mecánicas). No aparecen las que solo tienen eléctricas, como "Perinés" (5 de 5).
+     */
+    @Test
+    public void onBikeTypeFilterApplied_onlyMechanical_showsNineteenStations() {
+        initTuebici();
+
+        sut.onBikeTypeFilterApplied(false, true);
+
+        List<String> names = names(shownStations());
+        assertEquals(19, names.size());
+        assertEquals("Nueva Montaña", names.get(0));
+        assertTrue(names.contains("PTCAN 1"));
+        assertTrue(names.contains("Tabacalera/Varadero"));  // 1 libre y es mecánica (límite)
+        assertFalse(names.contains("Perinés"));
+        assertFalse(names.contains("Parque Llamas"));
+        verify(mockView).showBikeTypeFilterActive(false, true);
+        verify(mockView).showActiveFiltersCount(1);
+    }
+
+    /**
+     * IFT.1c: los dos tipos: 40 estaciones, todas las que tienen dato válido de bicis libres.
+     */
+    @Test
+    public void onBikeTypeFilterApplied_bothTypes_showsStationsWithValidFreeBikes() {
+        initTuebici();
+
+        sut.onBikeTypeFilterApplied(true, true);
+
+        List<String> names = names(shownStations());
+        assertEquals(40, names.size());
+        assertFalse(names.contains("Plaza Pombo (NE)"));
+        assertFalse(names.contains("Calle Alta (NE)"));
+    }
+
+    /**
+     * IFT.1d: combinación (Prueba 5 del PO): mínimo 5 bicis y solo eléctricas dan 7 estaciones
+     * y el embudo indica 2. Al volver a marcar los dos tipos quedan las 10 estaciones con al
+     * menos 5 bicis libres.
+     */
+    @Test
+    public void onBikeTypeFilterApplied_combinedWithMinFreeBikes() {
+        initTuebici();
+        sut.onFilterApplied("5");
+        clearInvocations(mockView);
+
+        sut.onBikeTypeFilterApplied(true, false);
+
+        assertEquals(Arrays.asList(
+                        "Ernest Lluch II (NE)",       // 7 libres
+                        "Magdalena",                  // 6 libres
+                        "Alto Miranda",               // 5 libres (empate: por nombre)
+                        "Intercambiador Sardinero",
+                        "Parque Llamas",
+                        "Perinés",
+                        "Plaza de Italia"),
+                names(shownStations()));
+        verify(mockView).showActiveFiltersCount(2);
+        clearInvocations(mockView);
+
+        sut.onBikeTypeFilterApplied(true, true);
+
+        List<String> names = names(shownStations());
+        assertEquals(10, names.size());
+        assertEquals("Nueva Montaña", names.get(0));
+    }
+
+    /**
+     * IFT.1e: ninguna estación cumple (Prueba 6 del PO): Bici Límites no tiene bicis eléctricas.
+     * Con solo eléctricas se muestra el mensaje; con solo mecánicas aparece "Puerto".
+     */
+    @Test
+    public void onBikeTypeFilterApplied_networkWithoutEbikes() {
+        sut.init(mockView, network("bicilimites", "Bici Límites", "Ushuaia"));
+        clearInvocations(mockView);
+
+        sut.onBikeTypeFilterApplied(true, false);
+
+        verify(mockView).showNoStationsWithBikeType(true, false);
+        verify(mockView, never()).showStations(anyList());
+        verify(mockView).showActiveFiltersCount(1);
+        clearInvocations(mockView);
+
+        sut.onBikeTypeFilterApplied(false, true);
+
+        assertEquals(Arrays.asList("Puerto"), names(shownStations()));
+        verify(mockView, never()).showNoStationsWithBikeType(anyBoolean(), anyBoolean());
+    }
+
+    /**
+     * IFT.1f: quitar filtros (Prueba 7 del PO): tras filtrar por eléctricas, vuelven las
+     * 42 estaciones y el embudo indica 0.
+     */
+    @Test
+    public void onFilterCleared_afterBikeTypeFilter_showsAllStations() {
+        initTuebici();
+        sut.onBikeTypeFilterApplied(true, false);
+        clearInvocations(mockView);
+
+        sut.onFilterCleared();
+
+        assertEquals(42, names(shownStations()).size());
+        verify(mockView).showActiveFiltersCount(0);
     }
 }
