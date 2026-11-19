@@ -62,11 +62,12 @@ public class Network {
      * main list (name and city). Detailed data are the coordinates, ebikes and company.
      * A false value of ebikes counts as a data (it is not the same as missing).
      * @return true if latitude, longitude, ebikes and company are all missing
+     * (an empty company array counts as missing)
      */
     public boolean hasOnlyBasicInfo() {
         boolean hasLocationData = location != null
                 && (location.getLatitude() != null || location.getLongitude() != null);
-        return !hasLocationData && ebikes == null && company == null;
+        return !hasLocationData && ebikes == null && (company == null || company.length == 0);
     }
 
     /**

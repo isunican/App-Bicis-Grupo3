@@ -55,7 +55,7 @@ public class JsonNetworksRepository implements INetworksRepository {
         // so we can infer the resource from the network id
         @SuppressLint("DiscouragedApi") int detailResId = context.getResources()
                 .getIdentifier("network_" + networkId, "raw", context.getPackageName());
-        Network network = detailResId != 0 ? Utils.parseNetwork(context, detailResId) : null;
+        Network network = detailResId == 0 ? null : Utils.parseNetwork(context, detailResId);
         if (network != null) {
             cb.onSuccess(network);
         } else {

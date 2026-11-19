@@ -135,7 +135,7 @@ public class CitySelectorTest {
     }
 
     /**
-     * UCS.3a a UCS.3f: filterByCity devuelve las redes de la ciudad (o de todo el país si la
+     * UCS.3a a UCS.3f: filterByCity devuelve las redes de la ciudad (o del país completo si la
      * ciudad es null, o todas si el país es null) en el mismo orden que la lista original.
      */
     @Test
