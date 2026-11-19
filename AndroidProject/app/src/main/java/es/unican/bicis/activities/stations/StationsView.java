@@ -571,6 +571,10 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         // El filtro por tipo está activo si solo se selecciona un tipo.
         boolean bikeTypeFilterActive = !(wantElectric && wantMechanical);
 
+        // Si ya había un filtro por tipo aplicado, se mantiene contado en el embudo
+        // aunque se vuelvan a marcar los dos tipos (Prueba 5, criterio del PO).
+        boolean bikeTypeWasApplied = !(appliedElectricBike && appliedMechanicalBike);
+
         boolean bikeTypeFilterRemoved =
                 (appliedElectricBike != wantElectric)
                         || (appliedMechanicalBike != wantMechanical);
@@ -583,11 +587,13 @@ public class StationsView extends AppCompatActivity implements IStationsContract
 
         boolean valid = true;
 
-        // Solo validar el mínimo vacío cuando no hay ningún otro filtro.
+        // Solo validar el mínimo vacío cuando no hay ningún otro filtro y no se está
+        // retirando ninguno (p. ej. volver a marcar los dos tipos de bici).
         if (!freeBikesText.isEmpty()
                 || (emptySlotsText.isEmpty()
                 && !distanceOn
-                && !bikeTypeFilterActive)) {
+                && !bikeTypeFilterActive
+                && !filterRemoved)) {
 
             valid = applyFilterAndCheck(
                     () -> presenter.onFilterApplied(freeBikesText)
@@ -623,7 +629,8 @@ public class StationsView extends AppCompatActivity implements IStationsContract
                     emptySlotsText,
                     distanceOn ? distanceText : "",
                     wantElectric,
-                    wantMechanical
+                    wantMechanical,
+                    bikeTypeWasApplied
             );
         }
 
@@ -668,9 +675,12 @@ public class StationsView extends AppCompatActivity implements IStationsContract
      * @param distanceText   the distance value, or empty if it is not applied
      * @param wantElectric   true if electric bikes should be included (HU 532305)
      * @param wantMechanical true if mechanical bikes should be included (HU 532305)
+     * @param keepBikeType   true if a bike type filter was applied before, so that it is
+     *                       applied again (and counted) even if both types are selected
      */
     private void reapplyFilters(String freeBikesText, String emptySlotsText, String distanceText,
-                                boolean wantElectric, boolean wantMechanical) {
+                                boolean wantElectric, boolean wantMechanical,
+                                boolean keepBikeType) {
         presenter.onFilterCleared();
         if (!freeBikesText.isEmpty()) {
             presenter.onFilterApplied(freeBikesText);
@@ -681,8 +691,9 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         if (!distanceText.isEmpty()) {
             presenter.onDistanceFilterApplied(distanceText);
         }
-        // HU 532305: reapply the bike type filter only if at least one type is deselected
-        if (!(wantElectric && wantMechanical)) {
+        // HU 532305: reapply the bike type filter if one type is deselected, or if it was
+        // already applied before (it keeps counting in the funnel, Prueba 5)
+        if (!(wantElectric && wantMechanical) || keepBikeType) {
             presenter.onBikeTypeFilterApplied(wantElectric, wantMechanical);
         }
     }
