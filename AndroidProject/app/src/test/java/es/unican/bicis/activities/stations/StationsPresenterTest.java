@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -29,6 +30,7 @@ import es.unican.bicis.common.StationUtils;
 import es.unican.bicis.model.Location;
 import es.unican.bicis.model.Network;
 import es.unican.bicis.model.Station;
+import es.unican.bicis.model.StationExtra;
 import es.unican.bicis.repository.INetworksRepository;
 import es.unican.bicis.repository.StationsCallback;
 
@@ -39,6 +41,7 @@ import es.unican.bicis.repository.StationsCallback;
  * Filter by free bikes and access to the details (UPR.1, UPR.3, UPR.4): HU 532376 Filtrar estaciones.
  * Search by name and selection of a station (UPB.1, UPB.2, Tabla 5): HU 532314 Buscar estación por nombre.
  * Filter by empty slots (UPH.1): HU 532335 Filtrar estaciones por huecos.
+ * Filter by bike type (UPT.1): HU 532305 Filtrar estaciones por tipo de bici.
  */
 public class StationsPresenterTest {
 
@@ -1050,5 +1053,209 @@ public class StationsPresenterTest {
         System.out.println("Distancia máxima: " + result);
         // Valida que el resultado sea 9.71 km con un margen de 0.05 km
         assertEquals(9.71, result, 0.05);
+    }
+
+
+    // =====================================================================
+    // HU 532305 Filtrar estaciones por tipo de bici (UPT.1)
+    // Lista de prueba, ya ordenada de más a menos bicis libres como la muestra el presenter:
+    //   ambas (5 libres: 1 eléctrica y 4 mecánicas), sin tipo (4 libres, sin dato de tipo),
+    //   mecánicas (3 libres, 0 eléctricas), eléctricas (2 libres, 2 eléctricas) y vacía (0 libres).
+    // =====================================================================
+
+    private Station tAmbas;
+    private Station tSinTipo;
+    private Station tMecanicas;
+    private Station tElectricas;
+    private Station tVacia;
+
+    /** Crea una estación con sus bicis libres y cuántas de ellas son eléctricas y mecánicas */
+    private Station createStationWithBikeTypes(String name, int freeBikes, int ebikes, int normalBikes) {
+        Station station = createStation(name, freeBikes);
+        StationExtra extra = new StationExtra();
+        extra.setEbikes(ebikes);
+        extra.setNormalBikes(normalBikes);
+        station.setExtra(extra);
+        return station;
+    }
+
+    /** Carga en el presenter la lista de prueba del filtro por tipo de bici */
+    private void initPresenterWithBikeTypes() {
+        tAmbas = createStationWithBikeTypes("Estacion ambas", 5, 1, 4);
+        tSinTipo = createStation("Estacion sin tipo", 4);
+        tMecanicas = createStationWithBikeTypes("Estacion mecanicas", 3, 0, 3);
+        tElectricas = createStationWithBikeTypes("Estacion electricas", 2, 2, 0);
+        tVacia = createStationWithBikeTypes("Estacion vacia", 0, 0, 0);
+        initPresenterWith(Arrays.asList(tAmbas, tSinTipo, tMecanicas, tElectricas, tVacia));
+    }
+
+    /**
+     * Red sin dato de tipo de bici (caso Tuebici): con una sola casilla activa se avisa de que
+     * la red no especifica el tipo y no se muestra el mensaje genérico de "sin resultados".
+     */
+    @Test
+    public void testBikeTypeFilterNetworkWithoutTypeDataShowsNotSpecified() {
+        initPresenterWith(Arrays.asList(createStation("A", 5), createStation("B", 3)));
+
+        sut.onBikeTypeFilterApplied(true, false);
+
+        verify(mockView).showBikeTypeNotSpecified();
+        verify(mockView, never()).showNoStationsWithBikeType(anyBoolean(), anyBoolean());
+        verify(mockView, never()).showBikeTypeFilterActive(anyBoolean(), anyBoolean());
+    }
+
+    /** Red sin dato de tipo: con ambas casillas activas se muestran todas las estaciones. */
+    @Test
+    public void testBikeTypeFilterNetworkWithoutTypeDataBothTypesShowsAll() {
+        Station a = createStation("A", 5);
+        Station b = createStation("B", 3);
+        initPresenterWith(Arrays.asList(a, b));
+
+        sut.onBikeTypeFilterApplied(true, true);
+
+        verify(mockView, never()).showBikeTypeNotSpecified();
+        verify(mockView).showStations(Arrays.asList(a, b));
+    }
+
+    /** Red que sí informa del tipo pero sin coincidencias: se mantiene el mensaje genérico. */
+    @Test
+    public void testBikeTypeFilterNetworkWithTypeDataNoMatchKeepsGenericMessage() {
+        initPresenterWith(Arrays.asList(createStationWithBikeTypes("M", 3, 0, 3)));
+
+        sut.onBikeTypeFilterApplied(true, false);
+
+        verify(mockView).showNoStationsWithBikeType(true, false);
+        verify(mockView, never()).showBikeTypeNotSpecified();
+    }
+
+    /**
+     * UPT.1a: solo eléctricas (Prueba 1 del PO): se muestran las estaciones con al menos una
+     * bici eléctrica libre [ambas, eléctricas] y el embudo indica 1 filtro.
+     */
+    @Test
+    public void testBikeTypeFilterOnlyElectricShowsStationsWithEbikes() {
+        initPresenterWithBikeTypes();
+
+        sut.onBikeTypeFilterApplied(true, false);
+
+        verify(mockView).showBikeTypeFilterActive(true, false);
+        verify(mockView).showActiveFiltersCount(1);
+        verify(mockView).showStations(Arrays.asList(tAmbas, tElectricas));
+        verify(mockView).showNetworkLocation("Santander, ES · 2 estaciones");
+        verify(mockView, never()).showNoStationsWithBikeType(anyBoolean(), anyBoolean());
+    }
+
+    /**
+     * UPT.1b: solo mecánicas (Prueba 2 del PO): se muestran [ambas, mecánicas]. No aparecen la
+     * estación sin dato de tipo ni la que solo tiene eléctricas.
+     */
+    @Test
+    public void testBikeTypeFilterOnlyMechanicalShowsStationsWithNormalBikes() {
+        initPresenterWithBikeTypes();
+
+        sut.onBikeTypeFilterApplied(false, true);
+
+        verify(mockView).showBikeTypeFilterActive(false, true);
+        verify(mockView).showActiveFiltersCount(1);
+        verify(mockView).showStations(Arrays.asList(tAmbas, tMecanicas));
+        verify(mockView).showNetworkLocation("Santander, ES · 2 estaciones");
+    }
+
+    /**
+     * UPT.1c: los dos tipos: no se restringe por tipo y se muestran todas las estaciones con
+     * dato de bicis libres, en el mismo orden.
+     */
+    @Test
+    public void testBikeTypeFilterBothTypesShowsAllStations() {
+        initPresenterWithBikeTypes();
+
+        sut.onBikeTypeFilterApplied(true, true);
+
+        verify(mockView).showBikeTypeFilterActive(true, true);
+        verify(mockView).showStations(Arrays.asList(tAmbas, tSinTipo, tMecanicas, tElectricas, tVacia));
+        verify(mockView).showNetworkLocation("Santander, ES · 5 estaciones");
+    }
+
+    /**
+     * UPT.1d: ningún tipo seleccionado (Prueba 4 del PO): se pide a la vista el aviso y no
+     * cambian ni la lista ni el número de filtros activos.
+     */
+    @Test
+    public void testBikeTypeFilterNoTypeSelectedShowsWarning() {
+        initPresenterWithBikeTypes();
+
+        sut.onBikeTypeFilterApplied(false, false);
+
+        verify(mockView).showNoBikeTypeSelected();
+        verify(mockView, never()).showStations(anyList());
+        verify(mockView, never()).showActiveFiltersCount(anyInt());
+        verify(mockView, never()).showBikeTypeFilterActive(anyBoolean(), anyBoolean());
+    }
+
+    /**
+     * UPT.1e: ninguna estación cumple el filtro (Prueba 6 del PO): red sin bicis eléctricas
+     * libres. Se muestra el mensaje, la cabecera sin número de estaciones y el embudo indica 1.
+     */
+    @Test
+    public void testBikeTypeFilterNoStationMatchesShowsMessage() {
+        tMecanicas = createStationWithBikeTypes("Estacion mecanicas", 3, 0, 3);
+        tVacia = createStationWithBikeTypes("Estacion vacia", 0, 0, 0);
+        initPresenterWith(Arrays.asList(tMecanicas, tVacia));
+
+        sut.onBikeTypeFilterApplied(true, false);
+
+        verify(mockView).showNoStationsWithBikeType(true, false);
+        verify(mockView).showNetworkLocation("Santander, ES");
+        verify(mockView).showActiveFiltersCount(1);
+        verify(mockView, never()).showStations(anyList());
+    }
+
+    /**
+     * UPT.1f: combinación con el mínimo de bicis (Prueba 5 del PO): mínimo 3 y solo eléctricas.
+     * Solo queda [ambas] y el embudo indica 2 filtros.
+     */
+    @Test
+    public void testBikeTypeFilterCombinedWithMinFreeBikes() {
+        initPresenterWithBikeTypes();
+        sut.onFilterApplied("3");
+        clearInvocations(mockView);
+
+        sut.onBikeTypeFilterApplied(true, false);
+
+        verify(mockView).showActiveFiltersCount(2);
+        verify(mockView).showStations(Arrays.asList(tAmbas));
+        verify(mockView).showNetworkLocation("Santander, ES · 1 estaciones");
+    }
+
+    /**
+     * UPT.1g: tras filtrar por eléctricas se vuelven a marcar los dos tipos: la lista vuelve
+     * a tener todas las estaciones.
+     */
+    @Test
+    public void testBikeTypeFilterBackToBothTypesRestoresList() {
+        initPresenterWithBikeTypes();
+        sut.onBikeTypeFilterApplied(true, false);
+        clearInvocations(mockView);
+
+        sut.onBikeTypeFilterApplied(true, true);
+
+        verify(mockView).showStations(Arrays.asList(tAmbas, tSinTipo, tMecanicas, tElectricas, tVacia));
+    }
+
+    /**
+     * UPT.1h: quitar filtros con el filtro por tipo activo (Prueba 7 del PO): el embudo
+     * vuelve a 0 y se muestra la lista completa.
+     */
+    @Test
+    public void testClearFilterAfterBikeTypeFilterRestoresFullList() {
+        initPresenterWithBikeTypes();
+        sut.onBikeTypeFilterApplied(true, false);
+        clearInvocations(mockView);
+
+        sut.onFilterCleared();
+
+        verify(mockView).showFilterInactive();
+        verify(mockView).showActiveFiltersCount(0);
+        verify(mockView).showStations(Arrays.asList(tAmbas, tSinTipo, tMecanicas, tElectricas, tVacia));
     }
 }

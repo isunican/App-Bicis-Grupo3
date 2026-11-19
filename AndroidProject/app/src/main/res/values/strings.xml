@@ -60,6 +60,16 @@
     <string name="filterEmptySlotsError">No se han podido filtrar las estaciones</string>
     <string name="filterSubtitleSeparator">" · "</string>
 
+    <!-- Filtro por tipo de bicicleta (HU 532305) -->
+    <string name="filterBikeTypeLabel">Tipo de bicicleta</string>
+    <string name="filterBikeTypeElectric">Eléctrica</string>
+    <string name="filterBikeTypeMechanical">Mecánica</string>
+    <string name="filterBikeTypeRequired">Debe seleccionar al menos un tipo de bicicleta</string>
+    <string name="filterBikeTypeNoResults">No hay estaciones con el tipo de bicicleta seleccionado</string>
+    <string name="filterBikeTypeNoElectric">No hay estaciones con bicis eléctricas disponibles</string>
+    <string name="filterBikeTypeNoMechanical">No hay estaciones con bicis mecánicas disponibles</string>
+    <string name="filterBikeTypeNotSpecified">Esta red no especifica el tipo de bicicleta (eléctrica o mecánica). Para ver sus estaciones, active ambas casillas en el filtro de tipo de bicicleta.</string>
+
     <!-- Filtro de estaciones por distancia (HU 532304) -->
     <string name="filterDistanceSwitch">Filtrar por distancia</string>
     <string name="filterDistanceLabel">Distancia máxima</string>
@@ -70,4 +80,14 @@
     <string name="distanceFilterActive">A menos de %s</string>
     <string name="distanceFilterNoResults">No hay estaciones dentro de la distancia seleccionada</string>
     <string name="distanceLocationUnavailable">No se puede obtener tu ubicación para filtrar por distancia</string>
+
+    <!-- Seleccionar la ciudad (HU 532301) -->
+    <string name="menuSelectCity">Seleccionar ciudad</string>
+    <string name="cityCountryLabel">País</string>
+    <string name="cityCityLabel">Ciudad</string>
+    <string name="citySelectHint">Selecciona…</string>
+    <string name="cityAllCountries">Todos</string>
+    <string name="cityAllCities">Todas</string>
+    <string name="citiesLoadError">No se han podido cargar las ciudades</string>
+    <string name="chooseCityHint">Elige el país y la ciudad en los que vas a usar las bicis</string>
 </resources>

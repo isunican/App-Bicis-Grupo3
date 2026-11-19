@@ -13,6 +13,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SeekBar;
@@ -109,6 +110,9 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     private MaterialSwitch distanceSwitch;
     private SeekBar distanceBar;
     private EditText distanceInput;
+    // HU 532305: bike type checkboxes (fields so that onApplyFiltersClicked can read them)
+    private CheckBox electricCheckBox;
+    private CheckBox mechanicalCheckBox;
 
     /** Whether the distance bar and the distance field are being synchronized (avoids loops) */
     private boolean syncingDistance = false;
@@ -121,6 +125,9 @@ public class StationsView extends AppCompatActivity implements IStationsContract
     private String appliedEmptySlotsText = "";
     private boolean appliedDistanceOn = false;
     private String appliedDistanceText = "";
+    // HU 532305: last applied bike type filter state
+    private boolean appliedElectricBike = true;
+    private boolean appliedMechanicalBike = true;
 
     /** Parts of the subtitle that describe the active filters (null if that filter is not active) */
     private String freeBikesSubtitle;
@@ -337,11 +344,44 @@ public class StationsView extends AppCompatActivity implements IStationsContract
      */
     private void openFilterDialog() {
         View content = getLayoutInflater().inflate(R.layout.dialog_filters, null);
+
         filterInput = content.findViewById(R.id.etMinFreeBikes);
         emptySlotsInput = content.findViewById(R.id.etMinEmptySlots);
+
         filterInput.setText(appliedFreeBikesText);
         emptySlotsInput.setText(appliedEmptySlotsText);
+
         setUpDistanceControls(content);
+
+        // HU 532305: bike type checkboxes — restore last applied state
+        electricCheckBox = content.findViewById(R.id.cbElectricBike);
+        mechanicalCheckBox = content.findViewById(R.id.cbMechanicalBike);
+
+        electricCheckBox.setChecked(appliedElectricBike);
+        mechanicalCheckBox.setChecked(appliedMechanicalBike);
+
+        // Prevent unchecking the last selected bike type.
+        electricCheckBox.setOnCheckedChangeListener((button, checked) -> {
+            if (!checked && !mechanicalCheckBox.isChecked()) {
+                electricCheckBox.setChecked(true);
+                Toast.makeText(
+                        this,
+                        R.string.filterBikeTypeRequired,
+                        Toast.LENGTH_SHORT
+                ).show();
+            }
+        });
+
+        mechanicalCheckBox.setOnCheckedChangeListener((button, checked) -> {
+            if (!checked && !electricCheckBox.isChecked()) {
+                mechanicalCheckBox.setChecked(true);
+                Toast.makeText(
+                        this,
+                        R.string.filterBikeTypeRequired,
+                        Toast.LENGTH_SHORT
+                ).show();
+            }
+        });
 
         filterDialog = new AlertDialog.Builder(this)
                 .setTitle(R.string.filterTitle)
@@ -354,7 +394,7 @@ public class StationsView extends AppCompatActivity implements IStationsContract
                 .setNegativeButton(R.string.filterCancel, null)
                 .create();
 
-        // The positive button is overridden so that the dialog does not close on invalid values
+        // The dialog remains open when filter values are invalid.
         filterDialog.setOnShowListener(d -> {
             Button apply = filterDialog.getButton(DialogInterface.BUTTON_POSITIVE);
             apply.setOnClickListener(v -> onApplyFiltersClicked());
@@ -370,6 +410,8 @@ public class StationsView extends AppCompatActivity implements IStationsContract
             distanceSwitch = null;
             distanceBar = null;
             distanceInput = null;
+            electricCheckBox = null;
+            mechanicalCheckBox = null;
         });
 
         filterDialog.show();
@@ -499,43 +541,113 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         return String.format(Locale.forLanguageTag("es-ES"), "%.1f", km);
     }
 
+
     /**
      * Sends to the presenter the filters introduced in the dialog.
-     * An empty field (or the distance switch off) means that the corresponding filter
-     * is not applied. If no filter is given at all, the free bikes filter is sent so that
+     * An empty field (or the distance switch off) means that the corresponding
+     * filter is not applied.
+     *
+     * If no filter is given at all, the free bikes filter is sent so that
      * the presenter reports the invalid value (behaviour of HU 532376).
-     * If a filter that was applied has been removed in the dialog, all the filters are
-     * removed and the remaining ones are applied again.
-     * The dialog is closed only if the presenter has not reported any invalid value.
+     *
+     * The bike type filter (HU 532305) can be applied independently
+     * of the other filters.
+     *
+     * If an applied filter has been removed, all filters are cleared
+     * and the remaining ones are applied again.
+     *
+     * The dialog closes only if no invalid value has been reported.
      */
     private void onApplyFiltersClicked() {
         String freeBikesText = filterInput.getText().toString().trim();
         String emptySlotsText = emptySlotsInput.getText().toString().trim();
         boolean distanceOn = distanceSwitch.isChecked();
         String distanceText = distanceInput.getText().toString().trim();
-        boolean filterRemoved = (!appliedFreeBikesText.isEmpty() && freeBikesText.isEmpty())
-                || (!appliedEmptySlotsText.isEmpty() && emptySlotsText.isEmpty())
-                || (appliedDistanceOn && !distanceOn);
+
+        // HU 532305: obtener los tipos de bicicleta seleccionados.
+        boolean wantElectric = electricCheckBox.isChecked();
+        boolean wantMechanical = mechanicalCheckBox.isChecked();
+
+        // El filtro por tipo está activo si solo se selecciona un tipo.
+        boolean bikeTypeFilterActive = !(wantElectric && wantMechanical);
+
+        // Si ya había un filtro por tipo aplicado, se mantiene contado en el embudo
+        // aunque se vuelvan a marcar los dos tipos (Prueba 5, criterio del PO).
+        boolean bikeTypeWasApplied = !(appliedElectricBike && appliedMechanicalBike);
+
+        boolean bikeTypeFilterRemoved =
+                (appliedElectricBike != wantElectric)
+                        || (appliedMechanicalBike != wantMechanical);
+
+        boolean filterRemoved =
+                (!appliedFreeBikesText.isEmpty() && freeBikesText.isEmpty())
+                        || (!appliedEmptySlotsText.isEmpty() && emptySlotsText.isEmpty())
+                        || (appliedDistanceOn && !distanceOn)
+                        || bikeTypeFilterRemoved;
+
         boolean valid = true;
 
-        if (!freeBikesText.isEmpty() || (emptySlotsText.isEmpty() && !distanceOn)) {
-            valid = applyFilterAndCheck(() -> presenter.onFilterApplied(freeBikesText));
+        // Solo validar el mínimo vacío cuando no hay ningún otro filtro y no se está
+        // retirando ninguno (p. ej. volver a marcar los dos tipos de bici).
+        if (!freeBikesText.isEmpty()
+                || (emptySlotsText.isEmpty()
+                && !distanceOn
+                && !bikeTypeFilterActive
+                && !filterRemoved)) {
+
+            valid = applyFilterAndCheck(
+                    () -> presenter.onFilterApplied(freeBikesText)
+            );
         }
+
+        // Aplicar filtro por huecos.
         if (valid && !emptySlotsText.isEmpty()) {
-            valid = applyFilterAndCheck(() -> presenter.onMinEmptySlotsFilterApplied(emptySlotsText));
+            valid = applyFilterAndCheck(
+                    () -> presenter.onMinEmptySlotsFilterApplied(emptySlotsText)
+            );
         }
+
+        // Aplicar filtro por distancia.
         if (valid && distanceOn) {
-            valid = applyFilterAndCheck(() -> presenter.onDistanceFilterApplied(distanceText));
+            valid = applyFilterAndCheck(
+                    () -> presenter.onDistanceFilterApplied(distanceText)
+            );
         }
+
+        // HU 532305: aplicar el filtro por tipo de bicicleta.
+        if (valid && bikeTypeFilterActive) {
+            valid = applyFilterAndCheck(
+                    () -> presenter.onBikeTypeFilterApplied(
+                            wantElectric, wantMechanical)
+            );
+        }
+
+        // Si se ha retirado algún filtro, reconstruir los restantes.
         if (valid && filterRemoved) {
-            reapplyFilters(freeBikesText, emptySlotsText, distanceOn ? distanceText : "");
+            reapplyFilters(
+                    freeBikesText,
+                    emptySlotsText,
+                    distanceOn ? distanceText : "",
+                    wantElectric,
+                    wantMechanical,
+                    bikeTypeWasApplied
+            );
         }
+
+        // Guardar el estado aplicado y cerrar el diálogo.
         if (valid && filterDialog != null) {
             appliedFreeBikesText = freeBikesText;
             appliedEmptySlotsText = emptySlotsText;
-            // if the location was not known the distance filter has not been applied
-            appliedDistanceOn = distanceOn && distanceSubtitle != null;
-            appliedDistanceText = appliedDistanceOn ? distanceText : "";
+
+            appliedDistanceOn =
+                    distanceOn && distanceSubtitle != null;
+
+            appliedDistanceText =
+                    appliedDistanceOn ? distanceText : "";
+
+            appliedElectricBike = wantElectric;
+            appliedMechanicalBike = wantMechanical;
+
             filterDialog.dismiss();
         }
     }
@@ -558,11 +670,17 @@ public class StationsView extends AppCompatActivity implements IStationsContract
      * It is used when a filter has been removed in the dialog (field emptied or distance
      * switch turned off), because the presenter only removes all the filters at once.
      * The values have already been validated.
-     * @param freeBikesText the free bikes value, or empty if it is not applied
+     * @param freeBikesText  the free bikes value, or empty if it is not applied
      * @param emptySlotsText the empty slots value, or empty if it is not applied
-     * @param distanceText the distance value, or empty if it is not applied
+     * @param distanceText   the distance value, or empty if it is not applied
+     * @param wantElectric   true if electric bikes should be included (HU 532305)
+     * @param wantMechanical true if mechanical bikes should be included (HU 532305)
+     * @param keepBikeType   true if a bike type filter was applied before, so that it is
+     *                       applied again (and counted) even if both types are selected
      */
-    private void reapplyFilters(String freeBikesText, String emptySlotsText, String distanceText) {
+    private void reapplyFilters(String freeBikesText, String emptySlotsText, String distanceText,
+                                boolean wantElectric, boolean wantMechanical,
+                                boolean keepBikeType) {
         presenter.onFilterCleared();
         if (!freeBikesText.isEmpty()) {
             presenter.onFilterApplied(freeBikesText);
@@ -572,6 +690,11 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         }
         if (!distanceText.isEmpty()) {
             presenter.onDistanceFilterApplied(distanceText);
+        }
+        // HU 532305: reapply the bike type filter if one type is deselected, or if it was
+        // already applied before (it keeps counting in the funnel, Prueba 5)
+        if (!(wantElectric && wantMechanical) || keepBikeType) {
+            presenter.onBikeTypeFilterApplied(wantElectric, wantMechanical);
         }
     }
 
@@ -739,6 +862,9 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         appliedEmptySlotsText = "";
         appliedDistanceOn = false;
         appliedDistanceText = "";
+        // HU 532305: reset bike type filter to default (both selected)
+        appliedElectricBike = true;
+        appliedMechanicalBike = true;
         updateSubtitle();
     }
 
@@ -995,6 +1121,49 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         tvStationsMessage.setText(message);
         tvStationsMessage.setVisibility(View.VISIBLE);
         searchNotFoundPanel.setVisibility(View.GONE);
+    }
+
+    // ── HU 532305 Filtrar por tipo de bici ───────────────────────────────
+
+    /**
+     * @see IStationsContract.View#showNoBikeTypeSelected()
+     */
+    @Override
+    public void showNoBikeTypeSelected() {
+        Toast.makeText(this, R.string.filterBikeTypeRequired, Toast.LENGTH_SHORT).show();
+    }
+
+    /**
+     * @see IStationsContract.View#showNoStationsWithBikeType(boolean, boolean)
+     * @param electricas true si se filtraba por bicis eléctricas
+     * @param mecanicas  true si se filtraba por bicis mecánicas
+     */
+    public void showNoStationsWithBikeType(boolean electricas, boolean mecanicas) {
+        int message = R.string.filterBikeTypeNoResults;
+        if (electricas && !mecanicas) {
+            message = R.string.filterBikeTypeNoElectric;
+        } else if (mecanicas && !electricas) {
+            message = R.string.filterBikeTypeNoMechanical;
+        }
+        showMessage(getString(message));
+    }
+
+    /**
+     * @see IStationsContract.View#showBikeTypeNotSpecified()
+     */
+    @Override
+    public void showBikeTypeNotSpecified() {
+        showMessage(getString(R.string.filterBikeTypeNotSpecified));
+    }
+
+    /**
+     * @see IStationsContract.View#showBikeTypeFilterActive(boolean, boolean)
+     * @param electricas true si el filtro activo incluye bicis eléctricas
+     * @param mecanicas  true si el filtro activo incluye bicis mecánicas
+     */
+    @Override
+    public void showBikeTypeFilterActive(boolean electricas, boolean mecanicas) {
+        updateSubtitle();
     }
 
     /**
