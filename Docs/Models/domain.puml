@@ -35,7 +35,7 @@ NetworksResponse *--> "*" Network : networks
 NetworkResponse *--> "1" Network : network
 
 ' ==========================================
-' Estaciones (HU 532377 Listar estaciones)
+' Estaciones (HU 532377 Listar estaciones, HU 532305 Filtrar por tipo de bici)
 ' Las clases de utilidad (StationFilter, StationSearch, NetworkLocator,
 ' CitySelector) no son del dominio: estan en el diagrama de arquitectura.
 ' ==========================================
@@ -49,11 +49,13 @@ class Station {
     - freeBikes : Integer
     - emptySlots : Integer
     + getEbikes() : Integer
+    + getNormalBikes() : Integer
     + getSlots() : Integer
 }
 
 class StationExtra {
     - ebikes : Integer
+    - normalBikes : Integer
     - slots : Integer
 }
 
