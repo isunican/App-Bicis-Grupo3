@@ -541,57 +541,106 @@ public class StationsView extends AppCompatActivity implements IStationsContract
         return String.format(Locale.forLanguageTag("es-ES"), "%.1f", km);
     }
 
+
     /**
      * Sends to the presenter the filters introduced in the dialog.
-     * An empty field (or the distance switch off) means that the corresponding filter
-     * is not applied. If no filter is given at all, the free bikes filter is sent so that
+     * An empty field (or the distance switch off) means that the corresponding
+     * filter is not applied.
+     *
+     * If no filter is given at all, the free bikes filter is sent so that
      * the presenter reports the invalid value (behaviour of HU 532376).
-     * If a filter that was applied has been removed in the dialog, all the filters are
-     * removed and the remaining ones are applied again.
-     * The dialog is closed only if the presenter has not reported any invalid value.
+     *
+     * The bike type filter (HU 532305) can be applied independently
+     * of the other filters.
+     *
+     * If an applied filter has been removed, all filters are cleared
+     * and the remaining ones are applied again.
+     *
+     * The dialog closes only if no invalid value has been reported.
      */
     private void onApplyFiltersClicked() {
         String freeBikesText = filterInput.getText().toString().trim();
         String emptySlotsText = emptySlotsInput.getText().toString().trim();
         boolean distanceOn = distanceSwitch.isChecked();
         String distanceText = distanceInput.getText().toString().trim();
-        // HU 532305: read the current state of the bike type checkboxes
+
+        // HU 532305: obtener los tipos de bicicleta seleccionados.
         boolean wantElectric = electricCheckBox.isChecked();
         boolean wantMechanical = mechanicalCheckBox.isChecked();
-        boolean bikeTypeFilterRemoved = (appliedElectricBike != wantElectric)
+
+        // El filtro por tipo está activo si solo se selecciona un tipo.
+        boolean bikeTypeFilterActive = !(wantElectric && wantMechanical);
+
+        boolean bikeTypeFilterRemoved =
+                (appliedElectricBike != wantElectric)
                 || (appliedMechanicalBike != wantMechanical);
-        boolean filterRemoved = (!appliedFreeBikesText.isEmpty() && freeBikesText.isEmpty())
+
+        boolean filterRemoved =
+                (!appliedFreeBikesText.isEmpty() && freeBikesText.isEmpty())
                 || (!appliedEmptySlotsText.isEmpty() && emptySlotsText.isEmpty())
                 || (appliedDistanceOn && !distanceOn)
                 || bikeTypeFilterRemoved;
+
         boolean valid = true;
 
-        if (!freeBikesText.isEmpty() || (emptySlotsText.isEmpty() && !distanceOn)) {
-            valid = applyFilterAndCheck(() -> presenter.onFilterApplied(freeBikesText));
+        // Solo validar el mínimo vacío cuando no hay ningún otro filtro.
+        if (!freeBikesText.isEmpty()
+                || (emptySlotsText.isEmpty()
+                    && !distanceOn
+                    && !bikeTypeFilterActive)) {
+
+            valid = applyFilterAndCheck(
+                    () -> presenter.onFilterApplied(freeBikesText)
+            );
         }
+
+        // Aplicar filtro por huecos.
         if (valid && !emptySlotsText.isEmpty()) {
-            valid = applyFilterAndCheck(() -> presenter.onMinEmptySlotsFilterApplied(emptySlotsText));
+            valid = applyFilterAndCheck(
+                    () -> presenter.onMinEmptySlotsFilterApplied(emptySlotsText)
+            );
         }
+
+        // Aplicar filtro por distancia.
         if (valid && distanceOn) {
-            valid = applyFilterAndCheck(() -> presenter.onDistanceFilterApplied(distanceText));
+            valid = applyFilterAndCheck(
+                    () -> presenter.onDistanceFilterApplied(distanceText)
+            );
         }
-        // HU 532305: apply the bike type filter only if at least one type is deselected
-        // (both selected = no restriction, same as not having the filter active)
-        if (valid && !(wantElectric && wantMechanical)) {
-            valid = applyFilterAndCheck(() -> presenter.onBikeTypeFilterApplied(wantElectric, wantMechanical));
+
+        // HU 532305: aplicar el filtro por tipo de bicicleta.
+        if (valid && bikeTypeFilterActive) {
+            valid = applyFilterAndCheck(
+                    () -> presenter.onBikeTypeFilterApplied(
+                            wantElectric, wantMechanical)
+            );
         }
+
+        // Si se ha retirado algún filtro, reconstruir los restantes.
         if (valid && filterRemoved) {
-            reapplyFilters(freeBikesText, emptySlotsText, distanceOn ? distanceText : "", wantElectric, wantMechanical);
+            reapplyFilters(
+                    freeBikesText,
+                    emptySlotsText,
+                    distanceOn ? distanceText : "",
+                    wantElectric,
+                    wantMechanical
+            );
         }
+
+        // Guardar el estado aplicado y cerrar el diálogo.
         if (valid && filterDialog != null) {
             appliedFreeBikesText = freeBikesText;
             appliedEmptySlotsText = emptySlotsText;
-            // if the location was not known the distance filter has not been applied
-            appliedDistanceOn = distanceOn && distanceSubtitle != null;
-            appliedDistanceText = appliedDistanceOn ? distanceText : "";
-            // HU 532305: persist the applied bike type state
+
+            appliedDistanceOn =
+                    distanceOn && distanceSubtitle != null;
+
+            appliedDistanceText =
+                    appliedDistanceOn ? distanceText : "";
+
             appliedElectricBike = wantElectric;
             appliedMechanicalBike = wantMechanical;
+
             filterDialog.dismiss();
         }
     }

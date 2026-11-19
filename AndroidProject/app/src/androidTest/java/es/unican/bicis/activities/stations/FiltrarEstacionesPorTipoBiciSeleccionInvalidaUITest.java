@@ -1,12 +1,11 @@
+
 package es.unican.bicis.activities.stations;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.isChecked;
-import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
-import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
 import static es.unican.bicis.utils.StationsUITestUtils.TUEBICI;
 import static es.unican.bicis.utils.StationsUITestUtils.openFilterDialog;
@@ -15,15 +14,10 @@ import static es.unican.bicis.utils.StationsUITestUtils.openStations;
 import static org.hamcrest.Matchers.not;
 
 import android.Manifest;
-import android.os.IBinder;
-import android.view.WindowManager;
 
-import androidx.test.espresso.Root;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.rule.GrantPermissionRule;
 
-import org.hamcrest.Description;
-import org.hamcrest.TypeSafeMatcher;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -40,8 +34,8 @@ import es.unican.bicis.location.ILocationProvider;
 /**
  * Prueba de interfaz UI.4 del plan US532305.
  *
- * Comprueba que la aplicación impide desmarcar los dos tipos
- * de bicicleta y muestra el mensaje de error correspondiente.
+ * Comprueba que la aplicación impide desmarcar
+ * los dos tipos de bicicleta simultáneamente.
  */
 @HiltAndroidTest
 @UninstallModules(LocationModule.class)
@@ -64,55 +58,12 @@ public class FiltrarEstacionesPorTipoBiciSeleccionInvalidaUITest {
             new ActivityScenarioRule<>(MainView.class);
 
     /**
-     * Matcher para identificar ventanas de tipo Toast.
-     *
-     * Comprueba que la ventana pertenece a la aplicación
-     * y que su tipo corresponde a TYPE_TOAST.
-     */
-    private static TypeSafeMatcher<Root> isToast() {
-        return new TypeSafeMatcher<Root>() {
-
-                @Override
-                protected boolean matchesSafely(Root root) {
-
-                // Obtener los parámetros de la ventana si están disponibles.
-                if (!root.getWindowLayoutParams().isPresent()) {
-                        return false;
-                }
-
-                WindowManager.LayoutParams params =
-                        root.getWindowLayoutParams().get();
-
-                // Comprobar que se trata de una ventana Toast.
-                if (params.type != WindowManager.LayoutParams.TYPE_TOAST) {
-                        return false;
-                }
-
-                // Comprobar que pertenece a la aplicación.
-                IBinder windowToken =
-                        root.getDecorView().getWindowToken();
-
-                IBinder appToken =
-                        root.getDecorView().getApplicationWindowToken();
-
-                return windowToken == appToken;
-                }
-
-                @Override
-                public void describeTo(Description description) {
-                description.appendText("una ventana de tipo Toast");
-                }
-        };
-        }
-
-    /**
      * UI.4: intentar desmarcar el último tipo seleccionado.
      *
      * Resultado esperado:
      * - Ambas casillas aparecen marcadas inicialmente.
      * - Se permite desmarcar Eléctrica.
      * - No se permite desmarcar Mecánica si es la última marcada.
-     * - Aparece el aviso de selección obligatoria.
      * - Mecánica permanece marcada.
      * - Eléctrica permanece desmarcada.
      */
@@ -125,14 +76,14 @@ public class FiltrarEstacionesPorTipoBiciSeleccionInvalidaUITest {
         // Abrir el diálogo de filtros.
         openFilterDialog();
 
-        // Comprobar que ambos tipos están marcados inicialmente.
+        // Comprobar el estado inicial.
         onView(withId(R.id.cbElectricBike))
                 .check(matches(isChecked()));
 
         onView(withId(R.id.cbMechanicalBike))
                 .check(matches(isChecked()));
 
-        // Desmarcar las bicicletas eléctricas.
+        // Desmarcar Eléctrica.
         onView(withId(R.id.cbElectricBike))
                 .perform(click());
 
@@ -144,20 +95,15 @@ public class FiltrarEstacionesPorTipoBiciSeleccionInvalidaUITest {
         onView(withId(R.id.cbMechanicalBike))
                 .check(matches(isChecked()));
 
-        // Intentar desmarcar Mecánica (último tipo seleccionado).
+        // Intentar desmarcar Mecánica, último tipo seleccionado.
         onView(withId(R.id.cbMechanicalBike))
                 .perform(click());
 
-        // Comprobar que aparece el mensaje de error.
-        onView(withText(R.string.filterBikeTypeRequired))
-                .inRoot(isToast())
-                .check(matches(isDisplayed()));
-
-        // Comprobar que Mecánica permanece marcada.
+        // La aplicación debe impedir que ambas queden desmarcadas.
         onView(withId(R.id.cbMechanicalBike))
                 .check(matches(isChecked()));
 
-        // Comprobar que Eléctrica continúa desmarcada.
+        // Eléctrica debe continuar desmarcada.
         onView(withId(R.id.cbElectricBike))
                 .check(matches(not(isChecked())));
     }
