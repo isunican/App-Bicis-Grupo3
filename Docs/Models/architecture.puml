@@ -236,6 +236,8 @@ class StationsPresenter {
 class StationFilter {
     ' HU 532305 - Filtrar estaciones por tipo de bici
     + {static} filterByBikeType(stations : List<Station>, electricas : boolean, mecanicas : boolean) : List<Station>
+    + {static} tieneEbikesDisponibles(station : Station) : boolean
+    + {static} tieneMecanicasDisponibles(station : Station) : boolean
     + {static} filterByMinFreeBikes(stations : List<Station>, minFreeBikes : int) : List<Station>
     + {static} hasValidFreeBikes(station : Station) : boolean
     + {static} filterByMinEmptySlots(stations : List<Station>, minEmptySlots : int) : List<Station>
