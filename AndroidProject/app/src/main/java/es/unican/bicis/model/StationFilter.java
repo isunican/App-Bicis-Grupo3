@@ -259,4 +259,25 @@ public class StationFilter {
         int freeBikes = station.getFreeBikes();
         return (freeBikes - ebikes) > 0;
     }
+
+    /**
+     * Comprueba si la red informa del tipo de bicicleta (eléctrica / mecánica) en alguna de
+     * sus estaciones. Hay redes (por ejemplo, Tuebici) que no incluyen este dato; con ellas
+     * el filtro por un único tipo no puede devolver ninguna estación.
+     *
+     * @param stations estaciones de la red (puede ser {@code null})
+     * @return {@code true} si al menos una estación informa de sus bicis eléctricas;
+     *         {@code false} si ninguna lo hace o si la lista es {@code null} o vacía
+     */
+    public static boolean networkReportsBikeType(List<Station> stations) {
+        if (stations == null) {
+            return false;
+        }
+        for (Station station : stations) {
+            if (station != null && station.getEbikes() != null) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

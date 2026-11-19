@@ -573,21 +573,21 @@ public class StationsView extends AppCompatActivity implements IStationsContract
 
         boolean bikeTypeFilterRemoved =
                 (appliedElectricBike != wantElectric)
-                || (appliedMechanicalBike != wantMechanical);
+                        || (appliedMechanicalBike != wantMechanical);
 
         boolean filterRemoved =
                 (!appliedFreeBikesText.isEmpty() && freeBikesText.isEmpty())
-                || (!appliedEmptySlotsText.isEmpty() && emptySlotsText.isEmpty())
-                || (appliedDistanceOn && !distanceOn)
-                || bikeTypeFilterRemoved;
+                        || (!appliedEmptySlotsText.isEmpty() && emptySlotsText.isEmpty())
+                        || (appliedDistanceOn && !distanceOn)
+                        || bikeTypeFilterRemoved;
 
         boolean valid = true;
 
         // Solo validar el mínimo vacío cuando no hay ningún otro filtro.
         if (!freeBikesText.isEmpty()
                 || (emptySlotsText.isEmpty()
-                    && !distanceOn
-                    && !bikeTypeFilterActive)) {
+                && !distanceOn
+                && !bikeTypeFilterActive)) {
 
             valid = applyFilterAndCheck(
                     () -> presenter.onFilterApplied(freeBikesText)
@@ -1127,9 +1127,22 @@ public class StationsView extends AppCompatActivity implements IStationsContract
      * @param electricas true si se filtraba por bicis eléctricas
      * @param mecanicas  true si se filtraba por bicis mecánicas
      */
-    @Override
     public void showNoStationsWithBikeType(boolean electricas, boolean mecanicas) {
-        showMessage(getString(R.string.filterBikeTypeNoResults));
+        int message = R.string.filterBikeTypeNoResults;
+        if (electricas && !mecanicas) {
+            message = R.string.filterBikeTypeNoElectric;
+        } else if (mecanicas && !electricas) {
+            message = R.string.filterBikeTypeNoMechanical;
+        }
+        showMessage(getString(message));
+    }
+
+    /**
+     * @see IStationsContract.View#showBikeTypeNotSpecified()
+     */
+    @Override
+    public void showBikeTypeNotSpecified() {
+        showMessage(getString(R.string.filterBikeTypeNotSpecified));
     }
 
     /**

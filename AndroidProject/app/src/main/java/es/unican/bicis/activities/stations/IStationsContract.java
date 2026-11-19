@@ -404,5 +404,15 @@ public interface IStationsContract {
          */
         public void showBikeTypeFilterActive(boolean electricas, boolean mecanicas);
 
+        /**
+         * La vista debe ocultar la lista y mostrar un mensaje indicando que la red no
+         * especifica el tipo de bicicleta, por lo que el filtro por un único tipo no puede
+         * aplicarse, y sugiriendo activar ambas casillas.
+         * Se invoca en lugar de {@link #showNoStationsWithBikeType(boolean, boolean)} cuando
+         * ninguna estación de la red informa del tipo de bicicleta.
+         * Only the Presenter should call this method.
+         */
+        public void showBikeTypeNotSpecified();
+
     }
 }

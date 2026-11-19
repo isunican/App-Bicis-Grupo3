@@ -605,4 +605,31 @@ public class StationFilterTest {
         assertEquals(Arrays.asList(stA, stC), result);
         assertEquals(originalL, listaL);
     }
+
+    /** La red informa del tipo si al menos una estación tiene dato de bicis eléctricas. */
+    @Test
+    public void testNetworkReportsBikeTypeConAlgunaEstacionConDato() {
+        List<Station> input = Arrays.asList(
+                createStationWithBikeType("A", 3, null),
+                createStationWithBikeType("B", 3, 1));
+
+        assertTrue(StationFilter.networkReportsBikeType(input));
+    }
+
+    /** Ninguna estación informa del tipo (caso Tuebici): la red no especifica el tipo. */
+    @Test
+    public void testNetworkReportsBikeTypeSinNingunDato() {
+        List<Station> input = Arrays.asList(
+                createStationWithBikeType("A", 3, null),
+                createStationWithBikeType("B", 2, null));
+
+        assertFalse(StationFilter.networkReportsBikeType(input));
+    }
+
+    /** Lista nula o vacía: no hay dato de tipo. */
+    @Test
+    public void testNetworkReportsBikeTypeListaNulaOVacia() {
+        assertFalse(StationFilter.networkReportsBikeType(null));
+        assertFalse(StationFilter.networkReportsBikeType(new ArrayList<>()));
+    }
 }

@@ -288,7 +288,13 @@ public class StationsPresenter implements IStationsContract.Presenter {
         filterMecanicas = mecanicas;
         List<Station> filtered = applyFilters();
         if (filtered.isEmpty()) {
-            view.showNoStationsWithBikeType(electricas, mecanicas);
+            boolean soloUnTipo = electricas != mecanicas;
+            if (soloUnTipo && !StationFilter.networkReportsBikeType(stations)) {
+                // La red no informa del tipo de bici: se explica al usuario cómo verla
+                view.showBikeTypeNotSpecified();
+            } else {
+                view.showNoStationsWithBikeType(electricas, mecanicas);
+            }
             view.showNetworkLocation(location);
         } else {
             view.showBikeTypeFilterActive(electricas, mecanicas);

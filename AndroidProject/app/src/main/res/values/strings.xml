@@ -66,6 +66,9 @@
     <string name="filterBikeTypeMechanical">Mecánica</string>
     <string name="filterBikeTypeRequired">Debe seleccionar al menos un tipo de bicicleta</string>
     <string name="filterBikeTypeNoResults">No hay estaciones con el tipo de bicicleta seleccionado</string>
+    <string name="filterBikeTypeNoElectric">No hay estaciones con bicis eléctricas disponibles</string>
+    <string name="filterBikeTypeNoMechanical">No hay estaciones con bicis mecánicas disponibles</string>
+    <string name="filterBikeTypeNotSpecified">Esta red no especifica el tipo de bicicleta (eléctrica o mecánica). Para ver sus estaciones, active ambas casillas en el filtro de tipo de bicicleta.</string>
 
     <!-- Filtro de estaciones por distancia (HU 532304) -->
     <string name="filterDistanceSwitch">Filtrar por distancia</string>
