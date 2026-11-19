@@ -69,8 +69,8 @@ android {
         applicationId "es.unican.bicis"
         minSdk 29
         targetSdk 37
-        versionCode 1
-        versionName "1.0"
+        versionCode 3
+        versionName "00.03.00"
 
         // I need a custom test runner to support Hilt
         // testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner
