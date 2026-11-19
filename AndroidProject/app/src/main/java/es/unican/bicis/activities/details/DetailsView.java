@@ -173,4 +173,17 @@ public class DetailsView extends AppCompatActivity implements IDetailsContract.V
         intent.putExtra(StationsView.INTENT_NETWORK, Parcels.wrap(network));
         startActivity(intent);
     }
+
+    /**
+     * Closes this activity when the back button of the action bar is pressed, so the previous
+     * screen keeps its state (for example, the city selected in the list of networks).
+     * Without this, Android would create a new list of networks from the parentActivityName
+     * of the manifest.
+     * @return true because the navigation has been handled
+     */
+    @Override
+    public boolean onSupportNavigateUp() {
+        finish();
+        return true;
+    }
 }

@@ -1,4 +1,4 @@
-package es.unican.bicis;
+package es.unican.bicis.activities.stations;
 
 import static androidx.test.espresso.Espresso.onData;
 import static androidx.test.espresso.Espresso.onView;
@@ -11,6 +11,7 @@ import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
 import android.Manifest;
 
+import androidx.test.espresso.matcher.ViewMatchers;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.rule.GrantPermissionRule;
 
@@ -24,6 +25,7 @@ import dagger.hilt.android.testing.HiltAndroidRule;
 import dagger.hilt.android.testing.HiltAndroidTest;
 import dagger.hilt.android.testing.UninstallModules;
 
+import es.unican.bicis.R;
 import es.unican.bicis.activities.main.MainView;
 import es.unican.bicis.injection.LocationModule;
 import es.unican.bicis.location.ILocationProvider;
@@ -68,7 +70,7 @@ public class StationsNavigationUITest {
                 description.appendText("Red de bicicletas " + name);
             }
         })
-                .inAdapterView(withId(R.id.lvNetworks))
+                .inAdapterView(ViewMatchers.withId(R.id.lvNetworks))
                 .perform(click());
     }
 

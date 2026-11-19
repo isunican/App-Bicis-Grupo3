@@ -112,7 +112,7 @@ public class DetectarCiudadSinRedUITest {
             }
 
             ListView listView = (ListView) view;
-            assertEquals(10, listView.getAdapter().getCount());
+            assertEquals(13, listView.getAdapter().getCount());
         });
     }
 }
