@@ -119,7 +119,7 @@ public class JsonNetworksRepositoryITest {
         List<Station> stations = loadStations("bicierronea");
 
         assertEquals(6, stations.size());
-        // Centro: todo correcto
+        // Centro: sin errores
         assertEquals(Integer.valueOf(4), byId(stations, "e1").getFreeBikes());
         assertEquals(Integer.valueOf(8), byId(stations, "e1").getEmptySlots());
         // Hospital: free_bikes -3

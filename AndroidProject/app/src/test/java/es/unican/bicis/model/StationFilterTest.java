@@ -468,9 +468,9 @@ public class StationFilterTest {
         Station stC = createStationWithBikeType("C", 3, 1);
         Station stD = createStationWithBikeType("D", 0, 0);
         Station stE = createStationWithBikeType("E", 3, null);
-        List<Station> L = Arrays.asList(stA, stB, stC, stD, stE);
+        List<Station> listaL = Arrays.asList(stA, stB, stC, stD, stE);
 
-        List<Station> result = StationFilter.filterByBikeType(L, true, false);
+        List<Station> result = StationFilter.filterByBikeType(listaL, true, false);
 
         assertEquals(Arrays.asList(stA, stC), result);
     }
@@ -492,9 +492,9 @@ public class StationFilterTest {
         Station stC = createStationWithBikeType("C", 3, 1);
         Station stD = createStationWithBikeType("D", 0, 0);
         Station stE = createStationWithBikeType("E", 3, null);
-        List<Station> L = Arrays.asList(stA, stB, stC, stD, stE);
+        List<Station> listaL = Arrays.asList(stA, stB, stC, stD, stE);
 
-        List<Station> result = StationFilter.filterByBikeType(L, false, true);
+        List<Station> result = StationFilter.filterByBikeType(listaL, false, true);
 
         assertEquals(Arrays.asList(stB, stC), result);
     }
@@ -511,9 +511,9 @@ public class StationFilterTest {
         Station stC = createStationWithBikeType("C", 3, 1);
         Station stD = createStationWithBikeType("D", 0, 0);
         Station stE = createStationWithBikeType("E", 3, null);
-        List<Station> L = Arrays.asList(stA, stB, stC, stD, stE);
+        List<Station> listaL = Arrays.asList(stA, stB, stC, stD, stE);
 
-        List<Station> result = StationFilter.filterByBikeType(L, true, true);
+        List<Station> result = StationFilter.filterByBikeType(listaL, true, true);
 
         assertEquals(Arrays.asList(stA, stB, stC, stD, stE), result);
     }
@@ -597,12 +597,12 @@ public class StationFilterTest {
         Station stC = createStationWithBikeType("C", 3, 1);
         Station stD = createStationWithBikeType("D", 0, 0);
         Station stE = createStationWithBikeType("E", 3, null);
-        List<Station> L = new ArrayList<>(Arrays.asList(stA, stB, stC, stD, stE));
-        List<Station> originalL = new ArrayList<>(L);
+        List<Station> listaL = new ArrayList<>(Arrays.asList(stA, stB, stC, stD, stE));
+        List<Station> originalL = new ArrayList<>(listaL);
 
-        List<Station> result = StationFilter.filterByBikeType(L, true, false);
+        List<Station> result = StationFilter.filterByBikeType(listaL, true, false);
 
         assertEquals(Arrays.asList(stA, stC), result);
-        assertEquals(originalL, L);
+        assertEquals(originalL, listaL);
     }
 }

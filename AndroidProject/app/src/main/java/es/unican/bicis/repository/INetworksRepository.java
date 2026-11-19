@@ -1,7 +1,5 @@
 package es.unican.bicis.repository;
 
-import es.unican.bicis.model.Network;
-
 /**
  * A repository to retrieve bike sharing networks
  */

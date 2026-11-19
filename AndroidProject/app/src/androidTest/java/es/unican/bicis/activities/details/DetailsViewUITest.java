@@ -140,7 +140,7 @@ public class DetailsViewUITest {
         return result;
     }
 
-    /** Borra un fichero o una carpeta con todo su contenido. */
+    /** Borra un fichero o una carpeta junto con su contenido. */
     private static void deleteRecursively(File file) {
         File[] children = file.listFiles();
         if (children != null) {

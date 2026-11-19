@@ -89,10 +89,6 @@ public class SeleccionarCiudadErrorCargaUITest {
     }
 
     /**
-     * Comprueba que un desplegable se ve, está desactivado y no tiene ninguna opción.
-     * @param spinnerId id del desplegable (R.id.spCountry o R.id.spCity)
-     */
-    /**
      * Comprueba lo que se ve en pantalla: el desplegable se muestra, pero no está habilitado.
      * @param spinnerId id del desplegable (R.id.spCountry o R.id.spCity)
      */

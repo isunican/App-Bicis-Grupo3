@@ -15,7 +15,7 @@ import java.util.List;
  * The value is only accepted if it is a JSON array whose elements are all texts.
  * If the value is not an array, or any element is not a text (a number, a boolean,
  * null, an object...), the whole value is considered anomalous and the field
- * is set to null, meaning "not available".
+ * is set to an empty array, meaning "not available".
  * Note: empty texts are accepted here; checking their content is a validation
  * responsibility of the model, not of the json reading.
  */
@@ -24,14 +24,14 @@ public class StringArrayAdapter extends TypeAdapter<String[]> {
     /**
      * Reads an array of texts from the json.
      * @param in the json reader
-     * @return the array of texts, or null if the value is missing or has an invalid format
+     * @return the array of texts, or an empty array if the value has an invalid format
      * @throws IOException if the json cannot be read
      */
     @Override
     public String[] read(JsonReader in) throws IOException {
         if (in.peek() != JsonToken.BEGIN_ARRAY) {
             in.skipValue();
-            return null;
+            return new String[0];
         }
 
         List<String> values = new ArrayList<>();
@@ -49,7 +49,7 @@ public class StringArrayAdapter extends TypeAdapter<String[]> {
         }
         in.endArray();
 
-        return valid ? values.toArray(new String[0]) : null;
+        return valid ? values.toArray(new String[0]) : new String[0];
     }
 
     /**
