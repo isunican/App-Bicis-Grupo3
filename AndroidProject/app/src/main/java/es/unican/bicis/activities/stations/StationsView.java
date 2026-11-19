@@ -1127,9 +1127,14 @@ public class StationsView extends AppCompatActivity implements IStationsContract
      * @param electricas true si se filtraba por bicis eléctricas
      * @param mecanicas  true si se filtraba por bicis mecánicas
      */
-    @Override
     public void showNoStationsWithBikeType(boolean electricas, boolean mecanicas) {
-        showMessage(getString(R.string.filterBikeTypeNoResults));
+        int message = R.string.filterBikeTypeNoResults;
+        if (electricas && !mecanicas) {
+            message = R.string.filterBikeTypeNoElectric;
+        } else if (mecanicas && !electricas) {
+            message = R.string.filterBikeTypeNoMechanical;
+        }
+        showMessage(getString(message));
     }
 
     /**
